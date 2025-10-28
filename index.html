@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CB可轉債發行資料查詢系統 - Rex大叔的168台股投資教室</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2.2em; margin-bottom: 15px; }
+        .header .subtitle { font-size: 1.05em; opacity: 0.95; margin-bottom: 25px; }
+        
+        .top-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .top-btn {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .top-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateY(-2px);
+        }
+        .header .author {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.85;
+            font-style: italic;
+        }
+        
+        .loading-banner {
+            background: #fffbf0;
+            border-bottom: 3px solid #ffc107;
+            padding: 15px 20px;
+            text-align: center;
+            color: #856404;
+            font-size: 1em;
+        }
+        .loading-banner.success {
+            background: #f0fff4;
+            border-bottom: 3px solid #28a745;
+            color: #155724;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0;
+            box-shadow: 0 0 50px rgba(0,0,0,0.1);
+        }
+        
+        .tab-navigation {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #e0e0e0;
+            overflow-x: auto;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 18px 12px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: 'Microsoft JhengHei', Arial;
+            transition: all 0.3s;
+            position: relative;
+            min-width: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .tab-btn .icon { font-size: 1.8em; }
+        .tab-btn:hover { background: #f8f9fa; }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .tab-content { display: none; padding: 40px; min-height: 500px; }
+        .tab-content.active { display: block; }
+        
+        .search-section { max-width: 800px; margin: 0 auto 40px; }
+        .search-box { display: flex; gap: 15px; }
+        .search-box input {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 1.3em;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Microsoft JhengHei', Arial;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .search-box button {
+            padding: 15px 40px;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .search-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .info-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-left: 5px solid #2196f3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .info-card h3 { color: #1565c0; margin-bottom: 10px; font-size: 1.3em; }
+        .info-card p { color: #0d47a1; line-height: 1.8; margin: 5px 0; font-size: 1.05em; }
+        
+        .summary-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        .summary-card h3 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: -25px -25px 20px -25px;
+            font-size: 1.3em;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .detail-item {
+            padding: 12px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .detail-item .label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .detail-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        .detail-item.highlight {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left-color: #ff9800;
+        }
+        .detail-item.highlight .value {
+            color: #e65100;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.95em;
+        }
+        thead {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            white-space: nowrap;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+        th:last-child { border-right: none; }
+        td {
+            padding: 10px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+            border-right: 1px solid #f0f0f0;
+        }
+        td:last-child { border-right: none; }
+        tbody tr:hover {
+            background: #f8f9fa;
+            cursor: pointer;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .badge-green { background: #c8e6c9; color: #1b5e20; }
+        .badge-blue { background: #bbdefb; color: #0d47a1; }
+        .badge-orange { background: #ffe0b2; color: #e65100; }
+        .badge-red { background: #ffcdd2; color: #b71c1c; }
+        .badge-purple { background: #e1bee7; color: #4a148c; }
+        
+        .price-high { background: #ffcdd2; color: #b71c1c; font-weight: bold; }
+        .price-low { background: #c8e6c9; color: #1b5e20; font-weight: bold; }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 1.3em;
+            color: #667eea;
+        }
+        
+        .error-message {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            color: #721c24;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            background: white;
+            color: #667eea;
+            font-size: 1em;
+            border-top: 2px solid #e0e0e0;
+        }
+        .footer p { margin: 5px 0; }
+        
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.6em; }
+            .top-buttons { flex-direction: column; }
+            .search-box { flex-direction: column; }
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📋 CB可轉債發行資料及掛牌後高低價格查詢工具</h1>
+        <div class="subtitle">發行條件 | 轉換價格 | 掛牌後表現 | 贖回賣回條件</div>
+        
+        <div class="top-buttons">
+            <a href="#" class="top-btn" id="loadDataBtn">📥 載入中...</a>
+            <a href="https://vocus.cc/user/@rexdashu168" target="_blank" class="top-btn">📝 方格子部落格</a>
+            <a href="https://www.youtube.com/@RexCB168" target="_blank" class="top-btn">📺 YouTube頻道</a>
+        </div>
+        
+        <div class="author">by Rex大叔的168台股投資教室</div>
+    </div>
+    
+    <div id="loadingBanner" class="loading-banner">
+        📥 正在載入可轉債發行資料...
+    </div>
+    
+    <div class="container">
+        <div class="tab-navigation">
+            <button class="tab-btn active" onclick="showTab('manual')">
+                <span class="icon">✍️</span>
+                <span>手動查詢</span>
+            </button>
+            <button class="tab-btn" onclick="showTab('auto')">
+                <span class="icon">🔄</span>
+                <span>自動更新</span>
+            </button>
+            <button class="tab-btn" onclick="showTab('list')">
+                <span class="icon">📋</span>
+                <span>完整清單</span>
+            </button>
+            <button class="tab-btn" onclick="showTab('expiry')">
+                <span class="icon">⏰</span>
+                <span>到期日查詢</span>
+            </button>
+        </div>
+        
+        <!-- 手動查詢 -->
+        <div id="manualTab" class="tab-content active">
+            <div class="info-card">
+                <h3>💡 功能說明</h3>
+                <p>查詢方式: 輸入CB代號(5位數)立即查詢該檔CB的完整資料</p>
+                <p>顯示內容: 發行基本資料、掛牌後最高/最低價、賣回條件等</p>
+                <p>使用範例: 輸入「33902」查詢旭軟二的完整資料</p>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-box">
+                    <input type="text" id="manualCode" placeholder="輸入CB代號(例如: 33902)" maxlength="5">
+                    <button onclick="searchManual()">查詢</button>
+                </div>
+            </div>
+            
+            <div id="result1"></div>
+        </div>
+        
+        <!-- 自動更新 -->
+        <div id="autoTab" class="tab-content">
+            <div class="info-card">
+                <h3>💡 功能說明</h3>
+                <p>查詢方式: 輸入股票代號,自動列出該公司所有發行過的CB</p>
+                <p>顯示內容: 該公司歷次發行的CB清單及掛牌後表現</p>
+                <p>使用範例: 輸入「3390」查詢旭軟所有發行過的CB</p>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-box">
+                    <input type="text" id="autoCode" placeholder="輸入股票代號(例如: 3390)" maxlength="4">
+                    <button onclick="searchAuto()">查詢</button>
+                </div>
+            </div>
+            
+            <div id="result2"></div>
+        </div>
+        
+        <!-- 完整清單 -->
+        <div id="listTab" class="tab-content">
+            <div class="info-card">
+                <h3>💡 功能說明</h3>
+                <p>顯示所有可轉債的發行資料及掛牌後表現</p>
+                <p>點擊任一列可查看該CB的完整詳細資料</p>
+            </div>
+            
+            <div id="result3"></div>
+        </div>
+        
+        <!-- 到期日查詢 -->
+        <div id="expiryTab" class="tab-content">
+            <div class="info-card">
+                <h3>💡 功能說明</h3>
+                <p>查詢即將到期的可轉債清單</p>
+                <p>依剩餘天數排序,提供到期日提醒功能</p>
+            </div>
+            
+            <div class="search-section">
+                <div class="search-box" style="max-width: 400px;">
+                    <select id="expiryFilter" style="flex: 1; padding: 15px; font-size: 1.2em; border: 2px solid #ddd; border-radius: 10px;">
+                        <option value="30">30天內到期</option>
+                        <option value="90">90天內到期</option>
+                        <option value="180">180天內到期</option>
+                        <option value="365">1年內到期</option>
+                        <option value="all">全部顯示</option>
+                    </select>
+                    <button onclick="searchExpiry()">查詢</button>
+                </div>
+            </div>
+            
+            <div id="result4"></div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 Rex大叔的168台股投資教室 | CB可轉債發行資料查詢系統 v1.0</p>
+            <p style="margin-top: 8px; opacity: 0.8;">資料僅供參考 | 投資有風險，入市需謹慎</p>
+        </div>
+    </div>
+
+    <script>
+        let cbData = null;
+        const COL = {
+            序: 0, 股票代碼: 1, CB代碼: 2, CB名稱: 3, TCRI擔保: 4, 擔保: 5, 額度億: 6,
+            發行轉換價格: 7, 掛牌日期: 8, 到期日: 9, 年期: 10, 最高價: 11, 最低價: 12,
+            溢價轉換率: 13, 股本: 14, 詢圈競拍: 15, 承銷商: 16, 董事會: 17, 送件日: 18,
+            生效日: 19, 詢圈競拍日: 20, 公告代收價款: 21, 掛牌日: 22, CBAS拆解日: 23,
+            賣回日1: 24, 賣回日2: 25, 賣回價1: 26, 賣回價2: 27, 賣回殖利率1: 28,
+            賣回殖利率2: 29, 提前賣回條件: 30, 賣回條件: 31, 產業分類: 32, 產業地位: 33,
+            資金用途: 34, 發行價格: 35, 到期還本價: 36, 轉換開始日: 37, 最新轉換價: 38,
+            最後股票價格: 39, CB參考價格: 40, 新轉換價生效日: 41, CB最新餘額: 42,
+            最近賣回權開始: 43, 最近賣回權結束: 44, 最近賣回權價格: 45,
+            公司強制贖回開始: 46, 公司強制贖回結束: 47, 強制贖回價格: 48, 終止櫃檯買賣日: 49
+        };
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const tabs = ['manual', 'auto', 'list', 'expiry'];
+            const index = tabs.indexOf(tabName);
+            
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            
+            if (tabName === 'list' && cbData) {
+                showFullList();
+            }
+        }
+        
+        window.onload = function() {
+            loadExcelFile();
+        };
+        
+        async function loadExcelFile() {
+            const banner = document.getElementById('loadingBanner');
+            const loadBtn = document.getElementById('loadDataBtn');
+            
+            try {
+                const response = await fetch('cb_issue.xlsx');
+                if (!response.ok) throw new Error('無法載入檔案');
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, {type: 'array'});
+                
+                const sheet = workbook.Sheets['allcbissue'];
+                if (!sheet) throw new Error('找不到allcbissue工作表');
+                
+                cbData = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                const cbCount = cbData.length - 1;
+                
+                banner.className = 'loading-banner success';
+                banner.textContent = `✅ 資料載入成功 | 可轉債總數: ${cbCount} 檔`;
+                
+                loadBtn.textContent = '✅ 載入完成';
+                loadBtn.style.background = 'rgba(40, 167, 69, 0.3)';
+                
+            } catch (error) {
+                banner.className = 'loading-banner';
+                banner.style.background = '#f8d7da';
+                banner.style.borderColor = '#dc3545';
+                banner.style.color = '#721c24';
+                banner.textContent = `❌ 載入失敗: ${error.message}`;
+                
+                loadBtn.textContent = '❌ 載入失敗';
+                loadBtn.style.background = 'rgba(220, 53, 69, 0.3)';
+            }
+        }
+        
+        function searchManual() {
+            const code = document.getElementById('manualCode').value.trim();
+            if (!code) { alert('請輸入CB代號'); return; }
+            if (!cbData) { alert('資料尚未載入'); return; }
+            
+            document.getElementById('result1').innerHTML = '<div class="loading">查詢中...</div>';
+            
+            setTimeout(() => {
+                let found = null;
+                for (let i = 1; i < cbData.length; i++) {
+                    if (String(cbData[i][COL.CB代碼]).trim() === code) {
+                        found = cbData[i];
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    document.getElementById('result1').innerHTML = 
+                        '<div class="error-message"><h3>找不到CB代號: ' + code + '</h3></div>';
+                    return;
+                }
+                
+                displaySingleDetail(found, 'result1');
+            }, 300);
+        }
+        
+        function displaySingleDetail(row, targetId) {
+            const highest = parseFloat(row[COL.最高價]) || 0;
+            const lowest = parseFloat(row[COL.最低價]) || 0;
+            const swing = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(1) : '0.0';
+            
+            const html = `
+                <div class="summary-card">
+                    <h3>${row[COL.CB代碼]} ${row[COL.CB名稱]}</h3>
+                    <div class="detail-grid">
+                        <div class="detail-item highlight">
+                            <div class="label">規模</div>
+                            <div class="value">${row[COL.額度億] || '-'} 億</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">擔保</div>
+                            <div class="value">${row[COL.擔保] || '-'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">年期</div>
+                            <div class="value">${row[COL.年期] || '-'} 年</div>
+                        </div>
+                        <div class="detail-item highlight">
+                            <div class="label">轉換價</div>
+                            <div class="value">${row[COL.最新轉換價] || row[COL.發行轉換價格] || '-'} 元</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">詢圈/競拍</div>
+                            <div class="value">${row[COL.詢圈競拍] || '-'}</div>
+                        </div>
+                        <div class="detail-item ${highest > 130 ? 'highlight' : ''}">
+                            <div class="label">最高價</div>
+                            <div class="value">${row[COL.最高價] || '-'}</div>
+                        </div>
+                        <div class="detail-item ${lowest < 100 ? 'highlight' : ''}">
+                            <div class="label">最低價</div>
+                            <div class="value">${row[COL.最低價] || '-'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="label">振幅</div>
+                            <div class="value">${swing}%</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <h3>賣回資訊</h3>
+                    <div class="table-wrapper">
+                        <table style="font-size: 1em;">
+                            <thead>
+                                <tr>
+                                    <th>賣回次數</th>
+                                    <th>日期</th>
+                                    <th>價格</th>
+                                    <th>利率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>賣回1</strong></td>
+                                    <td>${row[COL.賣回日1] || '-'}</td>
+                                    <td><strong>${row[COL.賣回價1] || '-'}</strong></td>
+                                    <td>${row[COL.賣回殖利率1] || '-'}%</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>賣回2</strong></td>
+                                    <td>${row[COL.賣回日2] || '-'}</td>
+                                    <td><strong>${row[COL.賣回價2] || '-'}</strong></td>
+                                    <td>${row[COL.賣回殖利率2] || '-'}%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById(targetId).innerHTML = html;
+        }
+        
+        function searchAuto() {
+            const code = document.getElementById('autoCode').value.trim();
+            if (!code) { alert('請輸入股票代號'); return; }
+            if (!cbData) { alert('資料尚未載入'); return; }
+            
+            document.getElementById('result2').innerHTML = '<div class="loading">查詢中...</div>';
+            
+            setTimeout(() => {
+                const results = [];
+                for (let i = 1; i < cbData.length; i++) {
+                    if (String(cbData[i][COL.股票代碼]).trim() === code) {
+                        results.push(cbData[i]);
+                    }
+                }
+                
+                if (results.length === 0) {
+                    document.getElementById('result2').innerHTML = 
+                        '<div class="error-message"><h3>查無資料: 股票代號 ' + code + '</h3></div>';
+                    return;
+                }
+                
+                let html = `
+                    <div class="summary-card">
+                        <h3>股票代號 ${code} 的所有CB發行記錄 (共${results.length}檔)</h3>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>CB代號</th>
+                                    <th>CB名稱</th>
+                                    <th>規模</th>
+                                    <th>擔保</th>
+                                    <th>年期</th>
+                                    <th>轉換價</th>
+                                    <th>詢圈/競拍</th>
+                                    <th>最高價</th>
+                                    <th>最低價</th>
+                                    <th>振幅</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                results.forEach(row => {
+                    const highest = parseFloat(row[COL.最高價]) || 0;
+                    const lowest = parseFloat(row[COL.最低價]) || 0;
+                    const swing = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(1) : '-';
+                    
+                    html += `
+                        <tr>
+                            <td><strong>${row[COL.CB代碼]}</strong></td>
+                            <td>${row[COL.CB名稱]}</td>
+                            <td>${row[COL.額度億]}億</td>
+                            <td><span class="badge ${row[COL.擔保] === '有擔保' ? 'badge-green' : 'badge-orange'}">${row[COL.擔保] || '-'}</span></td>
+                            <td>${row[COL.年期]}年</td>
+                            <td><strong>${row[COL.最新轉換價] || row[COL.發行轉換價格]}元</strong></td>
+                            <td><span class="badge ${row[COL.詢圈競拍] === '競拍' ? 'badge-blue' : 'badge-green'}">${row[COL.詢圈競拍] || '-'}</span></td>
+                            <td class="price-high">${row[COL.最高價] || '-'}</td>
+                            <td class="price-low">${row[COL.最低價] || '-'}</td>
+                            <td><strong>${swing}${swing !== '-' ? '%' : ''}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+                document.getElementById('result2').innerHTML = html;
+            }, 300);
+        }
+        
+        function showFullList() {
+            if (!cbData) return;
+            
+            let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CB代號</th>
+                                <th>CB名稱</th>
+                                <th>規模</th>
+                                <th>擔保</th>
+                                <th>年期</th>
+                                <th>轉換價</th>
+                                <th>掛牌日</th>
+                                <th>到期日</th>
+                                <th>最高價</th>
+                                <th>最低價</th>
+                                <th>振幅</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            for (let i = 1; i < cbData.length; i++) {
+                const row = cbData[i];
+                const highest = parseFloat(row[COL.最高價]) || 0;
+                const lowest = parseFloat(row[COL.最低價]) || 0;
+                const swing = highest && lowest ? ((highest - lowest) / lowest * 100).toFixed(1) : '-';
+                
+                html += `
+                    <tr>
+                        <td><strong>${row[COL.CB代碼]}</strong></td>
+                        <td>${row[COL.CB名稱]}</td>
+                        <td>${row[COL.額度億]}億</td>
+                        <td><span class="badge ${row[COL.擔保] === '有擔保' ? 'badge-green' : 'badge-orange'}">${row[COL.擔保] || '-'}</span></td>
+                        <td>${row[COL.年期]}年</td>
+                        <td>${row[COL.最新轉換價] || row[COL.發行轉換價格]}元</td>
+                        <td>${row[COL.掛牌日期] || '-'}</td>
+                        <td>${row[COL.到期日] || '-'}</td>
+                        <td class="price-high">${row[COL.最高價] || '-'}</td>
+                        <td class="price-low">${row[COL.最低價] || '-'}</td>
+                        <td><strong>${swing}${swing !== '-' ? '%' : ''}</strong></td>
+                    </tr>
+                `;
+            }
+            
+            html += '</tbody></table></div>';
+            document.getElementById('result3').innerHTML = html;
+        }
+        
+        function searchExpiry() {
+            if (!cbData) { alert('資料尚未載入'); return; }
+            
+            const filterDays = document.getElementById('expiryFilter').value;
+            const today = new Date();
+            const results = [];
+            
+            for (let i = 1; i < cbData.length; i++) {
+                const row = cbData[i];
+                const expiryStr = row[COL.到期日];
+                if (!expiryStr) continue;
+                
+                const expiry = new Date(expiryStr);
+                const diff = Math.floor((expiry - today) / (1000 * 60 * 60 * 24));
+                
+                if (filterDays === 'all' || diff <= parseInt(filterDays)) {
+                    results.push({ row: row, days: diff });
+                }
+            }
+            
+            results.sort((a, b) => a.days - b.days);
+            
+            let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CB代號</th>
+                                <th>CB名稱</th>
+                                <th>到期日</th>
+                                <th>剩餘天數</th>
+                                <th>年期</th>
+                                <th>掛牌日</th>
+                                <th>轉換價</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            results.forEach(r => {
+                const badgeClass = r.days < 30 ? 'badge-red' : 
+                                   r.days < 90 ? 'badge-orange' : 
+                                   r.days < 180 ? 'badge-blue' : 'badge-green';
+                html += `
+                    <tr>
+                        <td><strong>${r.row[COL.CB代碼]}</strong></td>
+                        <td>${r.row[COL.CB名稱]}</td>
+                        <td>${r.row[COL.到期日]}</td>
+                        <td><span class="badge ${badgeClass}">${r.days} 天</span></td>
+                        <td>${r.row[COL.年期]}年</td>
+                        <td>${r.row[COL.掛牌日期]}</td>
+                        <td>${r.row[COL.最新轉換價] || r.row[COL.發行轉換價格]}元</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            document.getElementById('result4').innerHTML = html || '<div class="error-message">查無符合條件的資料</div>';
+        }
+        
+        document.getElementById('manualCode').addEventListener('keypress', e => {
+            if (e.key === 'Enter') searchManual();
+        });
+        document.getElementById('autoCode').addEventListener('keypress', e => {
+            if (e.key === 'Enter') searchAuto();
+        });
+    </script>
+</body>
+</html>
