@@ -12,11 +12,18 @@
             background: #f5f5f5;
         }
 
+        /* 頂部標題區 */
         .header-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px 20px 20px 20px;
             text-align: center;
+            position: relative;
+        }
+        
+        .header-section .icon-title {
+            font-size: 2em;
+            margin-bottom: 10px;
         }
         
         .header-section h1 {
@@ -24,6 +31,53 @@
             margin-bottom: 15px;
         }
         
+        .header-section .subtitle {
+            font-size: 1em;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+        
+        .date-display {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            display: inline-block;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.05em;
+            margin-bottom: 20px;
+        }
+        
+        .external-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .external-btn {
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.95em;
+            transition: all 0.3s;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .external-btn:hover {
+            background: rgba(255,255,255,0.35);
+            transform: translateY(-2px);
+        }
+        
+        .author-tag {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        /* 資料統計橫幅 */
         .stats-banner {
             background: linear-gradient(90deg, #ffe5b4 0%, #ffd89b 100%);
             padding: 20px;
@@ -38,10 +92,114 @@
             margin-bottom: 12px;
         }
         
+        .stats-detail {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+        }
+        
+        .stats-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .stats-badge {
+            background: rgba(139, 69, 19, 0.15);
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        
+        .stats-badge.complete {
+            background: rgba(46, 125, 50, 0.2);
+            color: #2e7d32;
+        }
+        
+        .stats-badge.good {
+            background: rgba(56, 142, 60, 0.2);
+            color: #388e3c;
+        }
+        
+        .stats-badge.partial {
+            background: rgba(245, 124, 0, 0.2);
+            color: #f57c00;
+        }
+        
+        /* 功能選單 */
+        .function-menu-container {
+            background: #f8f9fa;
+            padding: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .function-menu {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 12px;
+            padding: 15px 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .function-item {
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 15px 10px;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .function-item:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+        }
+        
+        .function-item.active {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .function-item .icon {
+            font-size: 2.8em;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .function-item .label {
+            font-size: 0.9em;
+            color: #333;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        /* 內容區域 */
         .content-section {
             background: #f5f5f5;
             min-height: calc(100vh - 400px);
+            padding: 0;
+        }
+        
+        .section-block {
+            display: none;
             padding: 40px 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .section-block.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .section-title {
@@ -52,6 +210,123 @@
             font-weight: bold;
         }
         
+        .section-title .icon {
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        
+        /* 搜尋框 */
+        .search-box {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 1400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .search-title {
+            font-size: 1.2em;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .search-input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Microsoft JhengHei', Arial;
+        }
+        
+        .search-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .search-btn {
+            padding: 12px 30px;
+            font-size: 1.1em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .search-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        /* 批次標籤樣式 */
+        .batch-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95em;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .batch-tag:hover {
+            opacity: 0.9;
+        }
+        
+        .remove-tag {
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.8;
+            padding: 0 5px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .remove-tag:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.2);
+        }
+        
+        /* 功能說明卡片 */
+        .info-card {
+            background: white;
+            border-left: 5px solid #667eea;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 1400px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .info-card .title {
+            color: #1565c0;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .info-card .text {
+            color: #0d47a1;
+            line-height: 1.6;
+            margin: 5px 0;
+        }
+        
+        /* 表格樣式 */
         .table-wrapper {
             overflow-x: auto;
             border-radius: 10px;
@@ -78,17 +353,24 @@
             font-weight: bold;
             font-size: 0.95em;
             border-right: 1px solid rgba(255,255,255,0.2);
+            line-height: 1.3;
+            vertical-align: middle;
         }
+        
+        th:last-child { border-right: none; }
         
         td {
             padding: 10px 8px;
             text-align: center;
             border-bottom: 1px solid #eee;
             font-size: 0.9em;
+            line-height: 1.4;
+            vertical-align: middle;
         }
         
         tbody tr:hover {
             background: #f8f9fa;
+            cursor: pointer;
         }
         
         .highlight-top {
@@ -96,16 +378,21 @@
             font-weight: bold;
         }
         
-        .info-card {
-            background: white;
-            border-left: 5px solid #667eea;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 20px auto;
-            max-width: 1400px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        .rank-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-right: 8px;
         }
         
+        .rank-1 { background: #ffd700; color: #8b4513; }
+        .rank-2 { background: #c0c0c0; color: #333; }
+        .rank-3 { background: #cd7f32; color: white; }
+        .rank-other { background: #e0e0e0; color: #666; }
+        
+        /* 統計區塊樣式 */
         .stat-section {
             background: white;
             border-radius: 12px;
@@ -148,276 +435,571 @@
             color: #333;
         }
         
-        .rank-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-right: 8px;
+        /* 頁尾 */
+        .footer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
         }
         
-        .rank-1 { background: #ffd700; color: #8b4513; }
-        .rank-2 { background: #c0c0c0; color: #333; }
-        .rank-3 { background: #cd7f32; color: white; }
-        .rank-other { background: #e0e0e0; color: #666; }
+        /* 平板和手機版 */
+        @media (max-width: 1200px) {
+            .function-menu {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+            }
+        }
         
         @media (max-width: 768px) {
-            .header-section h1 { font-size: 1.5em; }
-            .table-wrapper { font-size: 0.85em; }
+            .header-section {
+                padding: 20px 15px 15px 15px;
+            }
+            .header-section h1 {
+                font-size: 1.5em;
+            }
+            .stats-banner {
+                font-size: 0.9em;
+                padding: 15px;
+            }
+            .stats-detail {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .function-menu {
+                gap: 10px;
+                padding: 12px 15px;
+            }
+            .function-item {
+                padding: 12px 8px;
+            }
+            .function-item .icon {
+                font-size: 2.2em;
+                margin-bottom: 5px;
+            }
+            .function-item .label {
+                font-size: 0.85em;
+            }
+            .section-title {
+                font-size: 1.5em;
+            }
+            .table-wrapper {
+                font-size: 0.85em;
+            }
         }
     </style>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
+    <!-- 載入提示 -->
     <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(102, 126, 234, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white;">
         <div style="font-size: 3em; margin-bottom: 20px;">📊</div>
-        <div style="font-size: 1.5em; margin-bottom: 10px;">正在載入資料...</div>
+        <div id="loadingText" style="font-size: 1.5em; margin-bottom: 10px;">正在載入資料...</div>
+        <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: white; animation: loading 1.5s ease-in-out infinite;"></div>
+        </div>
     </div>
+    <style>
+        @keyframes loading {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
 
+    <!-- 頂部標題區 -->
     <div class="header-section">
+        <div class="icon-title">🎯</div>
         <h1>CB可轉債發行資料查詢系統</h1>
-        <div style="font-size: 1em; opacity: 0.95; margin-top: 10px;">by Rex大叔的168小股投資教室</div>
-    </div>
-
-    <div class="stats-banner">
-        <div class="stats-main" id="statsBanner">📊 資料載入中...</div>
-    </div>
-
-    <div class="content-section">
-        <div class="section-title">📊 市場統計分析</div>
+        <div class="subtitle">發行條件 | 轉換價格 | 掛牌表現 | 贖回賣回條件</div>
         
-        <div class="info-card">
-            <div style="font-weight: bold; color: #1565c0; margin-bottom: 10px;">💡 統計說明</div>
-            <div style="color: #0d47a1; line-height: 1.6;">本系統提供多維度的CB市場統計分析,包含發行規模、股本大小、轉換價格等區間統計,以及券商和產業的表現排名。所有數據依掛牌最高價由好到差排序。</div>
+        <div class="date-display">
+            📅 <span id="currentDate"></span>
         </div>
-
-        <!-- 整體概況 -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 1400px;">
-            <h3 style="margin-bottom: 20px; font-size: 1.4em;">🌐 市場整體概況</h3>
-            <div class="stats-grid">
-                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.9em; opacity: 0.9;">CB總數</div>
-                    <div id="totalCount" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.9em; opacity: 0.9;">總發行規模</div>
-                    <div id="totalSize" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.9em; opacity: 0.9;">平均最高價</div>
-                    <div id="avgHighAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                </div>
-                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                    <div style="font-size: 0.9em; opacity: 0.9;">平均振幅</div>
-                    <div id="avgSwingAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                </div>
-            </div>
+        
+        <div class="external-links">
+            <a href="https://vocus.cc/user/@rexdashu168" target="_blank" class="external-btn">📝 方格子部落格</a>
+            <a href="https://www.youtube.com/@RexCB168" target="_blank" class="external-btn">🎬 YouTube頻道</a>
         </div>
-
-        <!-- 基本分類統計 -->
-        <div class="stat-section">
-            <h3>📋 基本分類統計比較</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>分類條件</th>
-                            <th>CB數量</th>
-                            <th>總規模(億)</th>
-                            <th>平均規模(億)</th>
-                            <th>平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="basicStatsTable"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 發行規模區間統計 -->
-        <div class="stat-section">
-            <h3>💼 發行規模區間統計 (依平均最高價排序)</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>規模區間</th>
-                            <th>CB數量</th>
-                            <th>平均規模(億)</th>
-                            <th style="background: #ff6b6b;">平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="sizeRangeTable"></tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 觀察重點:</strong> 此表依平均最高價由高到低排序,可觀察不同規模CB的掛牌表現差異
-            </div>
-        </div>
-
-        <!-- 股本大小區間統計 -->
-        <div class="stat-section">
-            <h3>🏦 股本大小區間統計 (依平均最高價排序)</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>股本區間</th>
-                            <th>CB數量</th>
-                            <th>平均規模(億)</th>
-                            <th style="background: #ff6b6b;">平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="capitalRangeTable"></tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 觀察重點:</strong> 可觀察公司股本規模與CB掛牌表現的關係
-            </div>
-        </div>
-
-        <!-- 轉換價格區間統計 -->
-        <div class="stat-section">
-            <h3>💰 轉換價格區間統計 (依平均最高價排序)</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>轉換價格區間</th>
-                            <th>CB數量</th>
-                            <th>平均規模(億)</th>
-                            <th style="background: #ff6b6b;">平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="convPriceRangeTable"></tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 觀察重點:</strong> 轉換價格高低與掛牌表現的關聯性分析
-            </div>
-        </div>
-
-        <!-- 券商TOP10 -->
-        <div class="stat-section">
-            <h3>🏆 承銷券商表現排行 TOP 10</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>券商名稱</th>
-                            <th>發行數量</th>
-                            <th>總規模(億)</th>
-                            <th>平均規模(億)</th>
-                            <th style="background: #ff6b6b;">平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="underwriterTop10Table"></tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 觀察重點:</strong> 此排名僅呈現數據統計,不代表未來表現。各券商承作的CB產業類別、公司規模等條件不同,需綜合評估
-            </div>
-        </div>
-
-        <!-- 產業TOP10 -->
-        <div class="stat-section">
-            <h3>🏭 產業表現排行 TOP 10</h3>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>產業分類</th>
-                            <th>發行數量</th>
-                            <th>總規模(億)</th>
-                            <th>平均規模(億)</th>
-                            <th style="background: #ff6b6b;">平均最高價</th>
-                            <th>平均最低價</th>
-                            <th>平均振幅(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="industryTop10Table"></tbody>
-                </table>
-            </div>
-            <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 觀察重點:</strong> 產業景氣循環、市場環境等因素會影響CB表現,歷史數據僅供參考
-            </div>
-        </div>
-
-        <!-- 擔保類型交叉分析 -->
-        <div class="stat-section">
-            <h3>🔀 擔保/無擔保交叉分析</h3>
-            
-            <!-- 產業前十名的擔保交叉 -->
-            <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
-                🏭 產業TOP10 - 擔保/無擔保對比
-            </h4>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>產業</th>
-                            <th>全部數據</th>
-                            <th>有擔保</th>
-                            <th>無擔保</th>
-                        </tr>
-                    </thead>
-                    <tbody id="industryGuaranteeTable"></tbody>
-                </table>
-            </div>
-            
-            <!-- 券商前十名的擔保交叉 -->
-            <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
-                🏦 券商TOP10 - 擔保/無擔保對比
-            </h4>
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>券商</th>
-                            <th>全部數據</th>
-                            <th>有擔保</th>
-                            <th>無擔保</th>
-                        </tr>
-                    </thead>
-                    <tbody id="underwriterGuaranteeTable"></tbody>
-                </table>
-            </div>
-            
-            <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em;">
-                <strong>💡 分析說明:</strong> 可觀察同一產業或券商在有擔保與無擔保CB的表現差異,了解擔保條件對掛牌表現的影響
-            </div>
-        </div>
-
+        
+        <div class="author-tag">by Rex大叔的168小股投資教室</div>
     </div>
 
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 20px; margin-top: 40px;">
+    <!-- 資料統計橫幅 -->
+    <div class="stats-banner" id="statsBanner">
+        <div class="stats-main">📊 資料載入中...</div>
+        <div class="stats-detail" id="statsDetail" style="display: none;">
+            <div class="stats-detail-item">
+                <span>掛牌表現數據:</span>
+                <span class="stats-badge complete">100% 完整 ✅</span>
+            </div>
+            <div class="stats-detail-item">
+                <span>發行基本條件:</span>
+                <span class="stats-badge good">95%+ 完整 ✅</span>
+            </div>
+            <div class="stats-detail-item">
+                <span>詳細賣回條件:</span>
+                <span class="stats-badge partial">約60% 完整 ⚠️</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 功能選單 -->
+    <div class="function-menu-container">
+        <div class="function-menu">
+            <div class="function-item active" onclick="switchSection('section1', 0)">
+                <div class="icon">🔍</div>
+                <div class="label">單檔查詢</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section2', 1)">
+                <div class="icon">📊</div>
+                <div class="label">批次查詢</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section3', 2)">
+                <div class="icon">⚙️</div>
+                <div class="label">條件篩選</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section4', 3)">
+                <div class="icon">📈</div>
+                <div class="label">掛牌表現</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section5', 4)">
+                <div class="icon">💰</div>
+                <div class="label">賣回查詢</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section6', 5)">
+                <div class="icon">🏢</div>
+                <div class="label">同公司比較</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section7', 6)">
+                <div class="icon">📅</div>
+                <div class="label">時間軸查詢</div>
+            </div>
+            <div class="function-item" onclick="switchSection('section8', 7)">
+                <div class="icon">📊</div>
+                <div class="label">市場統計</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 統一查詢框 -->
+    <div style="max-width: 1400px; margin: -10px auto 20px; padding: 0 20px;">
+        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="searchInput1" placeholder="🔍 請輸入CB代號或股票代號 (例如: 30193 或 3019)" 
+                    style="flex: 1; padding: 15px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 8px;"
+                    onkeypress="if(event.key==='Enter') searchCB()">
+                <button onclick="searchCB()" 
+                    style="padding: 15px 40px; font-size: 1.1em; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap;">
+                    查詢
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 內容區域 -->
+    <div class="content-section">
+        <!-- 1. 單檔查詢 -->
+        <div id="section1" class="section-block active">
+            <div id="result1" style="margin: 20px auto; max-width: 1400px;">
+                <div style="text-align:center; padding: 100px 20px; color:#999;">
+                    <div style="font-size: 3em; margin-bottom: 20px;">🔍</div>
+                    <div style="font-size: 1.2em;">請在上方輸入CB代號或股票代號進行查詢</div>
+                    <div style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">例如: 30193 或 3019</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. 批次查詢 -->
+        <div id="section2" class="section-block">
+            <div class="section-title"><span class="icon">📊</span>批次查詢</div>
+            <div class="info-card">
+                <div class="title">💡 功能說明</div>
+                <div class="text">查詢方式:輸入一檔CB代號按Enter,繼續輸入下一檔</div>
+            </div>
+            <div class="search-box">
+                <div class="search-title">📊 批次輸入CB代號</div>
+                <div class="search-input-group">
+                    <input type="text" id="batchInput" placeholder="輸入CB代號,按Enter繼續輸入下一檔" onkeypress="handleBatchEnter(event)">
+                    <button class="search-btn" onclick="batchSearch()">查詢</button>
+                    <button class="search-btn" onclick="clearBatchList()" style="background: #95a5a6;">清除</button>
+                </div>
+                <div id="batchList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; min-height: 40px;"></div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>CB代號</th>
+                            <th>CB名稱</th>
+                            <th>發行規模</th>
+                            <th>有無擔保</th>
+                            <th>股本大小</th>
+                            <th>發行年期</th>
+                            <th>發行券商</th>
+                            <th>產業分類</th>
+                            <th>承銷方式</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batchTable">
+                        <tr><td colspan="9">請輸入CB代號進行查詢</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3-7區塊保持空白,可後續擴充 -->
+        <div id="section3" class="section-block">
+            <div class="section-title"><span class="icon">⚙️</span>條件篩選</div>
+            <div style="text-align:center; padding:100px 20px; color:#999;">功能開發中...</div>
+        </div>
+        
+        <div id="section4" class="section-block">
+            <div class="section-title"><span class="icon">📈</span>掛牌表現</div>
+            <div style="text-align:center; padding:100px 20px; color:#999;">功能開發中...</div>
+        </div>
+        
+        <div id="section5" class="section-block">
+            <div class="section-title"><span class="icon">💰</span>賣回查詢</div>
+            <div style="text-align:center; padding:100px 20px; color:#999;">功能開發中...</div>
+        </div>
+        
+        <div id="section6" class="section-block">
+            <div class="section-title"><span class="icon">🏢</span>同公司比較</div>
+            <div style="text-align:center; padding:100px 20px; color:#999;">功能開發中...</div>
+        </div>
+        
+        <div id="section7" class="section-block">
+            <div class="section-title"><span class="icon">📅</span>時間軸查詢</div>
+            <div style="text-align:center; padding:100px 20px; color:#999;">功能開發中...</div>
+        </div>
+        
+        <!-- 8. 市場統計 - 完整整合 -->
+        <div id="section8" class="section-block">
+            <div class="section-title"><span class="icon">📊</span>市場統計分析</div>
+            
+            <div class="info-card">
+                <div class="title">💡 統計說明</div>
+                <div class="text">本系統提供多維度的CB市場統計分析,包含發行規模、股本大小、轉換價格等區間統計,以及券商和產業的表現排名。所有數據依掛牌最高價由好到差排序。</div>
+            </div>
+
+            <!-- 整體概況 -->
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 1400px;">
+                <h3 style="margin-bottom: 20px; font-size: 1.4em;">🌐 市場整體概況</h3>
+                <div class="stats-grid">
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; opacity: 0.9;">CB總數</div>
+                        <div id="totalCount" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; opacity: 0.9;">總發行規模</div>
+                        <div id="totalSize" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; opacity: 0.9;">平均最高價</div>
+                        <div id="avgHighAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 0.9em; opacity: 0.9;">平均振幅</div>
+                        <div id="avgSwingAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 基本分類統計 -->
+            <div class="stat-section">
+                <h3>📋 基本分類統計比較</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>分類條件</th>
+                                <th>CB數量</th>
+                                <th>總規模(億)</th>
+                                <th>平均規模(億)</th>
+                                <th>平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="basicStatsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 發行規模區間統計 -->
+            <div class="stat-section">
+                <h3>💼 發行規模區間統計 (依平均最高價排序)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>規模區間</th>
+                                <th>CB數量</th>
+                                <th>平均規模(億)</th>
+                                <th style="background: #ff6b6b;">平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sizeRangeTable"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 觀察重點:</strong> 此表依平均最高價由高到低排序,可觀察不同規模CB的掛牌表現差異
+                </div>
+            </div>
+
+            <!-- 股本大小區間統計 -->
+            <div class="stat-section">
+                <h3>🏦 股本大小區間統計 (依平均最高價排序)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>股本區間</th>
+                                <th>CB數量</th>
+                                <th>平均規模(億)</th>
+                                <th style="background: #ff6b6b;">平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capitalRangeTable"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 觀察重點:</strong> 可觀察公司股本規模與CB掛牌表現的關係
+                </div>
+            </div>
+
+            <!-- 轉換價格區間統計 -->
+            <div class="stat-section">
+                <h3>💰 轉換價格區間統計 (依平均最高價排序)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>轉換價格區間</th>
+                                <th>CB數量</th>
+                                <th>平均規模(億)</th>
+                                <th style="background: #ff6b6b;">平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="convPriceRangeTable"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 觀察重點:</strong> 轉換價格高低與掛牌表現的關聯性分析
+                </div>
+            </div>
+
+            <!-- 券商TOP10 -->
+            <div class="stat-section">
+                <h3>🏆 承銷券商表現排行 TOP 10</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>券商名稱</th>
+                                <th>發行數量</th>
+                                <th>總規模(億)</th>
+                                <th>平均規模(億)</th>
+                                <th style="background: #ff6b6b;">平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="underwriterTop10Table"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 觀察重點:</strong> 此排名僅呈現數據統計,不代表未來表現。各券商承作的CB產業類別、公司規模等條件不同,需綜合評估
+                </div>
+            </div>
+
+            <!-- 產業TOP10 -->
+            <div class="stat-section">
+                <h3>🏭 產業表現排行 TOP 10</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>產業分類</th>
+                                <th>發行數量</th>
+                                <th>總規模(億)</th>
+                                <th>平均規模(億)</th>
+                                <th style="background: #ff6b6b;">平均最高價</th>
+                                <th>平均最低價</th>
+                                <th>平均振幅(%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="industryTop10Table"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 觀察重點:</strong> 產業景氣循環、市場環境等因素會影響CB表現,歷史數據僅供參考
+                </div>
+            </div>
+
+            <!-- 擔保類型交叉分析 -->
+            <div class="stat-section">
+                <h3>🔀 擔保/無擔保交叉分析</h3>
+                
+                <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
+                    🏭 產業TOP10 - 擔保/無擔保對比
+                </h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>產業</th>
+                                <th>全部數據</th>
+                                <th>有擔保</th>
+                                <th>無擔保</th>
+                            </tr>
+                        </thead>
+                        <tbody id="industryGuaranteeTable"></tbody>
+                    </table>
+                </div>
+                
+                <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
+                    🏦 券商TOP10 - 擔保/無擔保對比
+                </h4>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>券商</th>
+                                <th>全部數據</th>
+                                <th>有擔保</th>
+                                <th>無擔保</th>
+                            </tr>
+                        </thead>
+                        <tbody id="underwriterGuaranteeTable"></tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em;">
+                    <strong>💡 分析說明:</strong> 可觀察同一產業或券商在有擔保與無擔保CB的表現差異,了解擔保條件對掛牌表現的影響
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 頁尾 -->
+    <div class="footer">
         <p>© 2025 Rex大叔的168小股投資教室 | CB可轉債發行資料查詢系統</p>
         <p style="margin-top: 8px; opacity: 0.9;">資料僅供參考 | 投資有風險,入市需謹慎</p>
     </div>
 
     <script>
         let mockData = [];
+        let isDataLoaded = false;
+        let batchCodes = [];
         
         function formatNumber(num) {
             if (num === '-' || num === '' || num === null || num === undefined) return '-';
             const n = parseFloat(num);
             if (isNaN(n)) return '-';
             return n.toFixed(1);
+        }
+        
+        function updateDate() {
+            const now = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-TW', options);
+        }
+        updateDate();
+        
+        function switchSection(sectionId, index) {
+            document.querySelectorAll('.section-block').forEach(block => block.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            
+            document.querySelectorAll('.function-item').forEach((item, i) => {
+                if (i === index) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+            
+            if (sectionId === 'section8') initAllStats();
+        }
+        
+        function searchCB() {
+            const input = document.getElementById('searchInput1').value.trim();
+            if (!input) { alert('請輸入代號'); return; }
+            
+            const result = input.length === 5 ? 
+                mockData.find(d => d.cbCode === input) :
+                mockData.find(d => d.stockCode === input);
+            
+            if (!result) { 
+                document.getElementById('result1').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">查無資料</div>';
+                return; 
+            }
+            
+            const swing = ((result.high - result.low) / result.low * 100).toFixed(1);
+            
+            document.getElementById('result1').innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 30px; border-radius: 12px; margin-bottom: 20px;">
+                    <h1 style="font-size: 2.2em; margin-bottom: 8px;">${result.cbCode} ${result.cbName}</h1>
+                    <p style="font-size: 1.1em; opacity: 0.95;">${result.stockCode} | ${result.industry}</p>
+                </div>
+            `;
+        }
+        
+        function handleBatchEnter(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('batchInput');
+                const code = input.value.trim();
+                if (!code) return;
+                if (batchCodes.includes(code)) {
+                    alert('此代號已加入:' + code);
+                    return;
+                }
+                batchCodes.push(code);
+                updateBatchTags();
+                input.value = '';
+                input.focus();
+            }
+        }
+        
+        function updateBatchTags() {
+            document.getElementById('batchList').innerHTML = batchCodes.map((code, index) => `
+                <div class="batch-tag">
+                    ${code}
+                    <span class="remove-tag" onclick="removeBatchCode(${index})">✕</span>
+                </div>
+            `).join('');
+        }
+        
+        function removeBatchCode(index) {
+            batchCodes.splice(index, 1);
+            updateBatchTags();
+        }
+        
+        function clearBatchList() {
+            batchCodes = [];
+            updateBatchTags();
+        }
+        
+        function batchSearch() {
+            if (batchCodes.length === 0) { alert('請先輸入CB代號'); return; }
+            const tbody = document.getElementById('batchTable');
+            tbody.innerHTML = '';
+            batchCodes.forEach(code => {
+                const found = mockData.find(d => d.cbCode === code);
+                if (found) {
+                    tbody.innerHTML += `<tr><td><strong>${found.cbCode}</strong></td><td>${found.cbName}</td><td>${formatNumber(found.size)}億</td></tr>`;
+                }
+            });
+            if (tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="9">查無資料</td></tr>';
         }
         
         function calculateStats(data) {
@@ -445,14 +1027,12 @@
             const tbody = document.getElementById('basicStatsTable');
             tbody.innerHTML = '';
             
-            // 全部CB
             const all = calculateStats(mockData);
             tbody.innerHTML += `<tr style="background: #f8f9fa; font-weight: bold;">
                 <td>📊 全部CB</td><td>${all.count}</td><td>${all.totalSize.toFixed(1)}</td>
                 <td>${all.avgSize.toFixed(1)}</td><td>${all.avgHigh.toFixed(1)}</td>
                 <td>${all.avgLow.toFixed(1)}</td><td>${all.avgSwing.toFixed(1)}</td></tr>`;
             
-            // 規模分類
             const large = calculateStats(mockData.filter(d => d.size >= 10));
             const small = calculateStats(mockData.filter(d => d.size < 10));
             tbody.innerHTML += `<tr><td>💼 規模≥10億</td><td>${large.count}</td><td>${large.totalSize.toFixed(1)}</td>
@@ -462,7 +1042,6 @@
                 <td>${small.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${small.avgHigh.toFixed(1)}</td>
                 <td>${small.avgLow.toFixed(1)}</td><td>${small.avgSwing.toFixed(1)}</td></tr>`;
             
-            // 承銷方式
             const inquiry = calculateStats(mockData.filter(d => d.method === '詢圈'));
             const auction = calculateStats(mockData.filter(d => d.method === '競拍'));
             if (inquiry) {
@@ -474,34 +1053,6 @@
                 tbody.innerHTML += `<tr><td>🎯 競拍</td><td>${auction.count}</td><td>${auction.totalSize.toFixed(1)}</td>
                     <td>${auction.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${auction.avgHigh.toFixed(1)}</td>
                     <td>${auction.avgLow.toFixed(1)}</td><td>${auction.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            
-            // 轉換價格分類
-            const highPrice = calculateStats(mockData.filter(d => d.convPrice >= 100));
-            const lowPrice = calculateStats(mockData.filter(d => d.convPrice < 100 && d.convPrice > 0));
-            if (highPrice) {
-                tbody.innerHTML += `<tr><td>💰 轉換價≥100元</td><td>${highPrice.count}</td><td>${highPrice.totalSize.toFixed(1)}</td>
-                    <td>${highPrice.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${highPrice.avgHigh.toFixed(1)}</td>
-                    <td>${highPrice.avgLow.toFixed(1)}</td><td>${highPrice.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            if (lowPrice) {
-                tbody.innerHTML += `<tr><td>💰 轉換價<100元</td><td>${lowPrice.count}</td><td>${lowPrice.totalSize.toFixed(1)}</td>
-                    <td>${lowPrice.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${lowPrice.avgHigh.toFixed(1)}</td>
-                    <td>${lowPrice.avgLow.toFixed(1)}</td><td>${lowPrice.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            
-            // 股本分類
-            const largeCapital = calculateStats(mockData.filter(d => parseFloat(d.capital) >= 10));
-            const smallCapital = calculateStats(mockData.filter(d => parseFloat(d.capital) < 10 && parseFloat(d.capital) > 0));
-            if (largeCapital) {
-                tbody.innerHTML += `<tr><td>🏦 股本≥10億</td><td>${largeCapital.count}</td><td>${largeCapital.totalSize.toFixed(1)}</td>
-                    <td>${largeCapital.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${largeCapital.avgHigh.toFixed(1)}</td>
-                    <td>${largeCapital.avgLow.toFixed(1)}</td><td>${largeCapital.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            if (smallCapital) {
-                tbody.innerHTML += `<tr><td>🏦 股本<10億</td><td>${smallCapital.count}</td><td>${smallCapital.totalSize.toFixed(1)}</td>
-                    <td>${smallCapital.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${smallCapital.avgHigh.toFixed(1)}</td>
-                    <td>${smallCapital.avgLow.toFixed(1)}</td><td>${smallCapital.avgSwing.toFixed(1)}</td></tr>`;
             }
         }
         
@@ -521,7 +1072,6 @@
                 return { label: range.label, ...stats };
             }).filter(s => s && s.count > 0);
             
-            // 依平均最高價排序,取前6項
             rangeStats.sort((a, b) => b.avgHigh - a.avgHigh);
             const top6 = rangeStats.slice(0, 6);
             
@@ -666,7 +1216,6 @@
         }
         
         function generateCrossAnalysis() {
-            // 產業TOP10的擔保交叉分析
             const industries = [...new Set(mockData.map(d => d.industry))];
             const indStats = industries.map(ind => {
                 const all = mockData.filter(d => d.industry === ind);
@@ -695,7 +1244,6 @@
                 </tr>`;
             }).join('');
             
-            // 券商TOP10的擔保交叉分析
             const underwriters = [...new Set(mockData.map(d => d.underwriter))];
             const uwStats = underwriters.map(uw => {
                 const all = mockData.filter(d => d.underwriter === uw);
@@ -768,8 +1316,15 @@
                     year: parseFloat(row["發行年期"] || 0),
                     convPrice: parseFloat(row["轉換價格"] || 0),
                     listDate: row["掛牌日期"] || "",
+                    maturity: row["到期日期"] || "",
                     high: parseFloat(row["掛牌最高"] || 0),
                     low: parseFloat(row["掛牌最低"] || 0),
+                    putDate1: row["賣回日期1"] || "-",
+                    putPrice1: parseFloat(row["賣回價格1"] || 0),
+                    rate1: parseFloat(row["殖利率1"] || 0),
+                    putDate2: row["賣回日期2"] || "-",
+                    putPrice2: parseFloat(row["賣回價格2"] || 0),
+                    rate2: parseFloat(row["殖利率2"] || 0),
                     underwriter: row["承銷券商"] || "",
                     industry: row["產業分類"] || "",
                     method: row["承銷方式"] || "",
@@ -778,10 +1333,11 @@
                 
                 const dates = mockData.map(d => d.listDate).filter(d => d).sort();
                 document.getElementById('statsBanner').innerHTML = 
-                    `📊 資料期間: ${dates[0]} ~ ${dates[dates.length-1]},共計 <strong>${mockData.length}</strong> 檔`;
+                    `<div class="stats-main">📊 資料期間: ${dates[0]} ~ ${dates[dates.length-1]},共計 <strong>${mockData.length}</strong> 檔</div>`;
+                document.getElementById('statsDetail').style.display = 'flex';
                 
                 document.getElementById('loadingScreen').style.display = 'none';
-                initAllStats();
+                isDataLoaded = true;
                 
             } catch (error) {
                 document.getElementById('loadingScreen').innerHTML = '<div style="font-size: 1.5em;">載入失敗,請重新整理頁面</div>';
