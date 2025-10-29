@@ -1,3 +1,6 @@
+Cb query system integrated · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1296,17 +1299,44 @@
             generateCrossAnalysis();
         }
         
-        async function loadExcelData() {
+        async function loadExcelData(retryCount = 0) {
+            const maxRetries = 3;
+            const loadingText = document.getElementById('loadingText');
+            
             try {
-                const url = "https://rexdashu168.github.io/cbhistory168/cb_issue.xlsx";
-                const response = await fetch(url + '?t=' + Date.now(), { cache: 'no-cache' });
-                if (!response.ok) throw new Error('載入失敗');
+                loadingText.textContent = retryCount > 0 ? `重試中 (${retryCount}/${maxRetries})...` : '正在載入資料...';
                 
+                const url = "https://rexdashu168.github.io/cbhistory168/cb_issue.xlsx";
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                
+                const response = await fetch(url + '?t=' + Date.now(), {
+                    signal: controller.signal,
+                    cache: 'no-cache',
+                    mode: 'cors'
+                });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP錯誤: ${response.status}`);
+                }
+                
+                loadingText.textContent = '解析資料中...';
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: "array" });
+                
+                if (!workbook.Sheets["allcbissue"]) {
+                    throw new Error('工作表不存在');
+                }
+                
                 const sheet = workbook.Sheets["allcbissue"];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
                 
+                if (!jsonData || jsonData.length === 0) {
+                    throw new Error('無資料');
+                }
+                
+                loadingText.textContent = '處理資料中...';
                 mockData = jsonData.map(row => ({
                     cbCode: String(row["CB代號"] || ""),
                     cbName: row["CB名稱"] || "",
@@ -1332,15 +1362,52 @@
                 }));
                 
                 const dates = mockData.map(d => d.listDate).filter(d => d).sort();
-                document.getElementById('statsBanner').innerHTML = 
-                    `<div class="stats-main">📊 資料期間: ${dates[0]} ~ ${dates[dates.length-1]},共計 <strong>${mockData.length}</strong> 檔</div>`;
-                document.getElementById('statsDetail').style.display = 'flex';
+                const mainHtml = `<div class="stats-main">📊 資料期間: ${dates[0]} ~ ${dates[dates.length-1]},共計 <strong>${mockData.length}</strong> 檔</div>`;
+                const detailHtml = `
+                    <div class="stats-detail-item">
+                        <span>掛牌表現數據:</span>
+                        <span class="stats-badge complete">100% 完整 ✅</span>
+                    </div>
+                    <div class="stats-detail-item">
+                        <span>發行基本條件:</span>
+                        <span class="stats-badge good">95%+ 完整 ✅</span>
+                    </div>
+                    <div class="stats-detail-item">
+                        <span>詳細賣回條件:</span>
+                        <span class="stats-badge partial">約60% 完整 ⚠️</span>
+                    </div>
+                `;
+                document.getElementById('statsBanner').innerHTML = mainHtml + '<div class="stats-detail" style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; font-size: 0.9em; margin-top: 12px;">' + detailHtml + '</div>';
                 
                 document.getElementById('loadingScreen').style.display = 'none';
                 isDataLoaded = true;
                 
+                console.log(`成功載入 ${mockData.length} 筆資料`);
+                
             } catch (error) {
-                document.getElementById('loadingScreen').innerHTML = '<div style="font-size: 1.5em;">載入失敗,請重新整理頁面</div>';
+                console.error('載入錯誤:', error);
+                
+                if (retryCount < maxRetries) {
+                    loadingText.textContent = `載入失敗,${2}秒後重試...`;
+                    setTimeout(() => {
+                        loadExcelData(retryCount + 1);
+                    }, 2000);
+                } else {
+                    const errorScreen = document.getElementById('loadingScreen');
+                    errorScreen.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3em; margin-bottom: 20px;">❌</div>
+                            <div style="font-size: 1.5em; margin-bottom: 20px;">載入失敗</div>
+                            <div style="font-size: 1em; opacity: 0.8; margin-bottom: 30px;">
+                                錯誤訊息: ${error.message}<br>
+                                請檢查網路連線或稍後再試
+                            </div>
+                            <button onclick="location.reload()" style="padding: 15px 40px; font-size: 1.1em; background: white; color: #667eea; border: 2px solid white; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                                重新載入
+                            </button>
+                        </div>
+                    `;
+                }
             }
         }
         
