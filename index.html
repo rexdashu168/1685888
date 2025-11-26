@@ -14,20 +14,21 @@
             color: #333;
             min-height: 100vh;
         }
-        .header {
-            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-            color: white;
-            padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
-        .header p { font-size: 0.9rem; opacity: 0.9; }
 
 ```
-    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    .header {
+        background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+        color: white;
+        padding: 15px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+    .header p { font-size: 0.9rem; opacity: 0.9; }
+    
+    .container { max-width: 1800px; margin: 0 auto; padding: 20px; }
     
     .controls {
         background: white;
@@ -50,6 +51,19 @@
         min-width: 200px;
     }
     select:focus, input:focus { outline: none; border-color: #2c5282; }
+    
+    .report-title {
+        background: linear-gradient(135deg, #2c5282 0%, #4299e1 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px 10px 0 0;
+        font-size: 1.2rem;
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .report-date { font-size: 0.9rem; opacity: 0.9; }
     
     .stats {
         display: grid;
@@ -76,34 +90,63 @@
         overflow: hidden;
     }
     .table-wrapper { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    
+    /* 表頭分組樣式 */
+    .header-group {
+        background: #1a365d;
+        color: white;
+        font-size: 0.75rem;
+        text-align: center;
+    }
+    .header-group th {
+        padding: 8px 5px;
+        border-right: 1px solid #2c5282;
+    }
+    .header-group th:last-child { border-right: none; }
+    
     th {
         background: #2c5282;
         color: white;
-        padding: 12px 10px;
-        text-align: left;
+        padding: 10px 8px;
+        text-align: center;
         font-weight: 500;
         white-space: nowrap;
         cursor: pointer;
         user-select: none;
-        position: sticky;
-        top: 0;
+        font-size: 0.8rem;
+        border-right: 1px solid #3182ce;
     }
+    th:last-child { border-right: none; }
     th:hover { background: #1a365d; }
-    th.sorted-asc::after { content: ' ▲'; }
-    th.sorted-desc::after { content: ' ▼'; }
+    th.sorted-asc::after { content: ' ▲'; font-size: 0.7rem; }
+    th.sorted-desc::after { content: ' ▼'; font-size: 0.7rem; }
+    
     td {
-        padding: 10px;
+        padding: 8px;
         border-bottom: 1px solid #eee;
+        text-align: center;
         white-space: nowrap;
     }
+    td.left { text-align: left; }
     tr:hover { background: #f7fafc; }
     tr:nth-child(even) { background: #fafafa; }
     tr:nth-child(even):hover { background: #f0f4f8; }
     
-    .positive { color: #c53030; font-weight: 500; }
-    .negative { color: #2f855a; font-weight: 500; }
-    .highlight { background: #fff5f5; }
+    /* 數值顏色標示 */
+    .positive { color: #c53030; font-weight: 600; }
+    .negative { color: #2f855a; font-weight: 600; }
+    .neutral { color: #666; }
+    
+    /* 股本小於10億標示 */
+    .small-cap { background-color: #fff5f5; }
+    
+    /* 漲幅顏色標示 */
+    .price-up { background-color: #fef2f2; }
+    .price-down { background-color: #f0fdf4; }
+    
+    /* 成交量放大標示 */
+    .volume-high { background-color: #fef3c7; }
     
     .pagination {
         display: flex;
@@ -144,6 +187,32 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     
+    .color-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 10px 20px;
+        background: #f8fafc;
+        border-bottom: 1px solid #eee;
+        font-size: 0.8rem;
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+    }
+    .legend-color.pink { background: #fff5f5; }
+    .legend-color.green { background: #f0fdf4; }
+    .legend-color.yellow { background: #fef3c7; }
+    .legend-color.red { background: #c53030; color: white; text-align: center; font-size: 0.7rem; line-height: 16px; }
+    .legend-color.green-text { background: #2f855a; color: white; text-align: center; font-size: 0.7rem; line-height: 16px; }
+    
     .footer {
         text-align: center;
         padding: 30px 20px;
@@ -169,6 +238,8 @@
         select, input[type="text"] { width: 100%; min-width: auto; }
         .header h1 { font-size: 1.2rem; }
         .stat-card .value { font-size: 1.4rem; }
+        table { font-size: 0.75rem; }
+        td, th { padding: 6px 4px; }
     }
 </style>
 ```
@@ -176,7 +247,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Rex大叔的168台股投資教室</h1>
+        <h1>🏫 Rex大叔的168台股投資教室</h1>
         <p>台股熱門交易資訊 - 資料日期：<span id="dataDate">載入中...</span></p>
     </div>
 
@@ -186,7 +257,7 @@
         <div class="control-group">
             <label>選擇報表類型</label>
             <select id="reportType">
-                <optgroup label="可轉債 CB">
+                <optgroup label="📊 可轉債 CB">
                     <option value="007_CB成交值排行.csv">CB 成交值排行</option>
                     <option value="008_CB週轉率排行.csv">CB 週轉率排行</option>
                     <option value="005_CB漲幅排行.csv">CB 漲幅排行</option>
@@ -198,20 +269,20 @@
                     <option value="009_CB外資買超.csv">CB 外資買超</option>
                     <option value="010_CB投信買超.csv">CB 投信買超</option>
                 </optgroup>
-                <optgroup label="上市櫃股票">
+                <optgroup label="📈 上市櫃股票">
                     <option value="013_上市櫃成交值排行.csv">上市櫃 成交值排行</option>
                     <option value="011_上市櫃週轉率排行.csv">上市櫃 週轉率排行</option>
                     <option value="012_上市櫃當沖率排行.csv">上市櫃 當沖率排行</option>
                     <option value="014_上市櫃計量統計強勢.csv">上市櫃 計量強勢排行</option>
                     <option value="015_上市櫃計量統計弱勢.csv">上市櫃 計量弱勢排行</option>
                 </optgroup>
-                <optgroup label="法人籌碼">
+                <optgroup label="💰 法人籌碼">
                     <option value="019_全部上市櫃計量排行_外本比買超.csv">外本比 買超排行</option>
                     <option value="020_全部上市櫃計量排行_外本比賣超.csv">外本比 賣超排行</option>
                     <option value="021_全部上市櫃計量排行_投本比買超.csv">投本比 買超排行</option>
                     <option value="022_全部上市櫃計量排行_投本比賣超.csv">投本比 賣超排行</option>
                 </optgroup>
-                <optgroup label="供應鏈">
+                <optgroup label="🔗 供應鏈概念股">
                     <option value="025_NVIDIA概念股計量統計排行.csv">NVIDIA概念股排行</option>
                     <option value="025_台積電供應鏈.csv">台積電供應鏈排行</option>
                 </optgroup>
@@ -254,6 +325,18 @@
     </div>
     
     <div class="table-container">
+        <div class="report-title">
+            <span id="reportName">成交值排行</span>
+            <span class="report-date">前二十大籌碼變化(熱錢關注股票)</span>
+        </div>
+        
+        <div class="color-legend">
+            <div class="legend-item"><div class="legend-color pink"></div><span>股本 &lt;10億</span></div>
+            <div class="legend-item"><div class="legend-color red">+</div><span>正值(紅)</span></div>
+            <div class="legend-item"><div class="legend-color green-text">-</div><span>負值(綠)</span></div>
+            <div class="legend-item"><div class="legend-color yellow"></div><span>成交量放大</span></div>
+        </div>
+        
         <div class="table-wrapper">
             <table id="dataTable">
                 <thead id="tableHead"></thead>
@@ -264,7 +347,7 @@
     </div>
     
     <div class="footer">
-        <p>以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
+        <p>📚 以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
         <p>本人整理之資料僅為學習分享用，無任何商業用途</p>
         <p>若對以上內容有任何建議交流可以寄到：<a href="mailto:rexdashu168@gmail.com">rexdashu168@gmail.com</a></p>
         <div class="warning">
@@ -280,18 +363,67 @@
     let currentPage = 1;
     let sortColumn = null;
     let sortDirection = 'asc';
-    let columns = [];
+    let dataDate = '';
 
-    const priorityColumns = [
-        '排序', '代碼', '股票名稱', '產業分類', '收盤價', '漲幅%', 
-        '成交量', '成交值(億)', '週轉率', '當沖率',
+    // 欄位對應表：CSV欄位 -> 顯示名稱
+    const columnMapping = {
+        '序號': '排序',
+        '代碼': '代碼',
+        '商品': '股票名稱',
+        '股本(億)': '股本(億)',
+        '成交': '收盤價',
+        '漲幅%': '漲幅%',
+        '總量': '成交量',
+        '金額(億)': '成交值(億)',
+        '當沖率': '當沖率',
+        '週轉率': '週轉率',
+        '外資買賣超(張)': '外資',
+        '投信買賣超(張)': '投信',
+        '主力買賣超(張)': '主力',
+        '散戶買賣超(張)': '散戶',
+        '融資增減(張)': '融資增減',
+        '融券增減(張)': '融券'
+    };
+
+    // 顯示欄位順序
+    const displayColumns = [
+        '排序', '代碼', '股票名稱', '股本(億)', '收盤價', '漲幅%',
+        '成交量', '成交值(億)', '當沖率', '週轉率',
         '外資', '投信', '主力', '散戶', '融資增減', '融券'
     ];
+
+    // 報表名稱對應
+    const reportNames = {
+        '007_CB成交值排行.csv': 'CB 成交值排行',
+        '008_CB週轉率排行.csv': 'CB 週轉率排行',
+        '005_CB漲幅排行.csv': 'CB 漲幅排行',
+        '006_CB跌幅排行.csv': 'CB 跌幅排行',
+        '003_CB計量強勢排行.csv': 'CB 計量強勢排行',
+        '004_CB計量弱勢排行.csv': 'CB 計量弱勢排行',
+        '002_CB創200日新高.csv': 'CB 創200日新高',
+        '001_CB創200日新低.csv': 'CB 創200日新低',
+        '009_CB外資買超.csv': 'CB 外資買超',
+        '010_CB投信買超.csv': 'CB 投信買超',
+        '013_上市櫃成交值排行.csv': '上市櫃 成交值排行',
+        '011_上市櫃週轉率排行.csv': '上市櫃 週轉率排行',
+        '012_上市櫃當沖率排行.csv': '上市櫃 當沖率排行',
+        '014_上市櫃計量統計強勢.csv': '上市櫃 計量強勢排行',
+        '015_上市櫃計量統計弱勢.csv': '上市櫃 計量弱勢排行',
+        '019_全部上市櫃計量排行_外本比買超.csv': '外本比 買超排行',
+        '020_全部上市櫃計量排行_外本比賣超.csv': '外本比 賣超排行',
+        '021_全部上市櫃計量排行_投本比買超.csv': '投本比 買超排行',
+        '022_全部上市櫃計量排行_投本比賣超.csv': '投本比 賣超排行',
+        '025_NVIDIA概念股計量統計排行.csv': 'NVIDIA概念股計量統計排行',
+        '025_台積電供應鏈.csv': '台積電供應鏈計量統計排行'
+    };
 
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('reportType').addEventListener('change', loadData);
         document.getElementById('searchInput').addEventListener('input', debounce(filterData, 300));
-        document.getElementById('pageSize').addEventListener('change', renderTable);
+        document.getElementById('pageSize').addEventListener('change', () => {
+            currentPage = 1;
+            renderTable();
+        });
         loadData();
     });
 
@@ -302,6 +434,9 @@
         
         tableBody.innerHTML = '<tr><td colspan="20" class="loading">載入資料中</td></tr>';
         tableHead.innerHTML = '';
+        
+        // 更新報表標題
+        document.getElementById('reportName').textContent = reportNames[filename] || filename;
         
         Papa.parse(filename, {
             download: true,
@@ -319,64 +454,86 @@
     }
 
     function processData(rawData) {
-        let headerIndex = 0;
+        // 找到資料日期
+        for (let i = 0; i < Math.min(5, rawData.length); i++) {
+            const row = rawData[i].join(' ');
+            const dateMatch = row.match(/(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/);
+            if (dateMatch) {
+                dataDate = `${dateMatch[1]}/${dateMatch[2].padStart(2, '0')}/${dateMatch[3].padStart(2, '0')}`;
+                document.getElementById('dataDate').textContent = dataDate;
+                break;
+            }
+        }
+        
+        // 找到表頭行
+        let headerIndex = -1;
         for (let i = 0; i < Math.min(10, rawData.length); i++) {
             const row = rawData[i];
-            if (row && (row.includes('代碼') || row.includes('排序') || row.includes('股票名稱'))) {
+            if (row && row.some(cell => cell && cell.includes('序號'))) {
                 headerIndex = i;
                 break;
             }
         }
         
-        columns = rawData[headerIndex].map(col => col ? col.trim().replace(/\n/g, '') : '');
-        
-        let dataDate = '未知';
-        for (let i = 0; i < headerIndex; i++) {
-            const row = rawData[i].join(' ');
-            const dateMatch = row.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
-            if (dateMatch) {
-                dataDate = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
-                break;
-            }
+        if (headerIndex === -1) {
+            document.getElementById('tableBody').innerHTML = '<tr><td colspan="20">無法解析資料格式</td></tr>';
+            return;
         }
-        document.getElementById('dataDate').textContent = dataDate;
         
+        // 解析表頭
+        const headers = rawData[headerIndex].map(h => h ? h.trim().replace(/"/g, '') : '');
+        
+        // 解析資料行
         allData = [];
         for (let i = headerIndex + 1; i < rawData.length; i++) {
             const row = rawData[i];
-            if (!row || row.length < 3) continue;
+            if (!row || row.length < 5) continue;
             
-            const firstCell = String(row[0] || '').trim();
+            // 檢查第一欄是否為序號
+            const firstCell = String(row[0] || '').trim().replace(/\t/g, '').replace(/"/g, '');
             if (!firstCell || isNaN(parseInt(firstCell))) continue;
             
             const rowObj = {};
-            columns.forEach((col, idx) => {
-                if (col) {
-                    let value = row[idx] !== undefined ? String(row[idx]).trim() : '';
-                    if (value.match(/^\([\d,.]+\)$/)) {
-                        value = '-' + value.replace(/[()]/g, '');
+            headers.forEach((header, idx) => {
+                if (header) {
+                    let value = row[idx] !== undefined ? String(row[idx]).trim().replace(/"/g, '').replace(/\t/g, '') : '';
+                    
+                    // 處理代碼，去掉.TW
+                    if (header === '代碼') {
+                        value = value.replace('.TW', '').replace('.TWO', '');
                     }
-                    rowObj[col] = value;
+                    
+                    rowObj[header] = value;
                 }
             });
-            allData.push(rowObj);
+            
+            // 轉換欄位名稱
+            const displayRow = {};
+            Object.keys(columnMapping).forEach(csvCol => {
+                if (rowObj[csvCol] !== undefined) {
+                    displayRow[columnMapping[csvCol]] = rowObj[csvCol];
+                }
+            });
+            
+            // 確保有基本資料
+            if (displayRow['代碼'] || displayRow['股票名稱']) {
+                allData.push(displayRow);
+            }
         }
         
         filteredData = [...allData];
         currentPage = 1;
+        sortColumn = null;
         updateStats();
         renderTable();
     }
 
     function updateStats() {
-        const data = filteredData;
-        document.getElementById('totalCount').textContent = data.length;
-        
-        const changeCol = columns.find(c => c.includes('漲幅') || c.includes('漲跌'));
+        document.getElementById('totalCount').textContent = filteredData.length;
         
         let up = 0, down = 0, flat = 0;
-        data.forEach(row => {
-            const val = parseFloat(row[changeCol]) || 0;
+        filteredData.forEach(row => {
+            const val = parseFloat(row['漲幅%']) || 0;
             if (val > 0) up++;
             else if (val < 0) down++;
             else flat++;
@@ -417,8 +574,9 @@
             let valA = a[column] || '';
             let valB = b[column] || '';
             
-            const numA = parseFloat(String(valA).replace(/,/g, ''));
-            const numB = parseFloat(String(valB).replace(/,/g, ''));
+            // 嘗試轉換為數字
+            const numA = parseFloat(String(valA).replace(/,/g, '').replace('%', ''));
+            const numB = parseFloat(String(valB).replace(/,/g, '').replace('%', ''));
             
             if (!isNaN(numA) && !isNaN(numB)) {
                 return sortDirection === 'asc' ? numA - numB : numB - numA;
@@ -437,24 +595,28 @@
         const tableBody = document.getElementById('tableBody');
         const pageSize = document.getElementById('pageSize').value;
         
-        const sortedColumns = [...columns].sort((a, b) => {
-            const idxA = priorityColumns.findIndex(p => a.includes(p));
-            const idxB = priorityColumns.findIndex(p => b.includes(p));
-            if (idxA === -1 && idxB === -1) return 0;
-            if (idxA === -1) return 1;
-            if (idxB === -1) return -1;
-            return idxA - idxB;
-        });
+        // 建立表頭（分組標題）
+        let headerGroupHTML = '<tr class="header-group">';
+        headerGroupHTML += '<th colspan="4">基本資料</th>';
+        headerGroupHTML += '<th colspan="2">價格資訊</th>';
+        headerGroupHTML += '<th colspan="4">熱門成交資訊</th>';
+        headerGroupHTML += '<th colspan="4">法人主力買賣超(張)</th>';
+        headerGroupHTML += '<th colspan="2">散戶融資融券(張)</th>';
+        headerGroupHTML += '</tr>';
         
-        const displayColumns = sortedColumns.slice(0, 20);
-        
-        tableHead.innerHTML = '<tr>' + displayColumns.map(col => {
+        // 建立欄位標題
+        let headerHTML = '<tr>';
+        displayColumns.forEach(col => {
             const sortClass = sortColumn === col 
                 ? (sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc') 
                 : '';
-            return `<th class="${sortClass}" onclick="sortData('${col}')">${col}</th>`;
-        }).join('') + '</tr>';
+            headerHTML += `<th class="${sortClass}" onclick="sortData('${col}')">${col}</th>`;
+        });
+        headerHTML += '</tr>';
         
+        tableHead.innerHTML = headerGroupHTML + headerHTML;
+        
+        // 計算分頁
         const total = filteredData.length;
         const size = pageSize === 'all' ? total : parseInt(pageSize);
         const totalPages = Math.ceil(total / size);
@@ -462,27 +624,60 @@
         const end = start + size;
         const pageData = filteredData.slice(start, end);
         
-        tableBody.innerHTML = pageData.map(row => {
-            const changeCol = columns.find(c => c.includes('漲幅'));
-            const change = parseFloat(row[changeCol]) || 0;
-            const rowClass = change > 0 ? 'highlight' : '';
+        // 建立資料行
+        tableBody.innerHTML = pageData.map((row, idx) => {
+            const change = parseFloat(row['漲幅%']) || 0;
+            const stockCap = parseFloat(row['股本(億)']) || 999;
+            const isSmallCap = stockCap < 10;
             
-            return `<tr class="${rowClass}">` + displayColumns.map(col => {
-                let value = row[col] || '';
-                let className = '';
+            let rowClass = '';
+            if (isSmallCap) rowClass = 'small-cap';
+            
+            let rowHTML = `<tr class="${rowClass}">`;
+            
+            displayColumns.forEach(col => {
+                let value = row[col] || '-';
+                let cellClass = '';
                 
-                const num = parseFloat(String(value).replace(/,/g, ''));
-                if (!isNaN(num)) {
-                    if (col.includes('漲幅') || col.includes('漲跌')) {
-                        className = num > 0 ? 'positive' : (num < 0 ? 'negative' : '');
-                        value = num > 0 ? `+${value}` : value;
-                    } else if (col.includes('外資') || col.includes('投信') || col.includes('主力') || col.includes('融資')) {
-                        className = num > 0 ? 'positive' : (num < 0 ? 'negative' : '');
+                // 格式化數值並設定顏色
+                if (col !== '代碼' && col !== '股票名稱' && col !== '排序') {
+                    const num = parseFloat(String(value).replace(/,/g, '').replace('%', ''));
+                    
+                    if (!isNaN(num)) {
+                        // 漲跌幅顏色
+                        if (col === '漲幅%') {
+                            if (num > 0) {
+                                cellClass = 'positive';
+                                value = '+' + value;
+                            } else if (num < 0) {
+                                cellClass = 'negative';
+                            }
+                        }
+                        // 法人買賣超顏色
+                        else if (['外資', '投信', '主力', '散戶', '融資增減', '融券'].includes(col)) {
+                            if (num > 0) {
+                                cellClass = 'positive';
+                            } else if (num < 0) {
+                                cellClass = 'negative';
+                            }
+                        }
+                        // 當沖率/週轉率 超過20%標示
+                        else if ((col === '當沖率' || col === '週轉率') && num > 20) {
+                            cellClass = 'positive';
+                        }
                     }
                 }
                 
-                return `<td class="${className}">${value}</td>`;
-            }).join('') + '</tr>';
+                // 股票名稱左對齊
+                if (col === '股票名稱') {
+                    cellClass += ' left';
+                }
+                
+                rowHTML += `<td class="${cellClass}">${value}</td>`;
+            });
+            
+            rowHTML += '</tr>';
+            return rowHTML;
         }).join('') || '<tr><td colspan="20" style="text-align:center;padding:30px;">無符合條件的資料</td></tr>';
         
         renderPagination(totalPages);
@@ -502,13 +697,21 @@
         const start = Math.max(1, currentPage - 2);
         const end = Math.min(totalPages, currentPage + 2);
         
+        if (start > 1) {
+            html += '<span style="padding: 0 10px;">...</span>';
+        }
+        
         for (let i = start; i <= end; i++) {
             html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
         }
         
+        if (end < totalPages) {
+            html += '<span style="padding: 0 10px;">...</span>';
+        }
+        
         html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一頁</button>`;
         html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末頁</button>`;
-        html += `<span style="margin-left:10px;color:#666;">第 ${currentPage} / ${totalPages} 頁</span>`;
+        html += `<span style="margin-left:15px;color:#666;">第 ${currentPage} / ${totalPages} 頁，共 ${filteredData.length} 筆</span>`;
         
         pagination.innerHTML = html;
     }
