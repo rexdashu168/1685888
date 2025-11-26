@@ -1,2179 +1,534 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CB可轉債發行資料查詢系統 - Rex大叔的168台股投資教室</title>
+    <title>Rex大叔的168台股投資教室 - 台股熱門交易資訊</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Microsoft JhengHei', Arial, sans-serif;
-            background: #f5f5f5;
-        }
-
-        /* 頂部標題區 */
-        .header-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px 20px 20px 20px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .header-section .icon-title {
-            font-size: 2em;
-            margin-bottom: 10px;
-        }
-        
-        .header-section h1 {
-            font-size: 1.8em;
-            margin-bottom: 15px;
-        }
-        
-        .header-section .subtitle {
-            font-size: 1em;
-            opacity: 0.95;
-            margin-bottom: 20px;
-        }
-        
-        .date-display {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            display: inline-block;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 1.05em;
-            margin-bottom: 20px;
-        }
-        
-        .external-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        .external-btn {
-            background: rgba(255,255,255,0.25);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            text-decoration: none;
-            font-size: 0.95em;
-            transition: all 0.3s;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        
-        .external-btn:hover {
-            background: rgba(255,255,255,0.35);
-            transform: translateY(-2px);
-        }
-        
-        .author-tag {
-            margin-top: 15px;
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
-        
-        /* 資料統計橫幅 */
-        .stats-banner {
-            background: linear-gradient(90deg, #ffe5b4 0%, #ffd89b 100%);
-            padding: 15px 20px;
-            text-align: center;
-            color: #8b4513;
-            font-size: 1em;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        /* 功能選單 */
-        .function-menu-container {
-            background: #f8f9fa;
-            padding: 15px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .function-menu {
-            display: grid;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 12px;
-            padding: 15px 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .function-item {
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            padding: 15px 10px;
-            border-radius: 10px;
-            background: white;
-            border: 2px solid #e0e0e0;
-        }
-        
-        .function-item:hover {
-            background: #f0f0f0;
-            border-color: #667eea;
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
-        }
-        
-        .function-item.active {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-            border-color: #667eea;
-            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
-        }
-        
-        .function-item .icon {
-            font-size: 2.8em;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .function-item .label {
-            font-size: 0.9em;
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif;
+            background: #f5f7fa; 
             color: #333;
-            font-weight: 600;
-            white-space: nowrap;
+            min-height: 100vh;
         }
-        
-        /* 內容區域 - 切換顯示 */
-        .content-section {
-            background: #f5f5f5;
-            min-height: calc(100vh - 400px);
-            padding: 0;
-        }
-        
-        .section-block {
-            display: none;
-            padding: 40px 20px;
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        .section-block.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .section-title {
-            font-size: 2em;
-            color: #667eea;
-            text-align: center;
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-        
-        .section-title .icon {
-            font-size: 1.2em;
-            margin-right: 10px;
-        }
-        
-        /* 搜尋框 */
-        .search-box {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 1200px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .search-title {
-            font-size: 1.2em;
-            color: #667eea;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-        
-        .search-input-group {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .search-input-group input {
-            flex: 1;
-            padding: 12px 15px;
-            font-size: 1.1em;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-family: 'Microsoft JhengHei', Arial;
-        }
-        
-        .search-input-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .search-btn {
-            padding: 12px 30px;
-            font-size: 1.1em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }
-        
-        .search-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-        
-        /* 功能說明卡片 */
-        .info-card {
-            background: white;
-            border-left: 5px solid #667eea;
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 20px auto;
-            max-width: 1200px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        
-        .info-card .title {
-            color: #1565c0;
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .info-card .text {
-            color: #0d47a1;
-            line-height: 1.6;
-            margin: 5px 0;
-        }
-        
-        /* 表格樣式 */
-        .table-wrapper {
-            overflow-x: auto;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            margin: 20px auto;
-            max-width: 1200px;
-            background: white;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-        
-        thead {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        th {
-            padding: 10px 6px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 0.9em;
-            border-right: 1px solid rgba(255,255,255,0.2);
-            line-height: 1.3;
-            vertical-align: middle;
-            word-wrap: break-word;
-        }
-        
-        /* 特定欄位寬度調整 */
-        th:nth-child(1) { min-width: 60px; max-width: 60px; }
-        th:nth-child(2) { min-width: 100px; max-width: 100px; }
-        th:nth-child(3) { min-width: 60px; max-width: 60px; }
-        th:nth-child(4) { min-width: 60px; max-width: 60px; }
-        th:nth-child(5) { min-width: 60px; max-width: 60px; }
-        th:nth-child(6) { min-width: 60px; max-width: 60px; }
-        th:nth-child(7) { min-width: 70px; max-width: 70px; }
-        th:nth-child(8) { min-width: 100px; max-width: 100px; }
-        th:nth-child(9) { min-width: 60px; max-width: 60px; }
-        th:nth-child(10) { min-width: 80px; max-width: 80px; }
-        th:nth-child(11) { min-width: 80px; max-width: 80px; }
-        
-        th:last-child { border-right: none; }
-        
-        td {
-            padding: 8px 6px;
-            text-align: center;
-            border-bottom: 1px solid #eee;
-            font-size: 0.9em;
-            line-height: 1.4;
-            vertical-align: middle;
-            word-wrap: break-word;
-            word-break: break-word;
-            overflow-wrap: break-word;
-        }
-        
-        td:nth-child(2) {
-            min-width: 100px;
-            max-width: 100px;
-            word-wrap: break-word;
-            word-break: break-word;
-            line-height: 1.4;
-            padding: 8px 6px;
-        }
-        
-        td:nth-child(8) {
-            min-width: 100px;
-            max-width: 100px;
-            word-wrap: break-word;
-            word-break: break-word;
-            font-size: 0.85em;
-            line-height: 1.3;
-            padding: 8px 6px;
-        }
-        
-        td:nth-child(10) {
-            min-width: 80px;
-            max-width: 80px;
-        }
-        
-        td:nth-child(11) {
-            min-width: 80px;
-            max-width: 80px;
-        }
-        
-        tbody tr:hover {
-            background: #f8f9fa;
-            cursor: pointer;
-        }
-        
-        .highlight-green {
-            background: #c8e6c9;
-            color: #1b5e20;
-            font-weight: bold;
-        }
-        
-        .highlight-red {
-            background: #ffcdd2;
-            color: #b71c1c;
-            font-weight: bold;
-        }
-        
-        .highlight-top {
-            background: #fff3e0;
-            font-weight: bold;
-        }
-        
-        /* 擔保狀態色塊 */
-        .guarantee-yes {
-            background: #c8e6c9;
-            color: #1b5e20;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        .guarantee-no {
-            background: #ffecb3;
-            color: #f57c00;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        /* 承銷方式色塊 */
-        .method-auction {
-            background: #f8bbd0;
-            color: #c2185b;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        .method-placement {
-            background: #e1bee7;
-            color: #7b1fa2;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            display: inline-block;
-        }
-        
-        /* 排名徽章樣式 */
-        .rank-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-        
-        .rank-1 { background: #ffd700; color: #8b4513; }
-        .rank-2 { background: #c0c0c0; color: #333; }
-        .rank-3 { background: #cd7f32; color: white; }
-        .rank-other { background: #e0e0e0; color: #666; }
-        
-        /* 統計卡片 */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 20px auto;
-            max-width: 1200px;
-        }
-        
-        .stat-card {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        .stat-card .label {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .stat-card .value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-        
-        /* 統計區塊樣式 */
-        .stat-section {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 20px auto;
-            max-width: 1400px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .stat-section h3 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-        }
-        
-        /* 單檔查詢 - 詳細資料區塊 */
-        .detail-section {
-            background: white;
-            border: 2px solid #667eea;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 1200px;
-        }
-        
-        .detail-section .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 20px;
-            margin: -20px -20px 20px -20px;
-            border-radius: 10px 10px 0 0;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .detail-item {
-            background: #f8f9fa;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-        
-        .detail-item .label {
-            font-size: 0.85em;
-            color: #666;
-            margin-bottom: 5px;
-        }
-        
-        .detail-item .value {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .detail-item.highlight-value .value {
-            color: #667eea;
-            font-size: 1.3em;
-        }
-        
-        /* CB名稱標題區 */
-        .cb-title-bar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px 25px;
-            margin: 20px auto;
-            max-width: 1200px;
-            border-radius: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        
-        .cb-title-bar .main-info {
-            flex: 1;
-        }
-        
-        .cb-title-bar .cb-name {
-            font-size: 1.8em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .cb-title-bar .cb-code {
-            font-size: 1.2em;
-            opacity: 0.95;
-        }
-        
-        .cb-title-bar .key-data {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .cb-title-bar .key-item {
-            background: rgba(255,255,255,0.2);
-            padding: 10px 20px;
-            border-radius: 8px;
-            text-align: center;
-        }
-        
-        .cb-title-bar .key-item .key-label {
-            font-size: 0.85em;
-            opacity: 0.9;
-            margin-bottom: 5px;
-        }
-        
-        .cb-title-bar .key-item .key-value {
-            font-size: 1.4em;
-            font-weight: bold;
-        }
-        
-        /* 頁尾 */
-        .footer {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-        }
-        
-        /* 平板和手機版 */
-        @media (max-width: 1200px) {
-            .function-menu {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 10px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .header-section {
-                padding: 20px 15px 15px 15px;
-            }
-            .header-section h1 {
-                font-size: 1.5em;
-            }
-            .stats-banner {
-                font-size: 0.9em;
-                padding: 12px 15px;
-            }
-            .function-menu {
-                gap: 10px;
-                padding: 12px 15px;
-            }
-            .function-item {
-                padding: 12px 8px;
-            }
-            .function-item .icon {
-                font-size: 2.2em;
-                margin-bottom: 5px;
-            }
-            .function-item .label {
-                font-size: 0.85em;
-            }
-            .section-title {
-                font-size: 1.5em;
-            }
-        }
-    </style>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
+```
+    .header {
+        background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+        color: white;
+        padding: 15px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+    .header p { font-size: 0.9rem; opacity: 0.9; }
+    
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    
+    .controls {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+    }
+    .control-group { display: flex; flex-direction: column; gap: 5px; }
+    .control-group label { font-size: 0.85rem; color: #666; font-weight: 500; }
+    select, input[type="text"] {
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+        min-width: 200px;
+    }
+    select:focus, input:focus { outline: none; border-color: #2c5282; }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stat-card .value { font-size: 1.8rem; font-weight: bold; color: #2c5282; }
+    .stat-card .label { font-size: 0.85rem; color: #666; margin-top: 5px; }
+    .stat-card.up .value { color: #c53030; }
+    .stat-card.down .value { color: #2f855a; }
+    
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th {
+        background: #2c5282;
+        color: white;
+        padding: 12px 10px;
+        text-align: left;
+        font-weight: 500;
+        white-space: nowrap;
+        cursor: pointer;
+        user-select: none;
+        position: sticky;
+        top: 0;
+    }
+    th:hover { background: #1a365d; }
+    th.sorted-asc::after { content: ' ▲'; }
+    th.sorted-desc::after { content: ' ▼'; }
+    td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        white-space: nowrap;
+    }
+    tr:hover { background: #f7fafc; }
+    tr:nth-child(even) { background: #fafafa; }
+    tr:nth-child(even):hover { background: #f0f4f8; }
+    
+    .positive { color: #c53030; font-weight: 500; }
+    .negative { color: #2f855a; font-weight: 500; }
+    .highlight { background: #fff5f5; }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        padding: 20px;
+        flex-wrap: wrap;
+    }
+    .pagination button {
+        padding: 8px 16px;
+        border: 1px solid #ddd;
+        background: white;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+    }
+    .pagination button:hover { background: #f0f4f8; }
+    .pagination button.active { background: #2c5282; color: white; border-color: #2c5282; }
+    .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .loading {
+        text-align: center;
+        padding: 50px;
+        color: #666;
+    }
+    .loading::after {
+        content: '';
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border: 3px solid #ddd;
+        border-top-color: #2c5282;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #666;
+        font-size: 0.85rem;
+        line-height: 1.8;
+        background: white;
+        margin-top: 30px;
+        border-radius: 10px;
+    }
+    .footer a { color: #2c5282; }
+    .footer .warning { 
+        color: #c53030; 
+        font-weight: 500;
+        margin-top: 15px;
+        padding: 15px;
+        background: #fff5f5;
+        border-radius: 8px;
+    }
+    
+    @media (max-width: 768px) {
+        .controls { flex-direction: column; align-items: stretch; }
+        select, input[type="text"] { width: 100%; min-width: auto; }
+        .header h1 { font-size: 1.2rem; }
+        .stat-card .value { font-size: 1.4rem; }
+    }
+</style>
+```
+
 </head>
 <body>
-    <!-- 載入提示 -->
-    <div id="loadingScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(102, 126, 234, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; color: white;">
-        <div style="font-size: 3em; margin-bottom: 20px;">📊</div>
-        <div id="loadingText" style="font-size: 1.5em; margin-bottom: 10px;">正在連接GitHub...</div>
-        <div id="loadingDetail" style="font-size: 0.9em; opacity: 0.8; margin-bottom: 30px;">請稍候</div>
-        <div style="width: 200px; height: 4px; background: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden;">
-            <div style="width: 100%; height: 100%; background: white; animation: loading 1.5s ease-in-out infinite;"></div>
-        </div>
-    </div>
-    <style>
-        @keyframes loading {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-    </style>
-
-    <!-- 頂部標題區 -->
-    <div class="header-section">
-        <div class="icon-title">🎯</div>
-        <h1>CB可轉債發行資料查詢系統</h1>
-        <div class="subtitle">發行條件 | 轉換價格 | 掛牌表現 | 贖回賣回條件</div>
-        
-        <div class="date-display">
-            📅 <span id="currentDate"></span>
-        </div>
-        
-        <div class="external-links">
-            <a href="https://vocus.cc/user/@rexdashu168" target="_blank" class="external-btn">📝 方格子部落格</a>
-            <a href="https://www.youtube.com/@RexCB168" target="_blank" class="external-btn">🎬 YouTube頻道</a>
-        </div>
-        
-        <div class="author-tag">by Rex大叔的168台股投資教室</div>
+    <div class="header">
+        <h1>Rex大叔的168台股投資教室</h1>
+        <p>台股熱門交易資訊 - 資料日期：<span id="dataDate">載入中...</span></p>
     </div>
 
-    <!-- 資料統計橫幅 -->
-    <div class="stats-banner" id="statsBanner">
-        📊 資料載入中...
-    </div>
-
-    <!-- 功能選單 -->
-    <div class="function-menu-container">
-        <div class="function-menu">
-            <div class="function-item active" onclick="switchSection('section1', 0)">
-                <div class="icon">🔍</div>
-                <div class="label">單檔查詢</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section2', 1)">
-                <div class="icon">📊</div>
-                <div class="label">批次查詢</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section3', 2)">
-                <div class="icon">⚙️</div>
-                <div class="label">條件篩選</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section4', 3)">
-                <div class="icon">📈</div>
-                <div class="label">掛牌表現</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section5', 4)">
-                <div class="icon">💰</div>
-                <div class="label">賣回查詢</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section6', 5)">
-                <div class="icon">🏢</div>
-                <div class="label">同公司比較</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section7', 6)">
-                <div class="icon">📅</div>
-                <div class="label">時間軸查詢</div>
-            </div>
-            <div class="function-item" onclick="switchSection('section8', 7)">
-                <div class="icon">📊</div>
-                <div class="label">市場統計</div>
-            </div>
+```
+<div class="container">
+    <div class="controls">
+        <div class="control-group">
+            <label>選擇報表類型</label>
+            <select id="reportType">
+                <optgroup label="可轉債 CB">
+                    <option value="007_CB成交值排行.csv">CB 成交值排行</option>
+                    <option value="008_CB週轉率排行.csv">CB 週轉率排行</option>
+                    <option value="005_CB漲幅排行.csv">CB 漲幅排行</option>
+                    <option value="006_CB跌幅排行.csv">CB 跌幅排行</option>
+                    <option value="003_CB計量強勢排行.csv">CB 計量強勢排行</option>
+                    <option value="004_CB計量弱勢排行.csv">CB 計量弱勢排行</option>
+                    <option value="002_CB創200日新高.csv">CB 創200日新高</option>
+                    <option value="001_CB創200日新低.csv">CB 創200日新低</option>
+                    <option value="009_CB外資買超.csv">CB 外資買超</option>
+                    <option value="010_CB投信買超.csv">CB 投信買超</option>
+                </optgroup>
+                <optgroup label="上市櫃股票">
+                    <option value="013_上市櫃成交值排行.csv">上市櫃 成交值排行</option>
+                    <option value="011_上市櫃週轉率排行.csv">上市櫃 週轉率排行</option>
+                    <option value="012_上市櫃當沖率排行.csv">上市櫃 當沖率排行</option>
+                    <option value="014_上市櫃計量統計強勢.csv">上市櫃 計量強勢排行</option>
+                    <option value="015_上市櫃計量統計弱勢.csv">上市櫃 計量弱勢排行</option>
+                </optgroup>
+                <optgroup label="法人籌碼">
+                    <option value="019_全部上市櫃計量排行_外本比買超.csv">外本比 買超排行</option>
+                    <option value="020_全部上市櫃計量排行_外本比賣超.csv">外本比 賣超排行</option>
+                    <option value="021_全部上市櫃計量排行_投本比買超.csv">投本比 買超排行</option>
+                    <option value="022_全部上市櫃計量排行_投本比賣超.csv">投本比 賣超排行</option>
+                </optgroup>
+                <optgroup label="供應鏈">
+                    <option value="025_NVIDIA概念股計量統計排行.csv">NVIDIA概念股排行</option>
+                    <option value="025_台積電供應鏈.csv">台積電供應鏈排行</option>
+                </optgroup>
+            </select>
         </div>
-    </div>
-
-    <!-- 統一查詢框 -->
-    <div style="max-width: 1200px; margin: -10px auto 20px; padding: 0 20px;">
-        <div style="background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="text" id="searchInput1" placeholder="🔍 請輸入CB代號或股票代號 (例如: 30193 或 3019)" 
-                    style="flex: 1; padding: 15px; font-size: 1.1em; border: 2px solid #ddd; border-radius: 8px;"
-                    onkeypress="if(event.key==='Enter') searchCB()">
-                <button onclick="searchCB()" 
-                    style="padding: 15px 40px; font-size: 1.1em; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap;">
-                    查詢
-                </button>
-            </div>
+        
+        <div class="control-group">
+            <label>搜尋（代碼或名稱）</label>
+            <input type="text" id="searchInput" placeholder="輸入代碼或股票名稱...">
+        </div>
+        
+        <div class="control-group">
+            <label>每頁筆數</label>
+            <select id="pageSize">
+                <option value="20">20 筆</option>
+                <option value="50" selected>50 筆</option>
+                <option value="100">100 筆</option>
+                <option value="all">全部顯示</option>
+            </select>
         </div>
     </div>
-
-    <!-- 內容區域 - 切換顯示 -->
-    <div class="content-section">
-        <!-- 1. 單檔查詢 -->
-        <div id="section1" class="section-block active">
-            <div id="result1" style="margin: 20px auto; max-width: 1200px;">
-                <div style="text-align:center; padding: 100px 20px; color:#999;">
-                    <div style="font-size: 3em; margin-bottom: 20px;">🔍</div>
-                    <div style="font-size: 1.2em;">請在上方輸入CB代號或股票代號進行查詢</div>
-                    <div style="font-size: 0.9em; margin-top: 10px; opacity: 0.7;">例如: 30193 或 3019</div>
-                </div>
-            </div>
+    
+    <div class="stats">
+        <div class="stat-card">
+            <div class="value" id="totalCount">-</div>
+            <div class="label">總筆數</div>
         </div>
-        
-        <!-- 2. 批次查詢 -->
-        <div id="section2" class="section-block">
-            <div class="section-title">
-                <span class="icon">📊</span>批次查詢
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">查詢方式:輸入多個CB代號,用逗號分隔</div>
-                <div class="text">使用範例:輸入「24762,33901,80701」同時查詢三檔CB</div>
-            </div>
-            
-            <div class="search-box">
-                <div class="search-title">📊 批次輸入CB代號</div>
-                <div class="search-input-group">
-                    <input type="text" id="batchInput" placeholder="例如: 24762,33901,80701">
-                    <button class="search-btn" onclick="batchSearch()">查詢</button>
-                </div>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>發行<br>規模</th>
-                            <th>有無<br>擔保</th>
-                            <th>股本<br>大小</th>
-                            <th>發行<br>年期</th>
-                            <th>發行<br>券商</th>
-                            <th>產業<br>分類</th>
-                            <th>承銷<br>方式</th>
-                        </tr>
-                    </thead>
-                    <tbody id="batchTable">
-                        <tr><td colspan="9">請輸入CB代號進行查詢</td></tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="stat-card up">
+            <div class="value" id="upCount">-</div>
+            <div class="label">上漲家數</div>
         </div>
-        
-        <!-- 3. 條件篩選 -->
-        <div id="section3" class="section-block">
-            <div class="section-title">
-                <span class="icon">⚙️</span>條件篩選
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">依擔保、年期、規模條件篩選CB</div>
-            </div>
-            
-            <div class="search-box">
-                <div class="search-title">⚙️ 設定篩選條件</div>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
-                    <select id="filterGuarantee" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">擔保(全部)</option>
-                        <option value="有擔保">有擔保</option>
-                        <option value="無擔保">無擔保</option>
-                    </select>
-                    <select id="filterYear" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">年期(全部)</option>
-                        <option value="2.5">2.5年</option>
-                        <option value="3">3年</option>
-                        <option value="5">5年</option>
-                    </select>
-                    <select id="filterSize" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">規模(全部)</option>
-                        <option value="1">1-3億</option>
-                        <option value="2">3-5億</option>
-                        <option value="3">5-8億</option>
-                        <option value="4">8-10億</option>
-                        <option value="5">10億以上</option>
-                    </select>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px;">
-                    <select id="filterCapital" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">股本(全部)</option>
-                        <option value="1">7-10億</option>
-                        <option value="2">10-15億</option>
-                        <option value="3">15-30億</option>
-                        <option value="4">30-60億</option>
-                        <option value="5">60億以上</option>
-                    </select>
-                    <select id="filterConvPrice" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">轉換價格(全部)</option>
-                        <option value="1">10-15元</option>
-                        <option value="2">15-20元</option>
-                        <option value="3">20-30元</option>
-                        <option value="4">30-40元</option>
-                        <option value="5">40-60元</option>
-                        <option value="6">60元以上</option>
-                    </select>
-                    <select id="filterRating" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">信用評等(全部)</option>
-                        <option value="有">有評等</option>
-                        <option value="無">無評等</option>
-                    </select>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                    <select id="filterUnderwriter" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">承銷券商(全部)</option>
-                        <option value="中信證券">中信證券</option>
-                        <option value="元大證券">元大證券</option>
-                        <option value="兆豐證券">兆豐證券</option>
-                        <option value="凱基證券">凱基證券</option>
-                        <option value="台新證券">台新證券</option>
-                        <option value="合庫證券">合庫證券</option>
-                        <option value="富邦證券">富邦證券</option>
-                        <option value="永豐金證">永豐金證</option>
-                        <option value="福邦證券">福邦證券</option>
-                        <option value="華南永昌">華南永昌</option>
-                    </select>
-                    <select id="filterIndustry" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">產業分類(全部)</option>
-                        <option value="光電業">光電業</option>
-                        <option value="其他業">其他業</option>
-                        <option value="其他電子業">其他電子業</option>
-                        <option value="半導體產業">半導體產業</option>
-                        <option value="建材營造業">建材營造業</option>
-                        <option value="紡織纖維">紡織纖維</option>
-                        <option value="貿易百貨業">貿易百貨業</option>
-                        <option value="通信網路業">通信網路業</option>
-                        <option value="金控業">金控業</option>
-                        <option value="銀行業">銀行業</option>
-                        <option value="鋼鐵工業">鋼鐵工業</option>
-                        <option value="電子通路業">電子通路業</option>
-                        <option value="電子零組件業">電子零組件業</option>
-                        <option value="電機機械">電機機械</option>
-                        <option value="電腦及週邊設備業">電腦及週邊設備業</option>
-                    </select>
-                    <select id="filterMethod" style="padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em;">
-                        <option value="">承銷方式(全部)</option>
-                        <option value="詢圈">詢圈</option>
-                    </select>
-                </div>
-                
-                <button class="search-btn" onclick="filterSearch()" style="width: 100%;">🔍 篩選</button>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>發行<br>規模</th>
-                            <th>有無<br>擔保</th>
-                            <th>股本<br>大小</th>
-                            <th>轉換<br>價格</th>
-                            <th>發行<br>年期</th>
-                            <th>承銷<br>券商</th>
-                            <th>產業<br>分類</th>
-                            <th>承銷<br>方式</th>
-                            <th>掛牌<br>最高</th>
-                            <th>掛牌<br>最低</th>
-                        </tr>
-                    </thead>
-                    <tbody id="filterTable">
-                        <tr><td colspan="12">請設定篩選條件</td></tr>
-                    </tbody>
-                    <tfoot id="filterStats" style="display: none;">
-                        <tr style="background: #fff3e0; font-weight: bold;">
-                            <td colspan="2">均值</td>
-                            <td id="avgSize">-</td>
-                            <td>-</td>
-                            <td id="avgCapital" style="font-size: 0.85em;">-</td>
-                            <td id="avgConvPrice">-</td>
-                            <td id="avgYear">-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td id="avgHigh">-</td>
-                            <td id="avgLow">-</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
+        <div class="stat-card down">
+            <div class="value" id="downCount">-</div>
+            <div class="label">下跌家數</div>
         </div>
-        
-        <!-- 4. 掛牌表現 -->
-        <div id="section4" class="section-block">
-            <div class="section-title">
-                <span class="icon">📈</span>掛牌表現統計
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">顯示所有CB的掛牌後表現統計及排行榜</div>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="label">平均最高價</div>
-                    <div class="value" id="avgHighPerf">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">平均最低價</div>
-                    <div class="value" id="avgLowPerf">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">平均振幅</div>
-                    <div class="value" id="avgSwingPerf">-</div>
-                </div>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>承銷<br>方式</th>
-                            <th>產業<br>分類</th>
-                            <th>掛牌<br>最高</th>
-                            <th>掛牌<br>最低</th>
-                            <th>價格<br>振幅</th>
-                        </tr>
-                    </thead>
-                    <tbody id="topTable"></tbody>
-                </table>
-            </div>
+        <div class="stat-card">
+            <div class="value" id="flatCount">-</div>
+            <div class="label">平盤家數</div>
         </div>
-        
-        <!-- 5. 賣回查詢 -->
-        <div id="section5" class="section-block">
-            <div class="section-title">
-                <span class="icon">💰</span>賣回條件查詢
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">顯示所有CB的賣回日期、價格、利率資訊</div>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>承銷<br>方式</th>
-                            <th>賣回<br>日期1</th>
-                            <th>賣回<br>價格1</th>
-                            <th>利率<br>(%)</th>
-                            <th>賣回<br>日期2</th>
-                            <th>賣回<br>價格2</th>
-                            <th>利率<br>(%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="putbackTable"></tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- 6. 同公司比較 -->
-        <div id="section6" class="section-block">
-            <div class="section-title">
-                <span class="icon">🏢</span>同公司比較
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">查詢方式:輸入股票代號,顯示該公司所有發行的CB</div>
-                <div class="text">使用範例:輸入「8070」查詢長榮航所有CB的比較</div>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>發行<br>規模</th>
-                            <th>有無<br>擔保</th>
-                            <th>發行<br>年期</th>
-                            <th>轉換<br>價格</th>
-                            <th>承銷<br>方式</th>
-                            <th>掛牌<br>最高</th>
-                            <th>掛牌<br>最低</th>
-                        </tr>
-                    </thead>
-                    <tbody id="companyTable">
-                        <tr><td colspan="9">請輸入股票代號進行查詢</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- 7. 時間軸查詢 -->
-        <div id="section7" class="section-block">
-            <div class="section-title">
-                <span class="icon">📅</span>時間軸查詢
-            </div>
-            
-            <div class="info-card">
-                <div class="title">💡 功能說明</div>
-                <div class="text">查詢方式:選擇年份,顯示該年度發行的所有CB</div>
-            </div>
-            
-            <div class="search-box">
-                <div class="search-title">📅 選擇年份</div>
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <select id="yearSelect" style="flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1em;">
-                        <option value="">選擇年份</option>
-                        <option value="2024">2024年</option>
-                        <option value="2023">2023年</option>
-                        <option value="2022">2022年</option>
-                    </select>
-                </div>
-                <button class="search-btn" onclick="yearSearch()" style="width: 100%;">🔍 查詢</button>
-            </div>
-            
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>掛牌<br>日期</th>
-                            <th>CB<br>代號</th>
-                            <th>CB<br>名稱</th>
-                            <th>股票<br>代號</th>
-                            <th>發行<br>規模</th>
-                            <th>承銷<br>方式</th>
-                            <th>產業<br>分類</th>
-                            <th>掛牌<br>最高</th>
-                            <th>掛牌<br>最低</th>
-                        </tr>
-                    </thead>
-                    <tbody id="yearTable">
-                        <tr><td colspan="9">請選擇年份進行查詢</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        
-        <!-- 8. 市場統計 (完整整合第二個檔案的功能) -->
-        <div id="section8" class="section-block">
-            <div class="section-title"><span class="icon">📊</span>市場統計分析</div>
-            
-            <div class="info-card">
-                <div class="title">💡 統計說明</div>
-                <div class="text">本系統提供多維度的CB市場統計分析,包含發行規模、股本大小、轉換價格等區間統計,以及券商和產業的表現排名。所有數據依掛牌最高價由好到差排序。</div>
-            </div>
-
-            <!-- 整體概況 -->
-            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px; margin: 20px auto; max-width: 1400px;">
-                <h3 style="margin-bottom: 20px; font-size: 1.4em;">🌐 市場整體概況</h3>
-                <div class="stats-grid">
-                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.9em; opacity: 0.9;">CB總數</div>
-                        <div id="totalCount" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.9em; opacity: 0.9;">總發行規模</div>
-                        <div id="totalSize" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.9em; opacity: 0.9;">平均最高價</div>
-                        <div id="avgHighAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                    </div>
-                    <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 0.9em; opacity: 0.9;">平均振幅</div>
-                        <div id="avgSwingAll" style="font-size: 2.2em; font-weight: bold; margin-top: 8px;">-</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 基本分類統計 -->
-            <div class="stat-section">
-                <h3>📋 基本分類統計比較</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>分類條件</th>
-                                <th>CB數量</th>
-                                <th>總規模(億)</th>
-                                <th>平均規模(億)</th>
-                                <th>平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="basicStatsTable"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- 發行規模區間統計 -->
-            <div class="stat-section">
-                <h3>💼 發行規模區間統計 (依平均最高價排序)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>規模區間</th>
-                                <th>CB數量</th>
-                                <th>平均規模(億)</th>
-                                <th style="background: #ff6b6b;">平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="sizeRangeTable"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 觀察重點:</strong> 此表依平均最高價由高到低排序,可觀察不同規模CB的掛牌表現差異
-                </div>
-            </div>
-
-            <!-- 股本大小區間統計 -->
-            <div class="stat-section">
-                <h3>🏦 股本大小區間統計 (依平均最高價排序)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>股本區間</th>
-                                <th>CB數量</th>
-                                <th>平均規模(億)</th>
-                                <th style="background: #ff6b6b;">平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="capitalRangeTable"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 觀察重點:</strong> 可觀察公司股本規模與CB掛牌表現的關係
-                </div>
-            </div>
-
-            <!-- 轉換價格區間統計 -->
-            <div class="stat-section">
-                <h3>💰 轉換價格區間統計 (依平均最高價排序)</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>轉換價格區間</th>
-                                <th>CB數量</th>
-                                <th>平均規模(億)</th>
-                                <th style="background: #ff6b6b;">平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="convPriceRangeTable"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: #e3f2fd; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 觀察重點:</strong> 轉換價格高低與掛牌表現的關聯性分析
-                </div>
-            </div>
-
-            <!-- 券商TOP10 -->
-            <div class="stat-section">
-                <h3>🏆 承銷券商表現排行 TOP 10</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>券商名稱</th>
-                                <th>發行數量</th>
-                                <th>總規模(億)</th>
-                                <th>平均規模(億)</th>
-                                <th style="background: #ff6b6b;">平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="underwriterTop10Table"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 觀察重點:</strong> 此排名僅呈現數據統計,不代表未來表現。各券商承作的CB產業類別、公司規模等條件不同,需綜合評估
-                </div>
-            </div>
-
-            <!-- 產業TOP10 -->
-            <div class="stat-section">
-                <h3>🏭 產業表現排行 TOP 10</h3>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>排名</th>
-                                <th>產業分類</th>
-                                <th>發行數量</th>
-                                <th>總規模(億)</th>
-                                <th>平均規模(億)</th>
-                                <th style="background: #ff6b6b;">平均最高價</th>
-                                <th>平均最低價</th>
-                                <th>平均振幅(%)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="industryTop10Table"></tbody>
-                    </table>
-                </div>
-                <div style="margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 觀察重點:</strong> 產業景氣循環、市場環境等因素會影響CB表現,歷史數據僅供參考
-                </div>
-            </div>
-
-            <!-- 擔保類型交叉分析 -->
-            <div class="stat-section">
-                <h3>🔀 擔保/無擔保交叉分析</h3>
-                
-                <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
-                    🏭 產業TOP10 - 擔保/無擔保對比
-                </h4>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>產業</th>
-                                <th>全部數據</th>
-                                <th>有擔保</th>
-                                <th>無擔保</th>
-                            </tr>
-                        </thead>
-                        <tbody id="industryGuaranteeTable"></tbody>
-                    </table>
-                </div>
-                
-                <h4 style="background: #f8f9fa; padding: 12px; border-left: 4px solid #667eea; margin: 20px 0 15px;">
-                    🏦 券商TOP10 - 擔保/無擔保對比
-                </h4>
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>券商</th>
-                                <th>全部數據</th>
-                                <th>有擔保</th>
-                                <th>無擔保</th>
-                            </tr>
-                        </thead>
-                        <tbody id="underwriterGuaranteeTable"></tbody>
-                    </table>
-                </div>
-                
-                <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; font-size: 0.9em;">
-                    <strong>💡 分析說明:</strong> 可觀察同一產業或券商在有擔保與無擔保CB的表現差異,了解擔保條件對掛牌表現的影響
-                </div>
-            </div>
-        </div>
-        
     </div>
-
-    <!-- 頁尾 -->
+    
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table id="dataTable">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+    </div>
+    
     <div class="footer">
-        <p>© 2025 Rex大叔的168台股投資教室 | CB可轉債發行資料查詢系統</p>
-        <p style="margin-top: 8px; opacity: 0.9;">資料僅供參考 | 投資有風險,入市需謹慎</p>
+        <p>以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
+        <p>本人整理之資料僅為學習分享用，無任何商業用途</p>
+        <p>若對以上內容有任何建議交流可以寄到：<a href="mailto:rexdashu168@gmail.com">rexdashu168@gmail.com</a></p>
+        <div class="warning">
+            ⚠️ 投資風險提醒：投資涉及風險，股票價格可升可跌，過往表現並非未來表現的指標。<br>
+            投資者應審慎評估自身財務狀況及風險承受能力，本資料不構成任何投資建議。
+        </div>
     </div>
+</div>
 
-    <script>
-        // 從GitHub載入資料
-        let mockData = [];
-        let isDataLoaded = false;
+<script>
+    let allData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    let sortColumn = null;
+    let sortDirection = 'asc';
+    let columns = [];
+
+    const priorityColumns = [
+        '排序', '代碼', '股票名稱', '產業分類', '收盤價', '漲幅%', 
+        '成交量', '成交值(億)', '週轉率', '當沖率',
+        '外資', '投信', '主力', '散戶', '融資增減', '融券'
+    ];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('reportType').addEventListener('change', loadData);
+        document.getElementById('searchInput').addEventListener('input', debounce(filterData, 300));
+        document.getElementById('pageSize').addEventListener('change', renderTable);
+        loadData();
+    });
+
+    function loadData() {
+        const filename = document.getElementById('reportType').value;
+        const tableBody = document.getElementById('tableBody');
+        const tableHead = document.getElementById('tableHead');
         
-        function formatNumber(num) {
-            if (num === '-' || num === '' || num === null || num === undefined) return '-';
-            const n = parseFloat(num);
-            if (isNaN(n)) return '-';
-            return n.toFixed(1);
+        tableBody.innerHTML = '<tr><td colspan="20" class="loading">載入資料中</td></tr>';
+        tableHead.innerHTML = '';
+        
+        Papa.parse(filename, {
+            download: true,
+            encoding: 'big5',
+            skipEmptyLines: true,
+            complete: function(results) {
+                processData(results.data);
+            },
+            error: function(error) {
+                tableBody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:50px;color:#c53030;">
+                    載入失敗：請確認 ${filename} 檔案存在於同目錄
+                </td></tr>`;
+            }
+        });
+    }
+
+    function processData(rawData) {
+        let headerIndex = 0;
+        for (let i = 0; i < Math.min(10, rawData.length); i++) {
+            const row = rawData[i];
+            if (row && (row.includes('代碼') || row.includes('排序') || row.includes('股票名稱'))) {
+                headerIndex = i;
+                break;
+            }
         }
         
-        function updateDate() {
-            const now = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('zh-TW', options);
-        }
-        updateDate();
+        columns = rawData[headerIndex].map(col => col ? col.trim().replace(/\n/g, '') : '');
         
-        function updateStatsBanner() {
-            if (mockData.length === 0) return;
-            
-            const dates = mockData.map(d => d.listDate).filter(d => d).sort();
-            const startDate = dates[0] || '';
-            const endDate = dates[dates.length - 1] || '';
-            
-            const banner = document.getElementById('statsBanner');
-            banner.innerHTML = `📊 資料期間:${startDate}～${endDate},共計 <strong>${mockData.length}</strong> 檔 | 💰 資料更新:${new Date().toLocaleDateString('zh-TW')}`;
+        let dataDate = '未知';
+        for (let i = 0; i < headerIndex; i++) {
+            const row = rawData[i].join(' ');
+            const dateMatch = row.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+            if (dateMatch) {
+                dataDate = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
+                break;
+            }
         }
+        document.getElementById('dataDate').textContent = dataDate;
         
-        function switchSection(sectionId, index) {
-            document.querySelectorAll('[id^="result"]').forEach(el => {
-                el.innerHTML = '';
-            });
+        allData = [];
+        for (let i = headerIndex + 1; i < rawData.length; i++) {
+            const row = rawData[i];
+            if (!row || row.length < 3) continue;
             
-            document.querySelectorAll('.section-block').forEach(block => {
-                block.classList.remove('active');
-            });
+            const firstCell = String(row[0] || '').trim();
+            if (!firstCell || isNaN(parseInt(firstCell))) continue;
             
-            document.getElementById(sectionId).classList.add('active');
-            
-            document.querySelectorAll('.function-item').forEach((item, i) => {
-                if (i === index) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
+            const rowObj = {};
+            columns.forEach((col, idx) => {
+                if (col) {
+                    let value = row[idx] !== undefined ? String(row[idx]).trim() : '';
+                    if (value.match(/^\([\d,.]+\)$/)) {
+                        value = '-' + value.replace(/[()]/g, '');
+                    }
+                    rowObj[col] = value;
                 }
             });
-            
-            if (sectionId === 'section4') initPerformance();
-            if (sectionId === 'section5') initPutback();
-            if (sectionId === 'section8') initAllStats();
+            allData.push(rowObj);
         }
         
-        function searchCB() {
-            const input = document.getElementById('searchInput1').value.trim();
-            if (!input) { alert('請輸入代號'); return; }
-            
-            const result = input.length === 5 ? 
-                mockData.find(d => d.cbCode === input) :
-                mockData.find(d => d.stockCode === input);
-            
-            if (!result) { 
-                document.getElementById('result1').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">查無資料</div>';
-                return; 
-            }
-            
-            const swing = ((result.high - result.low) / result.low * 100).toFixed(1);
-            
-            document.getElementById('result1').innerHTML = `
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px 30px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-                    <div>
-                        <h1 style="font-size: 2.2em; margin-bottom: 8px;">${result.cbCode} ${result.cbName}</h1>
-                        <p style="font-size: 1.1em; opacity: 0.95;">${result.stockCode} | ${result.industry} | ${result.underwriter}主辦</p>
-                    </div>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <div style="background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 8px; text-align: center; min-width: 100px;">
-                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">掛牌最高</div>
-                            <div style="font-size: 1.6em; font-weight: bold; color: #ffeb3b;">${formatNumber(result.high)}</div>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 8px; text-align: center; min-width: 100px;">
-                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">掛牌最低</div>
-                            <div style="font-size: 1.6em; font-weight: bold; color: #4caf50;">${formatNumber(result.low)}</div>
-                        </div>
-                        <div style="background: rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 8px; text-align: center; min-width: 100px;">
-                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">價格振幅</div>
-                            <div style="font-size: 1.6em; font-weight: bold;">${swing}%</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; font-size: 1.3em; font-weight: bold;">📋 基本條款</div>
-                    <div style="padding: 25px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">發行規模(億元)</div>
-                                <div style="font-size: 1.15em; font-weight: bold; color: #667eea;">${formatNumber(result.size)}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">發行年數</div>
-                                <div style="font-size: 1.15em; font-weight: bold;">${result.year}年</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">是否有擔保</div>
-                                <div style="font-size: 1.15em; font-weight: bold; color: ${result.guarantee === '有擔保' ? '#2196f3' : '#f57c00'};">${result.guarantee}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">承銷方式</div>
-                                <div style="font-size: 1.15em; font-weight: bold; color: ${result.method === '競拍' ? '#c2185b' : '#1976d2'};">${result.method}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">掛牌日期</div>
-                                <div style="font-size: 1.15em; font-weight: bold;">${result.listDate}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">到期日</div>
-                                <div style="font-size: 1.15em; font-weight: bold;">${result.maturity}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">股本(億元)</div>
-                                <div style="font-size: 1.15em; font-weight: bold;">${formatNumber(result.capital)}</div>
-                            </div>
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">產業分類</div>
-                                <div style="font-size: 1.15em; font-weight: bold;">${result.industry}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; font-size: 1.3em; font-weight: bold;">🔄 轉換條款</div>
-                    <div style="padding: 25px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            <div style="background: #f8f9fa; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">轉換價格(元)</div>
-                                <div style="font-size: 1.3em; font-weight: bold; color: #667eea;">${formatNumber(result.convPrice)}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; font-size: 1.3em; font-weight: bold;">↩️ 賣回條件</div>
-                    <div style="padding: 25px;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr>
-                                    <th style="background: #667eea; color: white; padding: 12px; text-align: center;">賣回次數</th>
-                                    <th style="background: #667eea; color: white; padding: 12px; text-align: center;">賣回日期</th>
-                                    <th style="background: #667eea; color: white; padding: 12px; text-align: center;">賣回價格</th>
-                                    <th style="background: #667eea; color: white; padding: 12px; text-align: center;">利率(%)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;"><strong>賣回1</strong></td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${result.putDate1}</td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${formatNumber(result.putPrice1)}</td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${formatNumber(result.rate1)}%</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;"><strong>賣回2</strong></td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${result.putDate2}</td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${formatNumber(result.putPrice2)}</td>
-                                    <td style="padding: 12px; text-align: center; border-bottom: 1px solid #eee;">${formatNumber(result.rate2)}%</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                
-                <div style="background: white; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 25px; font-size: 1.3em; font-weight: bold;">📈 掛牌表現統計</div>
-                    <div style="padding: 25px;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                            <div style="background: #ffebee; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #d32f2f;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">掛牌最高價</div>
-                                <div style="font-size: 1.5em; font-weight: bold; color: #d32f2f;">${formatNumber(result.high)}</div>
-                            </div>
-                            <div style="background: #e8f5e9; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #388e3c;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">掛牌最低價</div>
-                                <div style="font-size: 1.5em; font-weight: bold; color: #388e3c;">${formatNumber(result.low)}</div>
-                            </div>
-                            <div style="background: #fff3e0; padding: 12px 15px; border-radius: 8px; border-left: 4px solid #f57c00;">
-                                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px;">價格振幅</div>
-                                <div style="font-size: 1.5em; font-weight: bold; color: #f57c00;">${swing}%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
+        filteredData = [...allData];
+        currentPage = 1;
+        updateStats();
+        renderTable();
+    }
+
+    function updateStats() {
+        const data = filteredData;
+        document.getElementById('totalCount').textContent = data.length;
         
-        function batchSearch() {
-            const input = document.getElementById('batchInput').value.trim();
-            if (!input) { alert('請輸入CB代號'); return; }
-            
-            const codes = input.split(',').map(c => c.trim());
-            const tbody = document.getElementById('batchTable');
-            tbody.innerHTML = '';
-            
-            codes.forEach(code => {
-                const found = mockData.find(d => d.cbCode === code);
-                if (found) {
-                    const guaranteeText = found.guarantee === '有擔保' ? 
-                        '<span class="guarantee-yes">有</span>' : 
-                        '<span class="guarantee-no">無</span>';
-                    
-                    const methodText = found.method === '競拍' ? 
-                        '<span class="method-auction">競拍</span>' : 
-                        '<span class="method-placement">詢圈</span>';
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${found.cbCode}</strong></td>
-                            <td>${found.cbName}</td>
-                            <td>${formatNumber(found.size)}億</td>
-                            <td>${guaranteeText}</td>
-                            <td>${formatNumber(found.capital)}億</td>
-                            <td>${found.year}年</td>
-                            <td>${found.underwriter}</td>
-                            <td>${found.industry}</td>
-                            <td>${methodText}</td>
-                        </tr>
-                    `;
-                }
-            });
-            
-            if (tbody.innerHTML === '') tbody.innerHTML = '<tr><td colspan="9">查無資料</td></tr>';
-        }
+        const changeCol = columns.find(c => c.includes('漲幅') || c.includes('漲跌'));
         
-        function filterSearch() {
-            const guarantee = document.getElementById('filterGuarantee').value;
-            const year = document.getElementById('filterYear').value;
-            const size = document.getElementById('filterSize').value;
-            const capital = document.getElementById('filterCapital').value;
-            const convPrice = document.getElementById('filterConvPrice').value;
-            const rating = document.getElementById('filterRating').value;
-            const underwriter = document.getElementById('filterUnderwriter').value;
-            const industry = document.getElementById('filterIndustry').value;
-            const method = document.getElementById('filterMethod').value;
-            
-            let results = mockData;
-            
-            if (guarantee) results = results.filter(d => d.guarantee === guarantee);
-            if (year) results = results.filter(d => d.year == year);
-            if (size) {
-                const sizeRanges = {
-                    '1': [1, 3],
-                    '2': [3, 5],
-                    '3': [5, 8],
-                    '4': [8, 10],
-                    '5': [10, 999]
-                };
-                const [min, max] = sizeRanges[size];
-                results = results.filter(d => d.size >= min && d.size < max);
-            }
-            
-            if (capital) {
-                const capitalRanges = {
-                    '1': [7, 10],
-                    '2': [10, 15],
-                    '3': [15, 30],
-                    '4': [30, 60],
-                    '5': [60, 9999]
-                };
-                const [min, max] = capitalRanges[capital];
-                results = results.filter(d => {
-                    const cap = parseFloat(d.capital);
-                    return cap >= min && cap < max;
-                });
-            }
-            if (convPrice) {
-                const convRanges = {
-                    '1': [10, 15],
-                    '2': [15, 20],
-                    '3': [20, 30],
-                    '4': [30, 40],
-                    '5': [40, 60],
-                    '6': [60, 9999]
-                };
-                const [min, max] = convRanges[convPrice];
-                results = results.filter(d => d.convPrice >= min && d.convPrice < max);
-            }
-            
-            if (underwriter) results = results.filter(d => d.underwriter === underwriter);
-            if (industry) results = results.filter(d => d.industry === industry);
-            if (method) results = results.filter(d => d.method === method);
-            
-            const tbody = document.getElementById('filterTable');
-            tbody.innerHTML = '';
-            
-            if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="12">查無符合條件的資料</td></tr>';
-                document.getElementById('filterStats').style.display = 'none';
-                return;
-            }
-            
-            results.forEach(d => {
-                const guaranteeText = d.guarantee === '有擔保' ? 
-                    '<span class="guarantee-yes">有</span>' : 
-                    '<span class="guarantee-no">無</span>';
-                
-                const methodText = d.method === '競拍' ? 
-                    '<span class="method-auction">競拍</span>' : 
-                    '<span class="method-placement">詢圈</span>';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${d.cbCode}</strong></td>
-                        <td>${d.cbName}</td>
-                        <td>${formatNumber(d.size)}億</td>
-                        <td>${guaranteeText}</td>
-                        <td style="font-size: 0.85em;">${formatNumber(d.capital)}億</td>
-                        <td>${formatNumber(d.convPrice)}</td>
-                        <td>${d.year}年</td>
-                        <td>${d.underwriter}</td>
-                        <td>${d.industry}</td>
-                        <td>${methodText}</td>
-                        <td class="${d.high > 150 ? 'highlight-red' : ''}">${formatNumber(d.high)}</td>
-                        <td class="${d.low < 100 ? 'highlight-green' : ''}">${formatNumber(d.low)}</td>
-                    </tr>
-                `;
-            });
-            
-            const avgSize = (results.reduce((s, d) => s + d.size, 0) / results.length).toFixed(1);
-            const avgCapital = (results.reduce((s, d) => s + parseFloat(d.capital), 0) / results.length).toFixed(1);
-            const avgConvPrice = (results.reduce((s, d) => s + d.convPrice, 0) / results.length).toFixed(1);
-            const avgYear = (results.reduce((s, d) => s + d.year, 0) / results.length).toFixed(1);
-            const avgHigh = (results.reduce((s, d) => s + d.high, 0) / results.length).toFixed(1);
-            const avgLow = (results.reduce((s, d) => s + d.low, 0) / results.length).toFixed(1);
-            
-            document.getElementById('avgSize').textContent = avgSize + '億';
-            document.getElementById('avgCapital').textContent = avgCapital + '億';
-            document.getElementById('avgConvPrice').textContent = avgConvPrice + '元';
-            document.getElementById('avgYear').textContent = avgYear + '年';
-            document.getElementById('avgHigh').textContent = avgHigh;
-            document.getElementById('avgLow').textContent = avgLow;
-            document.getElementById('filterStats').style.display = '';
-        }
-        
-        function initPerformance() {
-            const avgH = (mockData.reduce((s, d) => s + d.high, 0) / mockData.length).toFixed(2);
-            const avgL = (mockData.reduce((s, d) => s + d.low, 0) / mockData.length).toFixed(2);
-            const swings = mockData.map(d => (d.high - d.low) / d.low * 100);
-            const avgS = (swings.reduce((s, v) => s + v, 0) / swings.length).toFixed(1);
-            
-            document.getElementById('avgHighPerf').textContent = avgH;
-            document.getElementById('avgLowPerf').textContent = avgL;
-            document.getElementById('avgSwingPerf').textContent = avgS + '%';
-            
-            const sorted = [...mockData].sort((a, b) => b.high - a.high).slice(0, 10);
-            const tbody = document.getElementById('topTable');
-            tbody.innerHTML = '';
-            sorted.forEach((d, i) => {
-                const swing = ((d.high - d.low) / d.low * 100).toFixed(1);
-                
-                const methodText = d.method === '競拍' ? 
-                    '<span class="method-auction">競拍</span>' : 
-                    '<span class="method-placement">詢圈</span>';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${i + 1}</strong></td>
-                        <td>${d.cbCode}</td>
-                        <td>${d.cbName}</td>
-                        <td>${methodText}</td>
-                        <td>${d.industry}</td>
-                        <td class="highlight-red">${formatNumber(d.high)}</td>
-                        <td class="highlight-green">${formatNumber(d.low)}</td>
-                        <td><strong>${swing}%</strong></td>
-                    </tr>
-                `;
-            });
-        }
-        
-        function initPutback() {
-            const tbody = document.getElementById('putbackTable');
-            tbody.innerHTML = '';
-            mockData.forEach(d => {
-                const methodText = d.method === '競拍' ? 
-                    '<span class="method-auction">競拍</span>' : 
-                    '<span class="method-placement">詢圈</span>';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${d.cbCode}</strong></td>
-                        <td>${d.cbName}</td>
-                        <td>${methodText}</td>
-                        <td>${d.putDate1}</td>
-                        <td>${d.putPrice1}</td>
-                        <td>${d.rate1}%</td>
-                        <td>${d.putDate2}</td>
-                        <td>${d.putPrice2}</td>
-                        <td>${d.rate2}%</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        function companySearch() {
-            const input = document.getElementById('searchInput1').value.trim();
-            if (!input) { alert('請輸入股票代號'); return; }
-            
-            const results = mockData.filter(d => d.stockCode === input);
-            const tbody = document.getElementById('companyTable');
-            tbody.innerHTML = '';
-            
-            if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">查無資料</td></tr>';
-                return;
-            }
-            
-            results.forEach(d => {
-                const guaranteeText = d.guarantee === '有擔保' ? 
-                    '<span class="guarantee-yes">有</span>' : 
-                    '<span class="guarantee-no">無</span>';
-                
-                const methodText = d.method === '競拍' ? 
-                    '<span class="method-auction">競拍</span>' : 
-                    '<span class="method-placement">詢圈</span>';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td><strong>${d.cbCode}</strong></td>
-                        <td>${d.cbName}</td>
-                        <td>${formatNumber(d.size)}億</td>
-                        <td>${guaranteeText}</td>
-                        <td>${d.year}年</td>
-                        <td>${formatNumber(d.convPrice)}</td>
-                        <td>${methodText}</td>
-                        <td class="${d.high > 150 ? 'highlight-red' : ''}">${formatNumber(d.high)}</td>
-                        <td class="${d.low < 100 ? 'highlight-green' : ''}">${formatNumber(d.low)}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        function yearSearch() {
-            const year = document.getElementById('yearSelect').value;
-            if (!year) { alert('請選擇年份'); return; }
-            
-            const results = mockData.filter(d => d.listDate.includes(year));
-            const tbody = document.getElementById('yearTable');
-            tbody.innerHTML = '';
-            
-            if (results.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">查無資料</td></tr>';
-                return;
-            }
-            
-            results.sort((a, b) => new Date(a.listDate) - new Date(b.listDate));
-            results.forEach(d => {
-                const methodText = d.method === '競拍' ? 
-                    '<span class="method-auction">競拍</span>' : 
-                    '<span class="method-placement">詢圈</span>';
-                
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${d.listDate}</td>
-                        <td><strong>${d.cbCode}</strong></td>
-                        <td>${d.cbName}</td>
-                        <td>${d.stockCode}</td>
-                        <td>${formatNumber(d.size)}億</td>
-                        <td>${methodText}</td>
-                        <td>${d.industry}</td>
-                        <td class="${d.high > 150 ? 'highlight-red' : ''}">${formatNumber(d.high)}</td>
-                        <td class="${d.low < 100 ? 'highlight-green' : ''}">${formatNumber(d.low)}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        // 市場統計相關函數 (從第二個檔案整合)
-        function calculateStats(data) {
-            if (data.length === 0) return null;
-            const count = data.length;
-            const totalSize = data.reduce((s, d) => s + (d.size || 0), 0);
-            const avgSize = totalSize / count;
-            const avgHigh = data.reduce((s, d) => s + (d.high || 0), 0) / count;
-            const avgLow = data.reduce((s, d) => s + (d.low || 0), 0) / count;
-            const avgSwing = data.reduce((s, d) => {
-                if (d.low > 0) return s + ((d.high - d.low) / d.low * 100);
-                return s;
-            }, 0) / count;
-            return { count, totalSize, avgSize, avgHigh, avgLow, avgSwing };
-        }
-        
-        function getRankBadge(rank) {
-            if (rank === 1) return '<span class="rank-badge rank-1">🥇</span>';
-            if (rank === 2) return '<span class="rank-badge rank-2">🥈</span>';
-            if (rank === 3) return '<span class="rank-badge rank-3">🥉</span>';
-            return '<span class="rank-badge rank-other">' + rank + '</span>';
-        }
-        
-        function generateBasicStats() {
-            const tbody = document.getElementById('basicStatsTable');
-            tbody.innerHTML = '';
-            
-            const all = calculateStats(mockData);
-            tbody.innerHTML += `<tr style="background: #f8f9fa; font-weight: bold;">
-                <td>📊 全部CB</td><td>${all.count}</td><td>${all.totalSize.toFixed(1)}</td>
-                <td>${all.avgSize.toFixed(1)}</td><td>${all.avgHigh.toFixed(1)}</td>
-                <td>${all.avgLow.toFixed(1)}</td><td>${all.avgSwing.toFixed(1)}</td></tr>`;
-            
-            const large = calculateStats(mockData.filter(d => d.size >= 10));
-            const small = calculateStats(mockData.filter(d => d.size < 10));
-            if (large) {
-                tbody.innerHTML += `<tr><td>💼 規模≥10億</td><td>${large.count}</td><td>${large.totalSize.toFixed(1)}</td>
-                    <td>${large.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${large.avgHigh.toFixed(1)}</td>
-                    <td>${large.avgLow.toFixed(1)}</td><td>${large.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            if (small) {
-                tbody.innerHTML += `<tr><td>💼 規模<10億</td><td>${small.count}</td><td>${small.totalSize.toFixed(1)}</td>
-                    <td>${small.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${small.avgHigh.toFixed(1)}</td>
-                    <td>${small.avgLow.toFixed(1)}</td><td>${small.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            
-            const inquiry = calculateStats(mockData.filter(d => d.method === '詢圈'));
-            const auction = calculateStats(mockData.filter(d => d.method === '競拍'));
-            if (inquiry) {
-                tbody.innerHTML += `<tr><td>🎯 詢圈</td><td>${inquiry.count}</td><td>${inquiry.totalSize.toFixed(1)}</td>
-                    <td>${inquiry.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${inquiry.avgHigh.toFixed(1)}</td>
-                    <td>${inquiry.avgLow.toFixed(1)}</td><td>${inquiry.avgSwing.toFixed(1)}</td></tr>`;
-            }
-            if (auction) {
-                tbody.innerHTML += `<tr><td>🎯 競拍</td><td>${auction.count}</td><td>${auction.totalSize.toFixed(1)}</td>
-                    <td>${auction.avgSize.toFixed(1)}</td><td style="color: #d32f2f; font-weight: bold;">${auction.avgHigh.toFixed(1)}</td>
-                    <td>${auction.avgLow.toFixed(1)}</td><td>${auction.avgSwing.toFixed(1)}</td></tr>`;
-            }
-        }
-        
-        function generateSizeRangeStats() {
-            const ranges = [
-                { label: '2億以下', min: 0, max: 2 },
-                { label: '2-5億', min: 2, max: 5 },
-                { label: '5-10億', min: 5, max: 10 },
-                { label: '10-15億', min: 10, max: 15 },
-                { label: '15-20億', min: 15, max: 20 },
-                { label: '20億以上', min: 20, max: 9999 }
-            ];
-            
-            const rangeStats = ranges.map(range => {
-                const data = mockData.filter(d => d.size >= range.min && d.size < range.max);
-                const stats = calculateStats(data);
-                return { label: range.label, ...stats };
-            }).filter(s => s && s.count > 0);
-            
-            rangeStats.sort((a, b) => b.avgHigh - a.avgHigh);
-            const top6 = rangeStats.slice(0, 6);
-            
-            const tbody = document.getElementById('sizeRangeTable');
-            tbody.innerHTML = top6.map((stat, index) => {
-                const rowClass = index < 3 ? 'highlight-top' : '';
-                return `<tr class="${rowClass}">
-                    <td>${getRankBadge(index + 1)}</td>
-                    <td style="text-align: left; padding-left: 15px;">${stat.label}</td>
-                    <td>${stat.count}</td>
-                    <td>${stat.avgSize.toFixed(1)}</td>
-                    <td style="color: #d32f2f; font-weight: bold; font-size: 1.1em;">${stat.avgHigh.toFixed(1)}</td>
-                    <td>${stat.avgLow.toFixed(1)}</td>
-                    <td>${stat.avgSwing.toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function generateCapitalRangeStats() {
-            const ranges = [
-                { label: '3億以下', min: 0, max: 3 },
-                { label: '3-6億', min: 3, max: 6 },
-                { label: '6-10億', min: 6, max: 10 },
-                { label: '10-15億', min: 10, max: 15 },
-                { label: '15-20億', min: 15, max: 20 },
-                { label: '20億以上', min: 20, max: 9999 }
-            ];
-            
-            const rangeStats = ranges.map(range => {
-                const data = mockData.filter(d => {
-                    const cap = parseFloat(d.capital);
-                    return cap >= range.min && cap < range.max;
-                });
-                const stats = calculateStats(data);
-                return { label: range.label, ...stats };
-            }).filter(s => s && s.count > 0);
-            
-            rangeStats.sort((a, b) => b.avgHigh - a.avgHigh);
-            const top6 = rangeStats.slice(0, 6);
-            
-            const tbody = document.getElementById('capitalRangeTable');
-            tbody.innerHTML = top6.map((stat, index) => {
-                const rowClass = index < 3 ? 'highlight-top' : '';
-                return `<tr class="${rowClass}">
-                    <td>${getRankBadge(index + 1)}</td>
-                    <td style="text-align: left; padding-left: 15px;">${stat.label}</td>
-                    <td>${stat.count}</td>
-                    <td>${stat.avgSize.toFixed(1)}</td>
-                    <td style="color: #d32f2f; font-weight: bold; font-size: 1.1em;">${stat.avgHigh.toFixed(1)}</td>
-                    <td>${stat.avgLow.toFixed(1)}</td>
-                    <td>${stat.avgSwing.toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function generateConvPriceRangeStats() {
-            const ranges = [
-                { label: '20元以下', min: 0, max: 20 },
-                { label: '20-50元', min: 20, max: 50 },
-                { label: '50-100元', min: 50, max: 100 },
-                { label: '100-150元', min: 100, max: 150 },
-                { label: '150-200元', min: 150, max: 200 },
-                { label: '200元以上', min: 200, max: 9999 }
-            ];
-            
-            const rangeStats = ranges.map(range => {
-                const data = mockData.filter(d => d.convPrice >= range.min && d.convPrice < range.max);
-                const stats = calculateStats(data);
-                return { label: range.label, ...stats };
-            }).filter(s => s && s.count > 0);
-            
-            rangeStats.sort((a, b) => b.avgHigh - a.avgHigh);
-            const top6 = rangeStats.slice(0, 6);
-            
-            const tbody = document.getElementById('convPriceRangeTable');
-            tbody.innerHTML = top6.map((stat, index) => {
-                const rowClass = index < 3 ? 'highlight-top' : '';
-                return `<tr class="${rowClass}">
-                    <td>${getRankBadge(index + 1)}</td>
-                    <td style="text-align: left; padding-left: 15px;">${stat.label}</td>
-                    <td>${stat.count}</td>
-                    <td>${stat.avgSize.toFixed(1)}</td>
-                    <td style="color: #d32f2f; font-weight: bold; font-size: 1.1em;">${stat.avgHigh.toFixed(1)}</td>
-                    <td>${stat.avgLow.toFixed(1)}</td>
-                    <td>${stat.avgSwing.toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function generateUnderwriterTop10() {
-            const underwriters = [...new Set(mockData.map(d => d.underwriter))];
-            const uwStats = underwriters.map(uw => {
-                const data = mockData.filter(d => d.underwriter === uw);
-                const stats = calculateStats(data);
-                return { name: uw, ...stats };
-            }).filter(s => s && s.count > 0);
-            
-            uwStats.sort((a, b) => b.avgHigh - a.avgHigh);
-            const top10 = uwStats.slice(0, 10);
-            
-            const tbody = document.getElementById('underwriterTop10Table');
-            tbody.innerHTML = top10.map((stat, index) => {
-                const rowClass = index < 3 ? 'highlight-top' : '';
-                return `<tr class="${rowClass}">
-                    <td>${getRankBadge(index + 1)}</td>
-                    <td style="text-align: left; padding-left: 15px;">${stat.name}</td>
-                    <td>${stat.count}</td>
-                    <td>${stat.totalSize.toFixed(1)}</td>
-                    <td>${stat.avgSize.toFixed(1)}</td>
-                    <td style="color: #d32f2f; font-weight: bold; font-size: 1.1em;">${stat.avgHigh.toFixed(1)}</td>
-                    <td>${stat.avgLow.toFixed(1)}</td>
-                    <td>${stat.avgSwing.toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function generateIndustryTop10() {
-            const industries = [...new Set(mockData.map(d => d.industry))];
-            const indStats = industries.map(ind => {
-                const data = mockData.filter(d => d.industry === ind);
-                const stats = calculateStats(data);
-                return { name: ind, ...stats };
-            }).filter(s => s && s.count > 0);
-            
-            indStats.sort((a, b) => b.avgHigh - a.avgHigh);
-            const top10 = indStats.slice(0, 10);
-            
-            const tbody = document.getElementById('industryTop10Table');
-            tbody.innerHTML = top10.map((stat, index) => {
-                const rowClass = index < 3 ? 'highlight-top' : '';
-                return `<tr class="${rowClass}">
-                    <td>${getRankBadge(index + 1)}</td>
-                    <td style="text-align: left; padding-left: 15px;">${stat.name}</td>
-                    <td>${stat.count}</td>
-                    <td>${stat.totalSize.toFixed(1)}</td>
-                    <td>${stat.avgSize.toFixed(1)}</td>
-                    <td style="color: #d32f2f; font-weight: bold; font-size: 1.1em;">${stat.avgHigh.toFixed(1)}</td>
-                    <td>${stat.avgLow.toFixed(1)}</td>
-                    <td>${stat.avgSwing.toFixed(1)}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function generateCrossAnalysis() {
-            const industries = [...new Set(mockData.map(d => d.industry))];
-            const indStats = industries.map(ind => {
-                const all = mockData.filter(d => d.industry === ind);
-                const guaranteed = all.filter(d => d.guarantee === '有擔保');
-                const notGuaranteed = all.filter(d => d.guarantee === '無擔保');
-                return {
-                    name: ind,
-                    all: calculateStats(all),
-                    guaranteed: calculateStats(guaranteed),
-                    notGuaranteed: calculateStats(notGuaranteed)
-                };
-            }).filter(s => s.all && s.all.count > 0);
-            
-            indStats.sort((a, b) => b.all.avgHigh - a.all.avgHigh);
-            const top10Ind = indStats.slice(0, 10);
-            
-            const indTbody = document.getElementById('industryGuaranteeTable');
-            indTbody.innerHTML = top10Ind.map(stat => {
-                const gStr = stat.guaranteed ? `${stat.guaranteed.count}檔 / 均高:${stat.guaranteed.avgHigh.toFixed(1)}` : '-';
-                const ngStr = stat.notGuaranteed ? `${stat.notGuaranteed.count}檔 / 均高:${stat.notGuaranteed.avgHigh.toFixed(1)}` : '-';
-                return `<tr>
-                    <td style="text-align: left; padding-left: 10px; font-weight: bold;">${stat.name}</td>
-                    <td>${stat.all.count}檔 / 均高:<strong style="color: #d32f2f;">${stat.all.avgHigh.toFixed(1)}</strong></td>
-                    <td style="background: #e8f5e9;">${gStr}</td>
-                    <td style="background: #fff3e0;">${ngStr}</td>
-                </tr>`;
-            }).join('');
-            
-            const underwriters = [...new Set(mockData.map(d => d.underwriter))];
-            const uwStats = underwriters.map(uw => {
-                const all = mockData.filter(d => d.underwriter === uw);
-                const guaranteed = all.filter(d => d.guarantee === '有擔保');
-                const notGuaranteed = all.filter(d => d.guarantee === '無擔保');
-                return {
-                    name: uw,
-                    all: calculateStats(all),
-                    guaranteed: calculateStats(guaranteed),
-                    notGuaranteed: calculateStats(notGuaranteed)
-                };
-            }).filter(s => s.all && s.all.count > 0);
-            
-            uwStats.sort((a, b) => b.all.avgHigh - a.all.avgHigh);
-            const top10Uw = uwStats.slice(0, 10);
-            
-            const uwTbody = document.getElementById('underwriterGuaranteeTable');
-            uwTbody.innerHTML = top10Uw.map(stat => {
-                const gStr = stat.guaranteed ? `${stat.guaranteed.count}檔 / 均高:${stat.guaranteed.avgHigh.toFixed(1)}` : '-';
-                const ngStr = stat.notGuaranteed ? `${stat.notGuaranteed.count}檔 / 均高:${stat.notGuaranteed.avgHigh.toFixed(1)}` : '-';
-                return `<tr>
-                    <td style="text-align: left; padding-left: 10px; font-weight: bold;">${stat.name}</td>
-                    <td>${stat.all.count}檔 / 均高:<strong style="color: #d32f2f;">${stat.all.avgHigh.toFixed(1)}</strong></td>
-                    <td style="background: #e8f5e9;">${gStr}</td>
-                    <td style="background: #fff3e0;">${ngStr}</td>
-                </tr>`;
-            }).join('');
-        }
-        
-        function initAllStats() {
-            const total = mockData.length;
-            const totalSize = mockData.reduce((s, d) => s + d.size, 0);
-            const avgHigh = mockData.reduce((s, d) => s + d.high, 0) / total;
-            const avgSwing = mockData.reduce((s, d) => {
-                if (d.low > 0) return s + ((d.high - d.low) / d.low * 100);
-                return s;
-            }, 0) / total;
-            
-            document.getElementById('totalCount').textContent = total + '檔';
-            document.getElementById('totalSize').textContent = totalSize.toFixed(1) + '億';
-            document.getElementById('avgHighAll').textContent = avgHigh.toFixed(1);
-            document.getElementById('avgSwingAll').textContent = avgSwing.toFixed(1) + '%';
-            
-            generateBasicStats();
-            generateSizeRangeStats();
-            generateCapitalRangeStats();
-            generateConvPriceRangeStats();
-            generateUnderwriterTop10();
-            generateIndustryTop10();
-            generateCrossAnalysis();
-        }
-        
-        async function loadExcelData(retryCount = 0) {
-            const maxRetries = 3;
-            
-            try {
-                console.log(`嘗試載入資料 (第${retryCount + 1}次)...`);
-                document.getElementById('loadingText').textContent = retryCount === 0 ? '正在連接GitHub...' : `重試中 (${retryCount}/${maxRetries})`;
-                document.getElementById('loadingDetail').textContent = '下載Excel檔案';
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const url = "https://rexdashu168.github.io/cbhistory168/cb_issue.xlsx";
-                const response = await fetch(url + '?t=' + Date.now(), {
-                    signal: controller.signal,
-                    cache: 'no-cache',
-                    mode: 'cors'
-                });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                document.getElementById('loadingText').textContent = '下載完成';
-                document.getElementById('loadingDetail').textContent = '正在解析資料...';
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: "array" });
-                const sheet = workbook.Sheets["allcbissue"];
-                const jsonData = XLSX.utils.sheet_to_json(sheet);
-                
-                document.getElementById('loadingText').textContent = '資料解析完成';
-                document.getElementById('loadingDetail').textContent = '正在初始化介面...';
-                mockData = jsonData.map(row => ({
-                    cbCode: String(row["CB代號"] || ""),
-                    cbName: row["CB名稱"] || "",
-                    stockCode: String(row["股票代號"] || ""),
-                    size: parseFloat(row["發行規模"] || 0),
-                    guarantee: row["有無擔保"] || "",
-                    year: parseFloat(row["發行年期"] || 0),
-                    convPrice: parseFloat(row["轉換價格"] || 0),
-                    listDate: row["掛牌日期"] || "",
-                    maturity: row["到期日期"] || "",
-                    high: parseFloat(row["掛牌最高"] || 0),
-                    low: parseFloat(row["掛牌最低"] || 0),
-                    putDate1: row["賣回日期1"] || "-",
-                    putPrice1: parseFloat(row["賣回價格1"] || 0),
-                    rate1: parseFloat(row["殖利率1"] || 0),
-                    putDate2: row["賣回日期2"] || "-",
-                    putPrice2: parseFloat(row["賣回價格2"] || 0),
-                    rate2: parseFloat(row["殖利率2"] || 0),
-                    underwriter: row["承銷券商"] || "",
-                    industry: row["產業分類"] || "",
-                    method: row["承銷方式"] || "",
-                    capital: String(row["股本規模"] || "")
-                }));
-                
-                isDataLoaded = true;
-                console.log(`成功載入 ${mockData.length} 筆資料`);
-                
-                updateStatsBanner();
-                document.getElementById('loadingScreen').style.display = 'none';
-                
-            } catch (error) {
-                console.error(`載入失敗 (第${retryCount + 1}次):`, error);
-                
-                if (retryCount < maxRetries) {
-                    console.log(`等待${(retryCount + 1) * 2}秒後重試...`);
-                    setTimeout(() => {
-                        loadExcelData(retryCount + 1);
-                    }, (retryCount + 1) * 2000);
-                    return;
-                }
-                
-                console.warn('多次重試失敗');
-                const useTestData = confirm(
-                    '無法從GitHub載入資料\n\n' +
-                    '可能原因：\n' +
-                    '1. GitHub Pages還在部署中（請等待1-2分鐘）\n' +
-                    '2. 網路連線問題\n' +
-                    '3. 檔案路徑錯誤\n\n' +
-                    '點擊確定重新載入頁面'
-                );
-                
-                if (useTestData) {
-                    location.reload();
-                } else {
-                    document.getElementById('loadingScreen').innerHTML = `
-                        <div style="font-size: 3em; margin-bottom: 20px;">⚠️</div>
-                        <div style="font-size: 1.5em; margin-bottom: 20px;">資料載入失敗</div>
-                        <div style="margin-bottom: 20px;">錯誤: ${error.message}</div>
-                        <button onclick="location.reload()" style="padding: 15px 40px; font-size: 1.1em; background: white; color: #667eea; border: none; border-radius: 8px; cursor: pointer;">
-                            重新載入
-                        </button>
-                    `;
-                }
-            }
-        }
-        
-        document.getElementById('searchInput1').addEventListener('keypress', e => {
-            if (e.key === 'Enter') searchCB();
+        let up = 0, down = 0, flat = 0;
+        data.forEach(row => {
+            const val = parseFloat(row[changeCol]) || 0;
+            if (val > 0) up++;
+            else if (val < 0) down++;
+            else flat++;
         });
         
-        const batchInput = document.getElementById('batchInput');
-        if (batchInput) {
-            batchInput.addEventListener('keypress', e => {
-                if (e.key === 'Enter') batchSearch();
+        document.getElementById('upCount').textContent = up;
+        document.getElementById('downCount').textContent = down;
+        document.getElementById('flatCount').textContent = flat;
+    }
+
+    function filterData() {
+        const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+        
+        if (!keyword) {
+            filteredData = [...allData];
+        } else {
+            filteredData = allData.filter(row => {
+                const code = String(row['代碼'] || '').toLowerCase();
+                const name = String(row['股票名稱'] || '').toLowerCase();
+                return code.includes(keyword) || name.includes(keyword);
             });
         }
         
-        window.addEventListener('DOMContentLoaded', () => {
-            loadExcelData();
+        currentPage = 1;
+        updateStats();
+        renderTable();
+    }
+
+    function sortData(column) {
+        if (sortColumn === column) {
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortColumn = column;
+            sortDirection = 'desc';
+        }
+        
+        filteredData.sort((a, b) => {
+            let valA = a[column] || '';
+            let valB = b[column] || '';
+            
+            const numA = parseFloat(String(valA).replace(/,/g, ''));
+            const numB = parseFloat(String(valB).replace(/,/g, ''));
+            
+            if (!isNaN(numA) && !isNaN(numB)) {
+                return sortDirection === 'asc' ? numA - numB : numB - numA;
+            }
+            
+            return sortDirection === 'asc' 
+                ? String(valA).localeCompare(String(valB))
+                : String(valB).localeCompare(String(valA));
         });
-    </script>
+        
+        renderTable();
+    }
+
+    function renderTable() {
+        const tableHead = document.getElementById('tableHead');
+        const tableBody = document.getElementById('tableBody');
+        const pageSize = document.getElementById('pageSize').value;
+        
+        const sortedColumns = [...columns].sort((a, b) => {
+            const idxA = priorityColumns.findIndex(p => a.includes(p));
+            const idxB = priorityColumns.findIndex(p => b.includes(p));
+            if (idxA === -1 && idxB === -1) return 0;
+            if (idxA === -1) return 1;
+            if (idxB === -1) return -1;
+            return idxA - idxB;
+        });
+        
+        const displayColumns = sortedColumns.slice(0, 20);
+        
+        tableHead.innerHTML = '<tr>' + displayColumns.map(col => {
+            const sortClass = sortColumn === col 
+                ? (sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc') 
+                : '';
+            return `<th class="${sortClass}" onclick="sortData('${col}')">${col}</th>`;
+        }).join('') + '</tr>';
+        
+        const total = filteredData.length;
+        const size = pageSize === 'all' ? total : parseInt(pageSize);
+        const totalPages = Math.ceil(total / size);
+        const start = (currentPage - 1) * size;
+        const end = start + size;
+        const pageData = filteredData.slice(start, end);
+        
+        tableBody.innerHTML = pageData.map(row => {
+            const changeCol = columns.find(c => c.includes('漲幅'));
+            const change = parseFloat(row[changeCol]) || 0;
+            const rowClass = change > 0 ? 'highlight' : '';
+            
+            return `<tr class="${rowClass}">` + displayColumns.map(col => {
+                let value = row[col] || '';
+                let className = '';
+                
+                const num = parseFloat(String(value).replace(/,/g, ''));
+                if (!isNaN(num)) {
+                    if (col.includes('漲幅') || col.includes('漲跌')) {
+                        className = num > 0 ? 'positive' : (num < 0 ? 'negative' : '');
+                        value = num > 0 ? `+${value}` : value;
+                    } else if (col.includes('外資') || col.includes('投信') || col.includes('主力') || col.includes('融資')) {
+                        className = num > 0 ? 'positive' : (num < 0 ? 'negative' : '');
+                    }
+                }
+                
+                return `<td class="${className}">${value}</td>`;
+            }).join('') + '</tr>';
+        }).join('') || '<tr><td colspan="20" style="text-align:center;padding:30px;">無符合條件的資料</td></tr>';
+        
+        renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+        const pagination = document.getElementById('pagination');
+        if (totalPages <= 1) {
+            pagination.innerHTML = '';
+            return;
+        }
+        
+        let html = '';
+        html += `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>首頁</button>`;
+        html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一頁</button>`;
+        
+        const start = Math.max(1, currentPage - 2);
+        const end = Math.min(totalPages, currentPage + 2);
+        
+        for (let i = start; i <= end; i++) {
+            html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+        }
+        
+        html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一頁</button>`;
+        html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末頁</button>`;
+        html += `<span style="margin-left:10px;color:#666;">第 ${currentPage} / ${totalPages} 頁</span>`;
+        
+        pagination.innerHTML = html;
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        renderTable();
+        document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+</script>
+```
+
 </body>
 </html>
