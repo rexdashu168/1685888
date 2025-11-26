@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex CB-Smart 智能戰情室 (高效能版)</title>
+    <title>Rex CB-Smart 戰情室 (自動連線版)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        /* CSS 樣式維持高質感暗色系 */
         :root {
             --bg-dark: #121212;
             --bg-card: #1e1e1e;
@@ -18,7 +18,6 @@
             --text-sub: #a0a0a0;
             --danger: #ff5252;
             --success: #00e676;
-            --warning: #ffb74d;
             --border: rgba(255,255,255,0.1);
         }
 
@@ -37,64 +36,57 @@
         /* --- Header --- */
         .header {
             height: 60px;
-            background: linear-gradient(90deg, #1a237e 0%, #0d47a1 100%);
+            background: linear-gradient(90deg, #0d47a1 0%, #1565c0 100%);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 0 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             z-index: 100;
         }
 
         .brand {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
-        .controls {
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: #333;
+            color: #aaa;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 6px;
         }
+        .status-badge.online { background: rgba(0, 230, 118, 0.2); color: var(--success); border: 1px solid var(--success); }
+        .status-badge.error { background: rgba(255, 82, 82, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+
+        .controls { display: flex; align-items: center; gap: 15px; }
 
         .date-picker-box {
             background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 4px 12px;
+            border-radius: 6px;
+            padding: 4px 10px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
         .date-input {
-            background: transparent;
-            border: none;
-            color: #fff;
-            font-family: inherit;
-            outline: none;
-            color-scheme: dark;
+            background: transparent; border: none; color: #fff;
+            font-family: inherit; outline: none; color-scheme: dark; font-size: 0.95rem;
         }
-
-        .btn-upload {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: 0.2s;
-        }
-        .btn-upload:hover { background: var(--primary); color: #000; }
 
         /* --- Main Layout --- */
         .main-container {
             display: grid;
-            grid-template-columns: 400px 1fr;
+            grid-template-columns: 380px 1fr;
             flex: 1;
             overflow: hidden;
         }
@@ -106,8 +98,8 @@
             display: flex;
             flex-direction: column;
             padding: 20px;
-            overflow-y: auto;
             gap: 20px;
+            overflow-y: auto;
         }
 
         .search-box { position: relative; }
@@ -125,89 +117,103 @@
         }
         .cb-card.active { display: block; }
 
-        .card-header { padding: 20px; background: linear-gradient(135deg, rgba(41,98,255,0.2), rgba(0,212,255,0.1)); border-bottom: 1px solid var(--border); }
-        .cb-title { font-size: 1.4rem; font-weight: 700; color: #fff; }
+        .card-header { padding: 15px; background: linear-gradient(135deg, rgba(41,98,255,0.2), rgba(0,212,255,0.1)); border-bottom: 1px solid var(--border); }
+        .cb-title { font-size: 1.3rem; font-weight: 700; color: #fff; }
         .cb-code { font-size: 1rem; color: var(--primary); font-family: monospace; }
-        .cb-tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-        .tag { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text-sub); }
+        .cb-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text-sub); }
         .tag.risk { background: rgba(255, 82, 82, 0.2); color: var(--danger); border: 1px solid var(--danger); }
         .tag.safe { background: rgba(0, 230, 118, 0.2); color: var(--success); border: 1px solid var(--success); }
 
         .card-body { padding: 15px; }
-        .data-section { margin-bottom: 20px; }
-        .section-title { font-size: 0.85rem; color: var(--text-sub); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #333; padding-bottom: 5px; }
-        .section-title i { color: var(--primary); }
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .data-item { background: rgba(0,0,0,0.2); padding: 10px; border-radius: 6px; }
-        .data-label { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 4px; }
-        .data-value { font-size: 1rem; font-weight: 500; color: #fff; word-break: break-all; }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .data-item { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px; }
+        .data-label { font-size: 0.75rem; color: var(--text-sub); }
+        .data-value { font-size: 0.95rem; font-weight: 500; color: #fff; }
         .val-up { color: var(--danger); }
         .val-down { color: var(--success); }
 
         /* --- Right Panel --- */
-        .right-panel { padding: 20px; display: flex; flex-direction: column; overflow: hidden; background: #121212; }
+        .right-panel {
+            padding: 20px; display: flex; flex-direction: column; overflow: hidden; background: #121212;
+            position: relative;
+        }
         
-        .dashboard-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; white-space: nowrap; }
+        .dashboard-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn {
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text-sub);
-            padding: 8px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; transition: 0.2s;
-            display: flex; align-items: center; gap: 6px;
+            padding: 6px 16px; border-radius: 20px; cursor: pointer; white-space: nowrap; font-size: 0.9rem;
         }
-        .tab-btn:hover { border-color: var(--primary); color: #fff; }
         .tab-btn.active { background: var(--primary); color: #000; font-weight: 700; border-color: var(--primary); }
 
-        .content-area { flex: 1; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; }
-        
-        .table-container { flex: 1; overflow: auto; }
-        table { width: 100%; border-collapse: collapse; }
+        .table-container { flex: 1; overflow: auto; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         thead { position: sticky; top: 0; background: #252525; z-index: 10; }
-        th { text-align: left; padding: 12px 16px; color: var(--text-sub); font-size: 0.85rem; border-bottom: 2px solid var(--border); white-space: nowrap; }
-        td { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; white-space: nowrap; color: var(--text-main); }
+        th { text-align: left; padding: 10px 14px; color: var(--text-sub); border-bottom: 2px solid var(--border); white-space: nowrap; }
+        td { padding: 10px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; color: var(--text-main); }
         tr:hover { background: rgba(255,255,255,0.05); cursor: pointer; }
 
-        /* --- Loading Overlay --- */
+        /* --- Diagnostics & Loading --- */
         .loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 999;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 50;
             display: none; justify-content: center; align-items: center; flex-direction: column;
         }
-        .progress-bar-container { width: 300px; height: 10px; background: #333; border-radius: 5px; margin-top: 20px; overflow: hidden; }
+        .progress-bar-container { width: 300px; height: 6px; background: #333; border-radius: 3px; margin-top: 15px; overflow: hidden; }
         .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: width 0.3s; }
-        .loading-text { color: #fff; margin-top: 10px; font-size: 0.9rem; }
-
-        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-align: center; }
-        .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
+        
+        .error-box {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #2a0000; border: 1px solid var(--danger); padding: 30px;
+            border-radius: 12px; text-align: center; max-width: 500px; display: none; z-index: 60;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
 
         @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
     </style>
 </head>
 <body>
 
+    <div id="statusBadge" style="position:fixed; bottom:20px; right:20px; z-index:999;" class="status-badge">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> 初始化中...
+    </div>
+
     <div id="loadingOverlay" class="loading-overlay">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary);"></i>
+        <i class="fa-solid fa-satellite-dish fa-bounce" style="font-size: 3rem; color: var(--primary);"></i>
         <div class="progress-bar-container">
             <div id="progressBar" class="progress-bar"></div>
         </div>
-        <div id="loadingText" class="loading-text">準備載入資料...</div>
+        <div id="loadingText" style="margin-top:10px; color:#ccc;">正在連線資料庫...</div>
+    </div>
+
+    <div id="errorBox" class="error-box">
+        <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--danger); margin-bottom: 15px;"></i>
+        <h3 style="color: #fff; margin-bottom: 10px;">無法讀取資料</h3>
+        <p id="errorMsg" style="color: #ccc; margin-bottom: 20px;">找不到檔案</p>
+        <div style="text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.9rem; color: #aaa;">
+            <p>請檢查 GitHub 設定：</p>
+            <ol style="margin-left: 20px; margin-top: 5px;">
+                <li>檔案名稱是否為 <span style="color:#fff;" id="expectedFilename"></span>？</li>
+                <li>檔案是否已上傳到 GitHub？</li>
+            </ol>
+        </div>
+        <button onclick="location.reload()" style="margin-top: 20px; padding: 8px 20px; background: var(--primary); border: none; border-radius: 4px; cursor: pointer;">重試</button>
     </div>
 
     <header class="header">
         <div class="brand">
-            <i class="fa-solid fa-bolt"></i>
-            Rex CB-Smart 戰情室 <span style="font-size: 0.8rem; background: var(--success); color: #000; padding: 2px 6px; border-radius: 4px; margin-left: 10px;">Pro</span>
+            <i class="fa-solid fa-network-wired"></i> Rex 戰情室
         </div>
         <div class="controls">
             <div class="date-picker-box">
                 <i class="fa-regular fa-calendar"></i>
-                <input type="date" id="datePicker" class="date-input">
-                <i class="fa-solid fa-rotate-right" style="cursor: pointer; font-size: 0.8rem;" onclick="loadDateData()" title="重新載入"></i>
+                <input type="date" id="datePicker" class="date-input" onchange="manualDateChange()">
             </div>
-            <input type="file" id="fileInput" accept=".xlsx" style="display: none;" onchange="handleManualUpload(event)">
-            <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
-                <i class="fa-solid fa-folder-open"></i> 載入 Excel
+            <input type="file" id="fileInput" accept=".xlsx" style="display:none;" onchange="handleManualUpload(event)">
+            <button onclick="document.getElementById('fileInput').click()" style="background:transparent; border:1px solid #444; color:#aaa; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8rem;">
+                手動上傳
             </button>
         </div>
     </header>
@@ -218,186 +224,197 @@
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
                 <input type="text" id="searchInput" class="search-input" placeholder="輸入代碼 (如: 68072)" onkeypress="if(event.key==='Enter') smartSearch()">
             </div>
-
-            <div id="welcomeMsg" class="empty-state" style="height: auto; padding-top: 50px;">
-                <div class="empty-icon"><i class="fa-solid fa-robot"></i></div>
-                <h3>準備就緒</h3>
-                <p>輸入代碼，系統將掃描所有工作表</p>
-            </div>
-
             <div id="superCard" class="cb-card"></div>
+            <div id="welcomeMsg" style="text-align: center; color: #555; margin-top: 50px;">
+                <i class="fa-solid fa-database" style="font-size: 3rem; margin-bottom: 10px;"></i>
+                <p>資料庫已連線</p>
+            </div>
         </aside>
 
         <main class="right-panel">
             <div class="dashboard-tabs" id="tabContainer">
-                <button class="tab-btn active" onclick="switchView('strategy')"><i class="fa-solid fa-chess-knight"></i> 智能選股</button>
+                <button class="tab-btn active" onclick="switchView('strategy')">智能選股</button>
             </div>
-
-            <div class="content-area">
-                <div id="tableWrapper" class="table-container">
-                    <div id="strategyView">
-                        <div style="padding: 20px; text-align: center; margin-top: 50px; color: #666;">
-                            <i class="fa-solid fa-layer-group" style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"></i>
-                            <p>請先載入 Excel 檔案</p>
-                            <p style="font-size: 0.9rem;">載入後可點選「策略按鈕」進行篩選</p>
-                        </div>
-                    </div>
-                    
-                    <table id="mainTable" style="display:none;">
-                        <thead id="tableHead"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
+            <div id="strategyView" style="padding: 20px; text-align: center;">
+                <div style="margin-bottom: 20px; display: flex; justify-content: center; gap: 10px;">
+                    <button class="tab-btn" onclick="runStrategy('high_leverage')">🔥 高槓桿 ASO</button>
+                    <button class="tab-btn" onclick="runStrategy('risk_alert')">⚠️ 風險警示</button>
+                    <button class="tab-btn" onclick="runStrategy('near_maturity')">⏳ 即將到期</button>
                 </div>
+                <div id="strategyResult"></div>
+            </div>
+            <div id="tableContainer" class="table-container" style="display:none;">
+                <table id="mainTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
             </div>
         </main>
     </div>
 
     <script>
+        // --- 核心變數 ---
         let fullDB = {};
         let sheetList = [];
-        let categorizedSheets = {
-            quote: null,   // 報價單
-            market: null,  // 每日行情
-            basic: null,   // 基本資料
-            risk: []       // 風險相關
+        let categorizedSheets = { quote: null, risk: [] };
+
+        // --- 1. 網頁啟動：自動執行 ---
+        window.onload = function() {
+            // 設定今日日期
+            const now = new Date();
+            // 處理時區問題，確保是當地時間的 YYYY-MM-DD
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const todayStr = `${year}-${month}-${day}`;
+            
+            document.getElementById('datePicker').value = todayStr;
+
+            // 立即觸發載入
+            console.log("系統啟動，嘗試載入日期:", todayStr);
+            loadDataByDate(todayStr);
         };
 
-        window.onload = () => {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('datePicker').value = today;
-        };
-
-        // --- 檔案處理 (防卡死核心) ---
-        function handleManualUpload(event) {
-            const file = event.target.files[0];
-            if(file) {
-                showLoading(true);
-                // 使用 setTimeout 讓 UI 先渲染 Loading 畫面，再開始跑重工作
-                setTimeout(() => processExcel(file), 100);
-            }
+        function manualDateChange() {
+            const date = document.getElementById('datePicker').value;
+            loadDataByDate(date);
         }
 
-        function loadDateData() {
-            const dateStr = document.getElementById('datePicker').value;
+        // --- 2. 智慧載入邏輯 (Smart Load) ---
+        function loadDataByDate(dateStr) {
             if(!dateStr) return;
+
+            // 檔名格式化: 2025-11-26 -> 20251126.xlsx
             const filename = dateStr.replace(/-/g, '') + '.xlsx';
-            const path = './data/' + filename;
             
-            showLoading(true);
-            
-            fetch(path)
-                .then(res => {
-                    if(!res.ok) throw new Error("找不到檔案");
-                    return res.arrayBuffer();
-                })
-                .then(data => setTimeout(() => processExcel(data, true), 100))
-                .catch(err => {
-                    showLoading(false);
-                    alert(`查無資料: ${filename}\n請確認檔案已上傳至 data 資料夾`);
+            // UI 狀態更新
+            updateStatus('loading', `正在搜尋: ${filename}`);
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('errorBox').style.display = 'none';
+
+            // 雙重路徑偵測：先找 data/，失敗找 ./
+            const pathData = `./data/${filename}`;
+            const pathRoot = `./${filename}`;
+
+            // 嘗試路徑 1
+            fetch(pathData).then(res => {
+                if(res.ok) return res.arrayBuffer();
+                throw new Error("data資料夾找不到");
+            }).then(data => {
+                // 成功載入
+                processExcel(data);
+            }).catch(err1 => {
+                console.log("data 資料夾讀取失敗，嘗試根目錄...");
+                // 嘗試路徑 2 (根目錄)
+                fetch(pathRoot).then(res => {
+                    if(res.ok) return res.arrayBuffer();
+                    throw new Error("根目錄也找不到");
+                }).then(data => {
+                    processExcel(data);
+                }).catch(err2 => {
+                    // 真的找不到了
+                    showError(filename, "兩個路徑都找不到檔案");
                 });
+            });
         }
 
-        async function processExcel(data, isBuffer = false) {
+        // --- 3. Excel 處理 (分批讀取防當機) ---
+        async function processExcel(buffer) {
             try {
-                const workbook = XLSX.read(data, {type: isBuffer ? 'array' : 'binary'});
+                updateStatus('loading', '正在解析 Excel...');
+                const workbook = XLSX.read(buffer, {type: 'array'});
                 sheetList = workbook.SheetNames;
                 fullDB = {};
-                
-                // 重置分類
-                categorizedSheets = { quote: null, market: null, basic: null, risk: [] };
+                categorizedSheets = { quote: null, risk: [] };
 
-                // 分批處理工作表 (Chunk Processing)
-                const totalSheets = sheetList.length;
+                const total = sheetList.length;
                 
-                for(let i = 0; i < totalSheets; i++) {
-                    const sheetName = sheetList[i];
-                    updateLoadingProgress((i / totalSheets) * 100, `正在讀取: ${sheetName}`);
+                for(let i=0; i<total; i++) {
+                    const name = sheetList[i];
+                    // 更新進度條
+                    document.getElementById('progressBar').style.width = `${(i/total)*100}%`;
+                    document.getElementById('loadingText').textContent = `讀取中: ${name}`;
                     
-                    // 讓出主執行緒，避免瀏覽器卡死 (Yield to main thread)
-                    await new Promise(resolve => setTimeout(resolve, 5));
+                    // 防卡死延遲
+                    await new Promise(r => setTimeout(r, 5));
 
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-                    
-                    // 欄位名稱標準化 (去除空白)
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[name]);
+                    // 欄位去空白
                     const cleanData = jsonData.map(row => {
                         const newRow = {};
-                        for(let key in row) newRow[key.trim()] = row[key];
+                        for(let k in row) newRow[k.trim()] = row[k];
                         return newRow;
                     });
 
-                    fullDB[sheetName] = cleanData;
+                    fullDB[name] = cleanData;
 
-                    // 智慧分類工作表 (根據欄位特徵，而非檔名)
+                    // 簡單分類
                     if(cleanData.length > 0) {
                         const keys = Object.keys(cleanData[0]).join(',');
-                        if(keys.includes('Delta') || keys.includes('Gamma')) categorizedSheets.quote = sheetName;
-                        else if(keys.includes('收盤') && keys.includes('漲跌')) categorizedSheets.market = sheetName;
-                        else if(keys.includes('到期日') || keys.includes('發行日')) categorizedSheets.basic = sheetName;
-                        else if(keys.includes('停止') || keys.includes('贖回') || keys.includes('調整')) categorizedSheets.risk.push(sheetName);
+                        if(keys.includes('Delta')) categorizedSheets.quote = name;
+                        if(keys.includes('停止') || keys.includes('贖回')) categorizedSheets.risk.push(name);
                     }
                 }
 
-                updateTabs();
-                initStrategyView();
-                showLoading(false);
+                // 完成
+                document.getElementById('loadingOverlay').style.display = 'none';
+                updateStatus('online', `已連線: ${sheetList.length} 個資料表`);
+                initTabs();
 
             } catch (e) {
                 console.error(e);
-                showLoading(false);
-                alert("讀取檔案時發生錯誤，可能是檔案格式不支援。");
+                showError("未知", "檔案解析失敗 (格式錯誤?)");
             }
         }
 
-        // --- UI 更新 ---
-        function updateTabs() {
-            const container = document.getElementById('tabContainer');
-            container.innerHTML = `<button class="tab-btn active" onclick="switchView('strategy')"><i class="fa-solid fa-chess-knight"></i> 智能選股</button>`;
-            
-            sheetList.forEach(name => {
+        // --- 輔助功能 ---
+        function updateStatus(type, msg) {
+            const badge = document.getElementById('statusBadge');
+            badge.className = `status-badge ${type}`;
+            badge.innerHTML = type === 'loading' 
+                ? `<i class="fa-solid fa-circle-notch fa-spin"></i> ${msg}`
+                : `<i class="fa-solid fa-check-circle"></i> ${msg}`;
+        }
+
+        function showError(filename, reason) {
+            document.getElementById('loadingOverlay').style.display = 'none';
+            document.getElementById('errorBox').style.display = 'block';
+            document.getElementById('expectedFilename').textContent = filename;
+            document.getElementById('errorMsg').textContent = `原因: ${reason}`;
+            updateStatus('error', '連線失敗');
+        }
+
+        function handleManualUpload(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => processExcel(evt.target.result);
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- 介面邏輯 (Tabs & Search) ---
+        function initTabs() {
+            const con = document.getElementById('tabContainer');
+            con.innerHTML = `<button class="tab-btn active" onclick="switchView('strategy')">智能選股</button>`;
+            sheetList.forEach(s => {
                 const btn = document.createElement('button');
                 btn.className = 'tab-btn';
-                btn.textContent = name;
-                btn.onclick = () => showSheetTable(name);
-                container.appendChild(btn);
+                btn.textContent = s;
+                btn.onclick = () => showTable(s);
+                con.appendChild(btn);
             });
         }
 
-        function initStrategyView() {
-            const view = document.getElementById('strategyView');
-            view.innerHTML = `
-                <div style="padding: 20px;">
-                    <h3 style="margin-bottom: 15px; color: var(--primary);">🎯 策略掃描 (已載入 ${sheetList.length} 個工作表)</h3>
-                    <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-                        <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('high_leverage')">🔥 高槓桿 (Delta高+便宜)</button>
-                        <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('risk_check')">⚠️ 風險警示 (停止/贖回)</button>
-                        <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('near_maturity')">⏳ 即將到期 (<6個月)</button>
-                    </div>
-                    <div id="strategyResult" style="color: #aaa;">請點選上方按鈕開始篩選...</div>
-                </div>
-            `;
-        }
-
-        function switchView(mode) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            if(mode === 'strategy') {
-                document.querySelector('.tab-btn').classList.add('active');
-                document.getElementById('strategyView').style.display = 'block';
-                document.getElementById('mainTable').style.display = 'none';
-            }
-        }
-
-        function showSheetTable(sheetName) {
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.toggle('active', b.textContent === sheetName);
-            });
+        function showTable(sheetName) {
             document.getElementById('strategyView').style.display = 'none';
-            const table = document.getElementById('mainTable');
-            table.style.display = 'table';
+            document.getElementById('tableContainer').style.display = 'block';
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            // Highlight current tab (simple logic)
             
-            const data = fullDB[sheetName];
-            const thead = document.getElementById('tableHead');
             const tbody = document.getElementById('tableBody');
-            
+            const thead = document.getElementById('tableHead');
+            const data = fullDB[sheetName];
+
             if(!data || data.length === 0) {
                 tbody.innerHTML = '<tr><td>無資料</td></tr>';
                 return;
@@ -405,158 +422,101 @@
 
             const cols = Object.keys(data[0]);
             thead.innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
-            
-            // 效能優化：只顯示前 50 筆
-            tbody.innerHTML = data.slice(0, 50).map(row => {
-                const code = row['CB代碼'] || row['代碼'] || row['Code'] || '';
-                return `<tr onclick="smartSearch('${code}')">
-                    ${cols.map(c => `<td>${row[c] || ''}</td>`).join('')}
-                </tr>`;
-            }).join('');
+            tbody.innerHTML = data.slice(0, 50).map(r => `
+                <tr onclick="smartSearch('${r['CB代碼']||r['代碼']||''}')">
+                    ${cols.map(c => `<td>${r[c]||''}</td>`).join('')}
+                </tr>
+            `).join('');
         }
 
-        // --- 智能搜尋 (Smart Search) ---
-        function smartSearch(forceCode = null) {
-            const input = document.getElementById('searchInput').value.trim().toUpperCase();
-            const keyword = forceCode || input;
-            
-            if(!keyword) return;
+        function switchView(mode) {
+            if(mode === 'strategy') {
+                document.getElementById('strategyView').style.display = 'block';
+                document.getElementById('tableContainer').style.display = 'none';
+            }
+        }
 
-            let integratedData = {
-                code: keyword,
-                name: '未知',
-                price: '-',
-                change: '-',
-                delta: '-',
-                bid: '-',
-                maturity: '-',
-                balance: '-',
-                risk_flags: []
-            };
+        function smartSearch(forceCode) {
+            const key = (forceCode || document.getElementById('searchInput').value).trim().toUpperCase();
+            if(!key) return;
 
-            let foundAny = false;
+            let result = { code: key, name: '', price: '-', delta: '-', risk: [] };
+            let found = false;
 
-            // 高效搜尋：不轉字串，直接比對特定欄位 (假設欄位名稱)
-            // 如果不知道欄位名，才做全文檢索
-            for(let sheetName in fullDB) {
-                const rows = fullDB[sheetName];
-                const found = rows.find(r => {
-                    // 嘗試比對常見代碼欄位
-                    const c = r['CB代碼'] || r['代碼'] || r['Code'] || r['股票代號'];
-                    if(c && String(c).includes(keyword)) return true;
-                    // 若無代碼欄位，嘗試名稱
-                    const n = r['名稱'] || r['商品'] || r['CB名稱'];
-                    if(n && String(n).includes(keyword)) return true;
-                    return false;
+            for(let name in fullDB) {
+                const row = fullDB[name].find(r => {
+                    const str = JSON.stringify(r).toUpperCase();
+                    return str.includes(`"${key}"`) || str.includes(`${key}`);
                 });
-
-                if(found) {
-                    foundAny = true;
-                    // 填補資料 (Data Patching)
-                    if(found['名称'] || found['名稱']) integratedData.name = found['名称'] || found['名稱'];
-                    if(found['收盤'] || found['成交']) integratedData.price = found['收盤'] || found['成交'];
-                    if(found['漲跌']) integratedData.change = found['漲跌'];
-                    if(found['Delta']) integratedData.delta = found['Delta'];
-                    if(found['買價']) integratedData.bid = found['買價'];
-                    if(found['到期日']) integratedData.maturity = found['到期日'];
-                    if(found['流通餘額']) integratedData.balance = found['流通餘額'];
-                    
-                    // 風險標記
-                    if(categorizedSheets.risk.includes(sheetName)) {
-                        integratedData.risk_flags.push(`⚠️ ${sheetName}: ${found['停止開始日'] || '資訊'}`);
-                    }
+                if(row) {
+                    found = true;
+                    if(row['名稱'] || row['商品']) result.name = row['名稱'] || row['商品'];
+                    if(row['收盤'] || row['成交']) result.price = row['收盤'] || row['成交'];
+                    if(row['Delta']) result.delta = row['Delta'];
+                    if(categorizedSheets.risk.includes(name)) result.risk.push(name);
                 }
             }
 
-            if(foundAny) {
-                renderCard(integratedData);
+            if(found) {
+                document.getElementById('welcomeMsg').style.display = 'none';
+                const card = document.getElementById('superCard');
+                card.classList.add('active');
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="cb-title">${result.name || '未知名稱'}</div>
+                        <div class="cb-code">${result.code}</div>
+                        <div class="cb-tags">
+                            ${result.risk.map(r => `<span class="tag risk">${r}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="data-grid">
+                            <div class="data-item"><div class="data-label">價格</div><div class="data-value">${result.price}</div></div>
+                            <div class="data-item"><div class="data-label">Delta</div><div class="data-value">${result.delta}</div></div>
+                        </div>
+                    </div>
+                `;
             } else {
-                alert(`查無 "${keyword}" 相關資料`);
+                alert("查無此代碼資料");
             }
         }
 
-        function renderCard(data) {
-            document.getElementById('welcomeMsg').style.display = 'none';
-            const card = document.getElementById('superCard');
-            card.classList.add('active');
-
-            const priceColor = parseFloat(data.change) > 0 ? 'val-up' : (parseFloat(data.change) < 0 ? 'val-down' : '');
-            
-            card.innerHTML = `
-                <div class="card-header">
-                    <div class="cb-title">${data.name}</div>
-                    <div class="cb-code">${data.code}</div>
-                    <div class="cb-tags">
-                        ${data.risk_flags.map(f => `<div class="tag risk">${f}</div>`).join('')}
-                        ${parseFloat(data.delta) > 0.5 ? '<div class="tag safe">高連動</div>' : ''}
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="data-section">
-                        <div class="section-title"><i class="fa-solid fa-chart-line"></i> 核心數據</div>
-                        <div class="data-grid">
-                            <div class="data-item"><div class="data-label">價格</div><div class="data-value ${priceColor}">${data.price}</div></div>
-                            <div class="data-item"><div class="data-label">漲跌</div><div class="data-value ${priceColor}">${data.change}</div></div>
-                            <div class="data-item"><div class="data-label">Delta</div><div class="data-value" style="color:var(--primary)">${data.delta}</div></div>
-                            <div class="data-item"><div class="data-label">買價 (ASO)</div><div class="data-value">${data.bid}</div></div>
-                        </div>
-                    </div>
-                    <div class="data-section">
-                        <div class="section-title"><i class="fa-solid fa-circle-info"></i> 基本資訊</div>
-                        <div class="data-grid">
-                            <div class="data-item"><div class="data-label">到期日</div><div class="data-value">${data.maturity}</div></div>
-                            <div class="data-item"><div class="data-label">流通餘額</div><div class="data-value">${data.balance}</div></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- 策略功能 ---
         function runStrategy(type) {
-            const resultDiv = document.getElementById('strategyResult');
-            resultDiv.innerHTML = '<div style="padding:20px; text-align:center;">分析運算中...</div>';
+            const res = document.getElementById('strategyResult');
+            if(!categorizedSheets.quote) {
+                res.innerHTML = "找不到報價單，無法分析";
+                return;
+            }
+            const data = fullDB[categorizedSheets.quote];
+            let list = [];
             
-            let results = [];
-            let html = '<table style="width:100%"><thead><tr><th>代碼</th><th>名稱</th><th>數值</th><th>狀態</th></tr></thead><tbody>';
-
             if(type === 'high_leverage') {
-                if(!categorizedSheets.quote) { resultDiv.innerHTML = '缺少報價單資料'; return; }
-                const rows = fullDB[categorizedSheets.quote];
-                results = rows.filter(r => (parseFloat(r['Delta']) > 0.6 && parseFloat(r['買價']) < 20));
-            } else if (type === 'risk_check') {
-                categorizedSheets.risk.forEach(sheet => {
-                    const rows = fullDB[sheet];
-                    rows.forEach(r => results.push({...r, _source: sheet}));
+                list = data.filter(r => parseFloat(r['Delta']) > 0.6 && parseFloat(r['買價']) < 20);
+            } else if (type === 'risk_alert') {
+                categorizedSheets.risk.forEach(s => {
+                    fullDB[s].forEach(r => list.push({...r, _note: s}));
                 });
+            } else if (type === 'near_maturity') {
+                 // 需有到期日欄位邏輯，此處簡化
+                 res.innerHTML = "需搭配到期日資料表";
+                 return;
             }
 
-            if(results.length === 0) {
-                resultDiv.innerHTML = '<div style="padding:20px; text-align:center;">無符合條件標的</div>';
+            if(list.length === 0) {
+                res.innerHTML = "無符合條件標的";
                 return;
             }
 
-            results.slice(0, 100).forEach(r => {
-                const code = r['CB代碼'] || r['代碼'];
-                const name = r['名稱'] || r['商品'] || '-';
-                const val = r['Delta'] || r['停止開始日'] || '-';
-                const note = r['買價'] ? `買:${r['買價']}` : (r._source || '');
-                
-                html += `<tr onclick="smartSearch('${code}')">
-                    <td>${code}</td><td>${name}</td><td style="color:var(--primary)">${val}</td><td>${note}</td>
+            let html = '<table style="width:100%; text-align:left;"><tr><th>代碼</th><th>名稱</th><th>數值</th></tr>';
+            list.slice(0, 20).forEach(r => {
+                html += `<tr style="border-bottom:1px solid #333; cursor:pointer;" onclick="smartSearch('${r['CB代碼']||r['代碼']}')">
+                    <td style="padding:8px;">${r['CB代碼']||r['代碼']}</td>
+                    <td>${r['名稱']||r['商品']||'-'}</td>
+                    <td style="color:var(--primary)">${r['Delta'] || r._note || '-'}</td>
                 </tr>`;
             });
-            
-            html += '</tbody></table>';
-            resultDiv.innerHTML = html;
-        }
-
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
-        }
-        function updateLoadingProgress(percent, text) {
-            document.getElementById('progressBar').style.width = percent + '%';
-            document.getElementById('loadingText').textContent = text;
+            html += '</table>';
+            res.innerHTML = html;
         }
     </script>
 </body>
