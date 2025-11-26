@@ -3,514 +3,661 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex大叔的可轉債戰情室 - 七合一超級儀表板</title>
+    <title>Rex CB-Smart 智能戰情室</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0f1419;
-            --bg-panel: #1a252f;
-            --primary-blue: #00d4ff;
-            --accent-blue: #1e3a5f;
-            --text-main: #e8e8e8;
-            --text-sub: #a0c4e8;
-            --border-color: rgba(61, 122, 181, 0.3);
-            --up-color: #ff5252;
-            --down-color: #4caf50;
+            --bg-dark: #121212;
+            --bg-card: #1e1e1e;
+            --bg-hover: #2d2d2d;
+            --primary: #00d4ff;
+            --accent: #2962ff;
+            --text-main: #e0e0e0;
+            --text-sub: #a0a0a0;
+            --danger: #ff5252;
+            --success: #00e676;
+            --warning: #ffb74d;
+            --border: rgba(255,255,255,0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+
         body {
             font-family: 'Noto Sans TC', sans-serif;
-            background: linear-gradient(135deg, #0f1419 0%, #0d2137 100%);
+            background-color: var(--bg-dark);
             color: var(--text-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* 防止整個網頁捲動 */
+            overflow: hidden;
         }
 
-        /* 頂部導航 */
+        /* --- Header --- */
         .header {
             height: 60px;
-            background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 100%);
+            background: linear-gradient(90deg, #1a237e 0%, #0d47a1 100%);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            border-bottom: 2px solid #3d7ab5;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            flex-shrink: 0;
+            padding: 0 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
         }
 
         .brand {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #fff;
             display: flex;
             align-items: center;
-            gap: 10px;
-        }
-        
-        .brand span {
-            background: var(--primary-blue);
-            color: #000;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.9rem;
+            gap: 12px;
         }
 
-        .status-bar {
-            font-size: 0.9rem;
-            color: var(--primary-blue);
-        }
+        .brand i { color: var(--primary); }
 
-        /* 主佈局：左 1/3，右 2/3 */
-        .main-layout {
+        .controls {
             display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .date-picker-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 4px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: inherit;
+            outline: none;
+            color-scheme: dark;
+        }
+
+        .btn-upload {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+        .btn-upload:hover { background: var(--primary); color: #000; }
+
+        /* --- Main Layout --- */
+        .main-container {
+            display: grid;
+            grid-template-columns: 400px 1fr;
             flex: 1;
-            height: calc(100vh - 60px); /* 扣掉 header 高度 */
             overflow: hidden;
         }
 
-        /* 左側面板：搜尋與卡片 */
+        /* --- Left Panel: Intelligence Card --- */
         .left-panel {
-            width: 380px; /* 固定寬度，或設為 30% */
-            background: var(--bg-panel);
-            border-right: 1px solid var(--border-color);
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            padding: 15px;
-            overflow-y: auto; /* 內容多時可捲動 */
-            flex-shrink: 0;
-        }
-
-        /* 右側面板：表格 */
-        .right-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 15px;
-            background: rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        /* 搜尋區塊樣式 */
-        .search-container {
-            margin-bottom: 20px;
-            background: rgba(0,0,0,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
+            padding: 20px;
+            overflow-y: auto;
+            gap: 20px;
         }
 
         .search-box {
-            display: flex;
-            gap: 8px;
+            position: relative;
         }
 
         .search-input {
-            flex: 1;
-            padding: 10px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border-color);
+            width: 100%;
+            padding: 12px 16px;
+            padding-left: 40px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             color: #fff;
-            border-radius: 6px;
+            font-size: 1rem;
             outline: none;
         }
 
-        .search-input:focus { border-color: var(--primary-blue); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(0,212,255,0.2); }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-sub); }
 
-        .btn {
-            padding: 8px 16px;
-            background: var(--accent-blue);
-            color: white;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn:hover { background: var(--primary-blue); color: #000; }
-        
-        .btn-active { background: var(--primary-blue); color: #000; font-weight: bold; }
-
-        /* 綜合資訊卡片樣式 */
-        .info-card {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2a4a6a 100%);
+        /* CB Super Card */
+        .cb-card {
+            background: rgba(255,255,255,0.03);
             border-radius: 12px;
-            padding: 15px;
-            border: 1px solid rgba(0,212,255,0.3);
-            display: none; /* 預設隱藏 */
-            animation: fadeIn 0.5s ease;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: none; /* Hidden by default */
+            animation: slideIn 0.3s ease;
         }
-        
-        .info-card.active { display: block; }
+        .cb-card.active { display: block; }
 
         .card-header {
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(41,98,255,0.2), rgba(0,212,255,0.1));
+            border-bottom: 1px solid var(--border);
         }
 
-        .card-title { font-size: 1.5rem; color: #fff; font-weight: 700; }
-        .card-subtitle { color: var(--primary-blue); font-size: 1rem; }
+        .cb-title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .cb-code { font-size: 1rem; color: var(--primary); font-family: monospace; }
+        .cb-tags { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        .tag { font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--text-sub); }
+        .tag.risk { background: rgba(255, 82, 82, 0.2); color: var(--danger); border: 1px solid var(--danger); }
 
-        .card-section { margin-bottom: 15px; }
-        .card-section-title {
+        .card-body { padding: 15px; }
+
+        .data-section { margin-bottom: 20px; }
+        .section-title {
             font-size: 0.85rem;
-            color: #aaa;
-            margin-bottom: 5px;
-            border-left: 3px solid var(--primary-blue);
-            padding-left: 8px;
-        }
-
-        .card-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
             gap: 8px;
         }
+        .section-title i { color: var(--primary); }
 
-        .card-item {
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .data-item {
             background: rgba(0,0,0,0.2);
-            padding: 8px;
+            padding: 10px;
             border-radius: 6px;
         }
-        
-        .card-label { font-size: 0.75rem; color: #888; }
-        .card-value { font-size: 0.95rem; color: #fff; font-weight: 500; }
+        .data-label { font-size: 0.75rem; color: var(--text-sub); margin-bottom: 4px; }
+        .data-value { font-size: 1rem; font-weight: 500; color: #fff; }
+        .val-up { color: var(--danger); }
+        .val-down { color: var(--success); }
 
-        /* 右側標籤列 (Tabs) */
-        .tabs-container {
+        /* --- Right Panel: Strategy Dashboard --- */
+        .right-panel {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #121212;
+        }
+
+        .dashboard-tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
             overflow-x: auto;
             padding-bottom: 5px;
-            white-space: nowrap;
         }
 
         .tab-btn {
-            padding: 8px 15px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             color: var(--text-sub);
+            padding: 8px 16px;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 0.9rem;
-        }
-
-        .tab-btn:hover { border-color: var(--primary-blue); color: #fff; }
-        .tab-btn.active { background: var(--primary-blue); color: #000; font-weight: bold; }
-
-        /* 表格樣式 */
-        .table-wrapper {
-            flex: 1;
-            overflow: auto;
-            background: rgba(0,0,0,0.2);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        
-        thead { position: sticky; top: 0; background: #2d5a87; z-index: 1; }
-        
-        th { padding: 12px; text-align: left; color: #fff; white-space: nowrap; }
-        td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
-        
-        tr:hover { background: rgba(0,212,255,0.05); }
-
-        .val-up { color: var(--up-color); }
-        .val-down { color: var(--down-color); }
-
-        /* 檔案上傳區 (第一次使用時顯示) */
-        .upload-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 999;
+            white-space: nowrap;
+            transition: 0.2s;
             display: flex;
-            justify-content: center;
             align-items: center;
+            gap: 6px;
+        }
+        .tab-btn:hover { border-color: var(--primary); color: #fff; }
+        .tab-btn.active { background: var(--primary); color: #000; font-weight: 700; border-color: var(--primary); }
+
+        .content-area {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
             flex-direction: column;
         }
-        
-        .upload-box {
-            background: #1a252f;
-            padding: 40px;
-            border-radius: 16px;
-            text-align: center;
-            border: 2px dashed var(--primary-blue);
+
+        /* Table Styles */
+        .table-container {
+            flex: 1;
+            overflow: auto;
         }
+        table { width: 100%; border-collapse: collapse; }
+        thead { position: sticky; top: 0; background: #252525; z-index: 10; }
+        th { text-align: left; padding: 12px 16px; color: var(--text-sub); font-size: 0.85rem; border-bottom: 2px solid var(--border); white-space: nowrap; }
+        td { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 0.9rem; white-space: nowrap; color: var(--text-main); }
+        tr:hover { background: rgba(255,255,255,0.05); cursor: pointer; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* Hints & Empty States */
+        .empty-state {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-sub);
+            text-align: center;
+        }
+        .empty-icon { font-size: 4rem; margin-bottom: 20px; opacity: 0.3; }
 
-        /* 卷軸美化 */
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #3d7ab5; border-radius: 4px; }
-        ::-webkit-scrollbar-track { background: #0f1419; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.4); }
+        ::-webkit-scrollbar-track { background: transparent; }
     </style>
 </head>
 <body>
 
-    <div class="upload-overlay" id="uploadOverlay">
-        <div class="upload-box">
-            <h2 style="margin-bottom: 20px; color: #fff;">歡迎來到可轉債戰情室</h2>
-            <p style="margin-bottom: 20px; color: #aaa;">請上傳包含 7 個工作表的 Excel 檔案 (.xlsx)</p>
-            <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleFileSelect(event)">
-            <button class="btn" style="font-size: 1.2rem; padding: 10px 30px;" onclick="document.getElementById('excelInput').click()">
-                📂 選擇 Excel 檔案
-            </button>
-            <p style="margin-top:15px; font-size: 0.8rem; color: #666;">資料將在您的瀏覽器本地處理，不會上傳雲端</p>
-        </div>
-    </div>
-
     <header class="header">
         <div class="brand">
-            <span>CB</span> Rex大叔可轉債戰情室
+            <i class="fa-solid fa-chart-line"></i>
+            Rex CB-Smart 戰情室
         </div>
-        <div class="status-bar">
-            📊 資料狀態：<span id="fileStatus">等待檔案...</span>
+        <div class="controls">
+            <div class="date-picker-box">
+                <i class="fa-regular fa-calendar"></i>
+                <input type="date" id="datePicker" class="date-input">
+                <i class="fa-solid fa-rotate-right" style="cursor: pointer; font-size: 0.8rem;" onclick="loadDateData()" title="重新載入"></i>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx" style="display: none;" onchange="handleManualUpload(event)">
+            <button class="btn-upload" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-folder-open"></i> 手動載入測試
+            </button>
         </div>
     </header>
 
-    <div class="main-layout">
-        
+    <div class="main-container">
         <aside class="left-panel">
-            <div class="search-container">
-                <div style="margin-bottom: 8px; color: var(--text-sub); font-size: 0.9rem;">全方位搜尋</div>
-                <div class="search-box">
-                    <input type="text" id="searchInput" class="search-input" placeholder="輸入代碼 (如: 2330)" onkeypress="if(event.key==='Enter') searchCode()">
-                    <button class="btn" onclick="searchCode()">🔍</button>
-                </div>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="輸入代碼或名稱 (如: 2330)" onkeyup="if(event.key==='Enter') smartSearch()">
             </div>
 
-            <div id="infoCard" class="info-card">
-                <div class="card-header">
-                    <div class="card-title" id="cardName">台積電</div>
-                    <div class="card-subtitle" id="cardCode">2330</div>
-                </div>
-                
-                <div id="cardContent">
-                    <p style="text-align: center; color: #888;">請輸入代碼進行搜尋</p>
-                </div>
+            <div id="welcomeMsg" class="empty-state" style="height: auto; padding-top: 50px;">
+                <div class="empty-icon"><i class="fa-solid fa-robot"></i></div>
+                <h3>等待指令</h3>
+                <p>輸入代碼，AI 將為您整合 7 大報表資訊</p>
             </div>
 
-            <div id="searchHint" style="text-align: center; margin-top: 50px; color: #555;">
-                <div style="font-size: 3rem; margin-bottom: 10px;">🔍</div>
-                <p>輸入可轉債或股票代碼<br>即時彙整 7 大工作表資訊</p>
-            </div>
+            <div id="superCard" class="cb-card">
+                </div>
         </aside>
 
         <main class="right-panel">
-            <div class="tabs-container" id="tabsContainer">
-                <span style="color: #666; padding: 8px;">請先載入檔案...</span>
-            </div>
+            <div class="dashboard-tabs" id="tabContainer">
+                <button class="tab-btn active" onclick="switchView('strategy')"><i class="fa-solid fa-chess-knight"></i> 智能選股</button>
+                </div>
 
-            <div class="table-wrapper">
-                <table id="mainTable">
-                    <thead id="tableHead"></thead>
-                    <tbody id="tableBody"></tbody>
-                </table>
+            <div class="content-area">
+                <div id="tableWrapper" class="table-container">
+                    <div id="strategyView">
+                        <div style="padding: 20px;">
+                            <h3 style="margin-bottom: 15px; color: var(--primary);">🎯 預設策略掃描</h3>
+                            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('high_leverage')">🔥 高槓桿 ASO</button>
+                                <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('near_maturity')">⏳ 即將到期</button>
+                                <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('high_volume')">📈 熱門交易</button>
+                                <button class="btn-upload" style="background:#2a2a2a; border:1px solid #444;" onclick="runStrategy('risk_alert')">⚠️ 風險警示</button>
+                            </div>
+                            <div id="strategyResult">請選擇上方策略按鈕開始掃描...</div>
+                        </div>
+                    </div>
+                    
+                    <table id="mainTable" style="display:none;">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </main>
     </div>
 
     <script>
-        // 全域變數存儲 Excel 資料
-        let workbookData = {}; // 格式: { '工作表1': [row1, row2...], '工作表2': [...] }
-        let sheetNames = [];
-        let currentSheet = '';
+        // --- 全域資料庫 ---
+        // 結構: { '報價單': [...], '基本資料檔': [...], ... }
+        let fullDB = {}; 
+        let sheetList = [];
+        
+        // --- 欄位映射設定 (根據您的檔案推測，若欄位名不同需微調) ---
+        // 這些是用來在程式碼中統一呼叫的 Key
+        const COL = {
+            CODE: 'CB代碼', // 或 '代碼'
+            NAME: '名稱',   // 或 '商品'
+            PRICE: '成交',  // 收盤價
+            BID: '買價',    // ASO 買價
+            ASK: '賣價',    // ASO 賣價
+            DELTA: 'Delta',
+            GAMMA: 'Gamma',
+            LEVERAGE: '槓桿',
+            DATE_MATURITY: '到期日',
+            DATE_ISSUE: '發行日',
+            BALANCE: '流通餘額', // 來自流通餘額表
+            RATING: '信評'
+        };
 
-        // 1. 處理檔案上傳
-        function handleFileSelect(event) {
+        // --- 初始化 ---
+        window.onload = () => {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('datePicker').value = today;
+            // 可以在此自動執行 loadDateData() 如果檔案已存在
+        };
+
+        // --- 檔案處理核心 ---
+        function handleManualUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
-
-            document.getElementById('fileStatus').textContent = "讀取中...";
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array'});
-                
-                // 解析所有工作表
-                workbookData = {};
-                sheetNames = workbook.SheetNames;
-                
-                sheetNames.forEach(name => {
-                    // 將每個工作表轉為 JSON 物件陣列 (第一列當標題)
-                    const worksheet = workbook.Sheets[name];
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {defval: ""}); // defval: "" 避免空值消失
-                    workbookData[name] = jsonData;
-                });
-
-                // 初始化介面
-                initInterface();
-                document.getElementById('uploadOverlay').style.display = 'none';
-                document.getElementById('fileStatus').textContent = `已載入 ${sheetNames.length} 個工作表`;
-            };
-
-            reader.readAsArrayBuffer(file);
+            if(file) processExcel(file);
         }
 
-        // 2. 初始化介面 (建立 Tabs)
-        function initInterface() {
-            const tabsContainer = document.getElementById('tabsContainer');
-            tabsContainer.innerHTML = '';
+        function loadDateData() {
+            const dateStr = document.getElementById('datePicker').value;
+            if(!dateStr) return;
+            const filename = dateStr.replace(/-/g, '') + '.xlsx';
+            const path = './data/' + filename; // 預設路徑
 
-            sheetNames.forEach((name, index) => {
-                const btn = document.createElement('button');
-                btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
-                btn.textContent = name;
-                btn.onclick = () => switchTab(name);
-                tabsContainer.appendChild(btn);
+            fetch(path)
+                .then(res => {
+                    if(!res.ok) throw new Error("找不到檔案");
+                    return res.arrayBuffer();
+                })
+                .then(data => processExcel(data, true))
+                .catch(err => {
+                    alert(`查無 ${dateStr} 的資料 (請確認檔案是否為 ${filename} 並位於 data 資料夾中)`);
+                });
+        }
+
+        function processExcel(data, isBuffer = false) {
+            const workbook = XLSX.read(data, {type: isBuffer ? 'array' : 'binary'});
+            
+            fullDB = {};
+            sheetList = workbook.SheetNames;
+            
+            // 讀取所有工作表
+            sheetList.forEach(sheetName => {
+                // 將所有欄位名稱去空白，方便處理
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                // 清理 Key (去除前後空白)
+                const cleanData = jsonData.map(row => {
+                    const newRow = {};
+                    for(let key in row) {
+                        newRow[key.trim()] = row[key];
+                    }
+                    return newRow;
+                });
+                fullDB[sheetName] = cleanData;
             });
 
-            // 預設顯示第一個工作表
-            if (sheetNames.length > 0) {
-                switchTab(sheetNames[0]);
+            updateTabs();
+            alert(`載入成功！共 ${sheetList.length} 個工作表資料已就緒。`);
+        }
+
+        // --- UI 更新 ---
+        function updateTabs() {
+            const container = document.getElementById('tabContainer');
+            // 保留第一個策略按鈕
+            container.innerHTML = `<button class="tab-btn active" onclick="switchView('strategy')"><i class="fa-solid fa-chess-knight"></i> 智能選股</button>`;
+            
+            sheetList.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.textContent = name;
+                btn.onclick = () => showSheetTable(name);
+                container.appendChild(btn);
+            });
+        }
+
+        function switchView(mode) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if(mode === 'strategy') {
+                document.querySelector('.tab-btn').classList.add('active'); // First one
+                document.getElementById('strategyView').style.display = 'block';
+                document.getElementById('mainTable').style.display = 'none';
             }
         }
 
-        // 3. 切換工作表 (右側表格)
-        function switchTab(sheetName) {
-            currentSheet = sheetName;
-            
-            // 更新按鈕狀態
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent === sheetName);
+        function showSheetTable(sheetName) {
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.toggle('active', b.textContent === sheetName);
             });
-
-            renderTable(sheetName);
-        }
-
-        // 4. 渲染表格
-        function renderTable(sheetName) {
-            const data = workbookData[sheetName];
+            document.getElementById('strategyView').style.display = 'none';
+            const table = document.getElementById('mainTable');
+            table.style.display = 'table';
+            
+            const data = fullDB[sheetName];
             const thead = document.getElementById('tableHead');
             const tbody = document.getElementById('tableBody');
             
-            thead.innerHTML = '';
-            tbody.innerHTML = '';
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">無資料</td></tr>';
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td>無資料</td></tr>';
                 return;
             }
 
-            // 取得欄位名稱
-            const columns = Object.keys(data[0]);
-
-            // 建立表頭
-            let headHtml = '<tr>';
-            columns.forEach(col => headHtml += `<th>${col}</th>`);
-            headHtml += '</tr>';
-            thead.innerHTML = headHtml;
-
-            // 建立內容 (限制顯示前 100 筆以免瀏覽器卡頓)
-            const displayData = data.slice(0, 100);
-            let bodyHtml = '';
+            const cols = Object.keys(data[0]);
+            thead.innerHTML = `<tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr>`;
             
-            displayData.forEach(row => {
-                bodyHtml += '<tr>';
-                columns.forEach(col => {
-                    let val = row[col];
-                    // 簡單的顏色判斷 (如果是數字且有 + -)
-                    let colorClass = '';
-                    if (!isNaN(parseFloat(val))) {
-                        // 這裡可以根據您的 Excel 資料格式微調
-                        // 例如：如果有 "漲跌幅" 欄位
-                    }
-                    bodyHtml += `<td class="${colorClass}">${val}</td>`;
-                });
-                bodyHtml += '</tr>';
-            });
-            tbody.innerHTML = bodyHtml;
+            // 只顯示前 100 筆以保持效能
+            tbody.innerHTML = data.slice(0, 100).map(row => {
+                return `<tr onclick="smartSearch('${row['CB代碼'] || row['代碼'] || ''}')">
+                    ${cols.map(c => `<td>${row[c]}</td>`).join('')}
+                </tr>`;
+            }).join('');
         }
 
-        // 5. 搜尋並建立卡片 (核心功能：跨工作表搜尋)
-        function searchCode() {
-            const keyword = document.getElementById('searchInput').value.trim().toUpperCase();
-            if (!keyword) return;
-
-            const card = document.getElementById('infoCard');
-            const cardContent = document.getElementById('cardContent');
-            const searchHint = document.getElementById('searchHint');
+        // --- 核心功能：智能搜尋 (Smart Search) ---
+        function smartSearch(forceCode = null) {
+            const input = document.getElementById('searchInput').value.trim().toUpperCase();
+            const keyword = forceCode || input;
             
-            // 清空舊資料
-            cardContent.innerHTML = '';
-            let foundAny = false;
-            let basicInfoFound = false; // 用來標記是否找到基本資料來填標題
+            if(!keyword) return;
 
-            // 遍歷所有工作表
-            sheetNames.forEach(sheetName => {
-                const sheetData = workbookData[sheetName];
-                
-                // 在該工作表中尋找符合代碼的列
-                // 假設您的 Excel 欄位中有 "代碼" 或 "名稱"
-                const foundRow = sheetData.find(row => {
-                    // 將所有欄位值轉為字串來搜尋 (模糊搜尋)
-                    return Object.values(row).some(val => String(val).toUpperCase().includes(keyword));
+            // 1. 在所有工作表中尋找該代碼的相關資料
+            let integratedData = {
+                code: keyword,
+                name: '未知',
+                price: '-',
+                change: '-',
+                aso_bid: '-',
+                aso_delta: '-',
+                maturity: '-',
+                rating: '-',
+                balance: '-',
+                risk_flags: []
+            };
+
+            let found = false;
+
+            // 遍歷所有表進行資料拼圖
+            for(let sheet in fullDB) {
+                const row = fullDB[sheet].find(r => {
+                    const rStr = JSON.stringify(r).toUpperCase();
+                    return rStr.includes(keyword);
                 });
 
-                if (foundRow) {
-                    foundAny = true;
-                    
-                    // 如果還沒設定卡片標題，且這行看起來有代碼名稱
-                    if (!basicInfoFound) {
-                        // 嘗試智慧抓取代碼與名稱
-                        // 這裡需要您提供 Excel 欄位後微調，目前先抓前兩個欄位
-                        const keys = Object.keys(foundRow);
-                        document.getElementById('cardCode').textContent = foundRow['代碼'] || foundRow['Code'] || keyword;
-                        document.getElementById('cardName').textContent = foundRow['名稱'] || foundRow['Name'] || foundRow['商品'] || '-';
-                        basicInfoFound = true;
+                if(row) {
+                    found = true;
+                    // 嘗試抓取名稱
+                    if(row['名稱'] || row['商品']) integratedData.name = row['名稱'] || row['商品'];
+                    if(row['CB名稱']) integratedData.name = row['CB名稱'];
+
+                    // 根據工作表名稱特徵來抓取特定欄位
+                    if(sheet.includes('每日行情')) {
+                        integratedData.price = row['收盤'] || row['成交'] || '-';
+                        integratedData.change = row['漲跌'] || '-';
                     }
-
-                    // 建立該工作表的資訊區塊
-                    const section = document.createElement('div');
-                    section.className = 'card-section';
+                    if(sheet.includes('報價單')) {
+                        integratedData.aso_bid = row['買價'] || '-';
+                        integratedData.aso_delta = row['Delta'] || '-';
+                    }
+                    if(sheet.includes('基本資料')) {
+                        integratedData.maturity = row['到期日'] || '-';
+                        integratedData.rating = row['信評'] || '-';
+                    }
+                    if(sheet.includes('流通餘額')) {
+                        integratedData.balance = row['流通餘額'] || row['餘額'] || '-';
+                    }
                     
-                    let gridHtml = `<div class="card-section-title">📂 ${sheetName}</div><div class="card-grid">`;
-                    
-                    // 將該列的所有資料列出來
-                    for (const [key, value] of Object.entries(foundRow)) {
-                        // 過濾掉空值或太長的文字
-                        if (value !== "" && String(value).length < 20) {
-                            // 顏色判斷
-                            let colorClass = '';
-                            if (String(value).includes('+') || (typeof value === 'number' && value > 0 && key.includes('%'))) colorClass = 'val-up';
-                            if (String(value).includes('-') || (typeof value === 'number' && value < 0 && key.includes('%'))) colorClass = 'val-down';
+                    // 風險偵測
+                    if(sheet.includes('停止轉換')) integratedData.risk_flags.push(`⚠️ 停止轉換: ${row['停止開始日'] || ''}~${row['停止終止日'] || ''}`);
+                    if(sheet.includes('贖回權')) integratedData.risk_flags.push(`🔥 公司執行贖回`);
+                    if(sheet.includes('價格調整')) integratedData.risk_flags.push(`ℹ️ 價格調整: ${row['新轉換價格'] || ''}`);
+                }
+            }
 
-                            gridHtml += `
-                                <div class="card-item">
-                                    <div class="card-label">${key}</div>
-                                    <div class="card-value ${colorClass}">${value}</div>
-                                </div>
-                            `;
+            if(found) {
+                renderSuperCard(integratedData);
+            } else {
+                alert('查無資料');
+            }
+        }
+
+        // --- 渲染超級卡片 ---
+        function renderSuperCard(data) {
+            document.getElementById('welcomeMsg').style.display = 'none';
+            const card = document.getElementById('superCard');
+            card.classList.add('active');
+
+            // 顏色處理
+            const priceColor = parseFloat(data.change) > 0 ? 'val-up' : (parseFloat(data.change) < 0 ? 'val-down' : '');
+
+            let riskHtml = '';
+            data.risk_flags.forEach(flag => {
+                riskHtml += `<div class="tag risk">${flag}</div>`;
+            });
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="cb-title">${data.name}</div>
+                    <div class="cb-code">${data.code}</div>
+                    <div class="cb-tags">
+                        <div class="tag">${data.rating}</div>
+                        ${riskHtml}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="data-section">
+                        <div class="section-title"><i class="fa-solid fa-chart-simple"></i> 市場行情</div>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label">收盤價</div>
+                                <div class="data-value ${priceColor}">${data.price}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">漲跌</div>
+                                <div class="data-value ${priceColor}">${data.change}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">流通餘額</div>
+                                <div class="data-value">${data.balance}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-section">
+                        <div class="section-title"><i class="fa-solid fa-layer-group"></i> 選擇權拆解 (ASO)</div>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label">ASO 買價</div>
+                                <div class="data-value" style="color:var(--accent);">${data.aso_bid}</div>
+                            </div>
+                            <div class="data-item">
+                                <div class="data-label">Delta</div>
+                                <div class="data-value">${data.aso_delta}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="data-section">
+                        <div class="section-title"><i class="fa-regular fa-calendar-days"></i> 到期資訊</div>
+                        <div class="data-grid">
+                            <div class="data-item">
+                                <div class="data-label">到期日</div>
+                                <div class="data-value">${data.maturity}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- 策略功能 (Strategy Runner) ---
+        function runStrategy(type) {
+            const resultDiv = document.getElementById('strategyResult');
+            resultDiv.innerHTML = '<div style="text-align:center; padding:20px;">分析中...</div>';
+
+            // 尋找包含關鍵資料的工作表
+            const quoteSheet = sheetList.find(s => s.includes('報價單'));
+            const basicSheet = sheetList.find(s => s.includes('基本資料'));
+            
+            if(!quoteSheet) {
+                resultDiv.innerHTML = '<p style="color:var(--danger)">缺少「報價單」資料，無法執行策略。</p>';
+                return;
+            }
+
+            let html = '<table style="width:100%"><thead><tr><th>代碼</th><th>名稱</th><th>數值</th><th>說明</th></tr></thead><tbody>';
+            let hits = 0;
+
+            const rows = fullDB[quoteSheet];
+
+            rows.forEach(row => {
+                let match = false;
+                let val = '';
+                let note = '';
+                
+                const code = row['CB代碼'] || row['代碼'];
+                const name = row['名稱'];
+                const delta = parseFloat(row['Delta']) || 0;
+                const bid = parseFloat(row['買價']) || 0;
+
+                if(type === 'high_leverage') {
+                    // 簡單邏輯：Delta > 0.8 且 買價低於 20 (高槓桿潛力)
+                    if(delta > 0.6 && bid < 20 && bid > 0) {
+                        match = true;
+                        val = `Delta: ${delta}`;
+                        note = `權利金: ${bid}`;
+                    }
+                } else if(type === 'risk_alert') {
+                    // 檢查停止轉換表
+                    const stopSheet = sheetList.find(s => s.includes('停止轉換'));
+                    if(stopSheet) {
+                        const riskRow = fullDB[stopSheet].find(r => r['代碼'] == code);
+                        if(riskRow) {
+                            match = true;
+                            val = '停止轉換';
+                            note = `${riskRow['停止開始日']}~${riskRow['停止終止日']}`;
                         }
                     }
-                    gridHtml += '</div>';
-                    section.innerHTML = gridHtml;
-                    cardContent.appendChild(section);
+                }
+
+                if(match) {
+                    hits++;
+                    html += `<tr onclick="smartSearch('${code}')">
+                        <td>${code}</td>
+                        <td>${name}</td>
+                        <td style="color:var(--accent)">${val}</td>
+                        <td>${note}</td>
+                    </tr>`;
                 }
             });
 
-            if (foundAny) {
-                card.classList.add('active');
-                searchHint.style.display = 'none';
-            } else {
-                alert(`在所有 7 個工作表中都找不到代碼：${keyword}`);
-            }
+            html += '</tbody></table>';
+            
+            if(hits === 0) html = '<p style="text-align:center; padding:20px; color:#aaa;">此策略目前無符合標的</p>';
+            resultDiv.innerHTML = html;
         }
-        
-        // 自動載入測試 (如果您之後要把檔案放在同目錄下自動載入，可開啟此功能)
-        // window.onload = function() {
-        //     fetch('您的檔案名稱.xlsx').then(...)
-        // }
+
     </script>
 </body>
 </html>
