@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
+        /* CSS 樣式保持原樣，無需變動 */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -739,7 +740,6 @@
     </style>
 </head>
 <body>
-    <!-- 頂部導航 -->
     <header class="header">
         <div class="logo-section">
             <div class="logo-icon">168</div>
@@ -754,9 +754,7 @@
         </div>
     </header>
 
-    <!-- 主要內容區 -->
     <div class="main-container">
-        <!-- 左側面板 - 股票查詢 -->
         <div class="left-panel">
             <div class="panel-title">股票/可轉債查詢</div>
             
@@ -770,7 +768,6 @@
                 <p class="search-hint">💡 輸入股票代號（如：2330）或名稱進行查詢</p>
             </div>
 
-            <!-- 股票資訊卡片 -->
             <div class="stock-card" id="stockCard">
                 <div class="stock-header">
                     <div class="stock-name-section">
@@ -842,13 +839,11 @@
             </div>
         </div>
 
-        <!-- 右側面板 - 熱門交易資訊 -->
         <div class="right-panel">
             <div class="right-header">
                 <div class="right-title">熱門交易資訊排行</div>
                 
                 <div class="category-selector">
-                    <!-- CB可轉債 -->
                     <div class="category-group">
                         <button class="category-btn" onclick="toggleDropdown('cbMenu')">
                             📈 可轉債CB
@@ -877,7 +872,6 @@
                         </div>
                     </div>
 
-                    <!-- 上市櫃股票 -->
                     <div class="category-group">
                         <button class="category-btn" onclick="toggleDropdown('stockMenu')">
                             📊 上市櫃股票
@@ -895,7 +889,6 @@
                         </div>
                     </div>
 
-                    <!-- 法人籌碼 -->
                     <div class="category-group">
                         <button class="category-btn" onclick="toggleDropdown('chipMenu')">
                             💰 法人籌碼
@@ -912,7 +905,6 @@
                         </div>
                     </div>
 
-                    <!-- 供應鏈 -->
                     <div class="category-group">
                         <button class="category-btn" onclick="toggleDropdown('chainMenu')">
                             🔗 供應鏈
@@ -924,7 +916,6 @@
                         </div>
                     </div>
 
-                    <!-- 元大選擇權 -->
                     <div class="category-group">
                         <button class="category-btn" onclick="toggleDropdown('optionMenu')">
                             🎯 元大選擇權
@@ -947,7 +938,6 @@
                 </div>
             </div>
 
-            <!-- 統計資訊 -->
             <div class="stats-bar">
                 <div class="stat-item">
                     <span class="stat-label">總筆數</span>
@@ -971,7 +961,6 @@
                 </div>
             </div>
 
-            <!-- 表格區域 -->
             <div class="table-container">
                 <div class="table-wrapper">
                     <table id="dataTable">
@@ -984,7 +973,6 @@
         </div>
     </div>
 
-    <!-- 頁尾 -->
     <footer class="footer">
         <p>以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
         <p>本人整理之資料僅為學習分享用，無任何商業用途</p>
@@ -1037,8 +1025,8 @@
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 設定預設日期
-            document.getElementById('dataDate').textContent = '2025/11/25';
+            // 設定預設日期 (之後會從CSV更新)
+            document.getElementById('dataDate').textContent = '載入中...';
             
             // 綁定下拉選單項目點擊事件
             document.querySelectorAll('.dropdown-item').forEach(item => {
@@ -1070,9 +1058,7 @@
         function toggleDropdown(menuId) {
             const menu = document.getElementById(menuId);
             const isOpen = menu.classList.contains('show');
-            
             closeAllDropdowns();
-            
             if (!isOpen) {
                 menu.classList.add('show');
             }
@@ -1085,7 +1071,7 @@
             });
         }
 
-        // 載入資料
+        // 載入資料 (改進版：更強的編碼偵測)
         function loadData(filename) {
             currentFile = filename;
             const tableBody = document.getElementById('tableBody');
@@ -1097,7 +1083,7 @@
                     <td colspan="20">
                         <div class="loading">
                             <div class="loading-spinner"></div>
-                            <span>載入資料中...</span>
+                            <span>載入資料中... (${filename})</span>
                         </div>
                     </td>
                 </tr>
@@ -1107,118 +1093,151 @@
             // 更新報表名稱
             document.getElementById('currentReport').textContent = reportNames[filename] || filename;
 
-            // 嘗試多種編碼方式載入
-            const encodings = ['big5', 'utf-8', 'gb2312'];
-            let encodingIndex = 0;
-
-            function tryLoad(encoding) {
-                Papa.parse(encodeURI(filename), {
-                    download: true,
-                    encoding: encoding,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        if (results.data && results.data.length > 3) {
-                            // 檢查是否有亂碼
-                            const testRow = results.data.slice(0, 5).join('');
-                            if (testRow.includes('�') && encodingIndex < encodings.length - 1) {
-                                encodingIndex++;
-                                tryLoad(encodings[encodingIndex]);
-                            } else {
-                                processData(results.data);
-                            }
-                        } else if (encodingIndex < encodings.length - 1) {
-                            encodingIndex++;
-                            tryLoad(encodings[encodingIndex]);
-                        } else {
-                            showError(filename);
-                        }
-                    },
-                    error: function(error) {
-                        if (encodingIndex < encodings.length - 1) {
-                            encodingIndex++;
-                            tryLoad(encodings[encodingIndex]);
-                        } else {
-                            showError(filename);
-                        }
+            // 使用 fetch 取得 Blob，以便手動控制 FileReader 的編碼
+            fetch(filename, { cache: "no-store" }) // 避免緩存舊資料
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // 優先嘗試 Big5 (台股常見編碼)
+                    tryParseBlob(blob, 'big5');
+                })
+                .catch(error => {
+                    console.error("Load failed:", error);
+                    showError(filename);
                 });
+
+            function tryParseBlob(blob, encoding) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    
+                    // 簡單檢查是否有常見的中文字 "代碼" 或 "商品" 或 "名稱"
+                    // 如果用 Big5 解出來沒有這些字，很可能是編碼錯誤
+                    if (!text.includes('代碼') && !text.includes('商品') && !text.includes('名稱') && encoding === 'big5') {
+                        console.log('Big5 decoding failed or no headers found, retrying with UTF-8...');
+                        tryParseBlob(blob, 'utf-8'); // 嘗試 UTF-8
+                        return;
+                    }
+
+                    // 開始解析 CSV
+                    Papa.parse(text, {
+                        header: false, // 手動處理 header
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            if (results.data && results.data.length > 0) {
+                                processData(results.data);
+                            } else {
+                                showError(filename, "檔案內容為空");
+                            }
+                        },
+                        error: function(err) {
+                            showError(filename, "解析失敗");
+                        }
+                    });
+                };
+                reader.onerror = () => showError(filename, "讀取錯誤");
+                reader.readAsText(blob, encoding);
             }
 
-            function showError(file) {
+            function showError(file, msg = "") {
                 tableBody.innerHTML = `
                     <tr>
                         <td colspan="20">
                             <div class="no-data">
                                 <div class="no-data-icon">📁</div>
-                                <p>載入失敗：請確認 ${file} 檔案存在於同一目錄</p>
-                                <p style="font-size:0.8rem;margin-top:10px;color:#888;">提示：請確保所有CSV檔案與index.html在同一資料夾</p>
+                                <p>載入失敗：請確認 ${file} 檔案存在</p>
+                                <p style="font-size:0.8rem;margin-top:10px;color:#ff6b6b;">${msg}</p>
                             </div>
                         </td>
                     </tr>
                 `;
             }
-
-            tryLoad(encodings[encodingIndex]);
         }
 
-        // 處理資料
+        // 處理資料 (改進版：自動尋找標題列)
         function processData(rawData) {
-            // 找到標題列
-            let headerIndex = 0;
-            for (let i = 0; i < Math.min(10, rawData.length); i++) {
+            // 1. 尋找真正的標題列 (Header)
+            // 許多券商軟體匯出的 CSV 前幾行是報表資訊，不是欄位名稱
+            let headerIndex = -1;
+            for (let i = 0; i < Math.min(20, rawData.length); i++) {
                 const row = rawData[i];
-                if (row && (row.some(cell => cell && cell.includes('代碼')) || 
-                           row.some(cell => cell && cell.includes('序號')))) {
+                // 判斷依據：該行包含 "代碼" 且包含 "漲幅" 或 "名稱" 或 "商品"
+                const rowStr = row.join(',');
+                if (rowStr.includes('代碼') && (rowStr.includes('漲幅') || rowStr.includes('商品') || rowStr.includes('名稱'))) {
                     headerIndex = i;
                     break;
                 }
             }
 
-            // 處理欄位名稱
+            if (headerIndex === -1) {
+                // 如果找不到標準標題，嘗試用第一行 (相容性)
+                headerIndex = 0; 
+            }
+
+            // 2. 處理欄位名稱
             columns = rawData[headerIndex].map(col => {
                 if (!col) return '';
-                return col.trim().replace(/\n/g, '').replace(/"/g, '');
+                return col.trim().replace(/\n/g, '').replace(/"/g, '').replace(/\s+/g, '');
             });
 
-            // 提取日期
+            // 3. 提取日期 (從標題列上方尋找)
             let dataDate = '未知';
             for (let i = 0; i < headerIndex; i++) {
                 const row = rawData[i].join(' ');
-                const dateMatch = row.match(/(\d{4})年?\s*(\d{1,2})月?\s*(\d{1,2})日?/);
+                // 支援 2024/11/25, 2024-11-25, 2024年11月25日 等格式
+                const dateMatch = row.match(/(\d{4})[/-年]\s*(\d{1,2})[/-月]\s*(\d{1,2})[日]?/);
                 if (dateMatch) {
-                    dataDate = `${dateMatch[1]}/${dateMatch[2]}/${dateMatch[3]}`;
+                    dataDate = `${dateMatch[1]}/${dateMatch[2].padStart(2,'0')}/${dateMatch[3].padStart(2,'0')}`;
                     break;
                 }
             }
-            document.getElementById('dataDate').textContent = dataDate;
+            // 如果上方沒找到日期，就顯示當天日期或保持原狀
+            if (dataDate !== '未知') {
+                document.getElementById('dataDate').textContent = dataDate;
+            } else {
+                 // 嘗試找最後更新時間
+                 const today = new Date();
+                 document.getElementById('dataDate').textContent = today.toLocaleDateString();
+            }
 
-            // 處理資料列
+            // 4. 處理資料內容
             allData = [];
             for (let i = headerIndex + 1; i < rawData.length; i++) {
                 const row = rawData[i];
-                if (!row || row.length < 3) continue;
-
-                // 檢查是否為有效資料列
-                const firstCell = String(row[0] || '').trim().replace(/"/g, '');
-                if (!firstCell || isNaN(parseInt(firstCell))) continue;
+                if (!row || row.length < 2) continue; // 跳過空行
 
                 const rowObj = {};
+                let isValidRow = false;
+
                 columns.forEach((col, idx) => {
                     if (col) {
                         let value = row[idx] !== undefined ? String(row[idx]).trim().replace(/"/g, '') : '';
-                        // 處理括號負數
+                        
+                        // 處理括號負數 (Excel 格式)
                         if (value.match(/^\([\d,.]+\)$/)) {
                             value = '-' + value.replace(/[()]/g, '');
                         }
+                        
                         rowObj[col] = value;
+                        
+                        // 簡單驗證：如果有代碼，這行通常是有效資料
+                        if (col.includes('代碼') && value.length > 0) {
+                            isValidRow = true;
+                        }
                     }
                 });
-                allData.push(rowObj);
 
-                // 建立股票資料庫供查詢
-                const code = rowObj['代碼'] ? rowObj['代碼'].replace('.TW', '').replace('.TWO', '') : '';
-                if (code) {
-                    stockDatabase[code] = rowObj;
+                if (isValidRow) {
+                    allData.push(rowObj);
+                    // 建立股票查詢索引
+                    const code = rowObj['代碼'] ? rowObj['代碼'].replace('.TW', '').replace('.TWO', '') : '';
+                    if (code) {
+                        stockDatabase[code] = rowObj;
+                    }
                 }
             }
 
@@ -1238,12 +1257,16 @@
             const changeCol = columns.find(c => c.includes('漲幅'));
 
             let up = 0, down = 0, flat = 0;
-            data.forEach(row => {
-                const val = parseFloat(row[changeCol]) || 0;
-                if (val > 0) up++;
-                else if (val < 0) down++;
-                else flat++;
-            });
+            if (changeCol) {
+                data.forEach(row => {
+                    const val = parseFloat(String(row[changeCol]).replace(/,/g, '')) || 0;
+                    if (val > 0) up++;
+                    else if (val < 0) down++;
+                    else flat++;
+                });
+            } else {
+                flat = data.length; // 如果沒有漲幅欄位
+            }
 
             document.getElementById('upCount').textContent = up;
             document.getElementById('downCount').textContent = down;
@@ -1294,7 +1317,7 @@
                 return idxA - idxB;
             });
 
-            // 只顯示前15個欄位
+            // 只顯示前15個重點欄位，避免表格太寬
             const displayColumns = sortedColumns.slice(0, 15);
 
             // 渲染表頭
@@ -1316,7 +1339,7 @@
             if (pageData.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="${displayColumns.length}">
+                        <td colspan="${Math.max(1, displayColumns.length)}">
                             <div class="no-data">
                                 <div class="no-data-icon">📊</div>
                                 <p>無符合條件的資料</p>
@@ -1327,7 +1350,7 @@
             } else {
                 tableBody.innerHTML = pageData.map(row => {
                     const changeCol = columns.find(c => c.includes('漲幅'));
-                    const change = parseFloat(row[changeCol]) || 0;
+                    const change = changeCol ? (parseFloat(String(row[changeCol]).replace(/,/g, '')) || 0) : 0;
                     const rowClass = change > 5 ? 'td-highlight' : '';
 
                     return `<tr class="${rowClass}">` + displayColumns.map(col => {
@@ -1341,20 +1364,20 @@
                         }
 
                         // 商品名稱
-                        if (col === '商品') {
+                        if (col === '商品' || col === '名稱') {
                             return `<td class="td-name">${value}</td>`;
                         }
 
                         // 數值欄位處理
                         const num = parseFloat(String(value).replace(/,/g, ''));
                         if (!isNaN(num)) {
-                            if (col.includes('漲幅') || col.includes('%')) {
+                            // 判斷是否為需要紅綠變色的欄位
+                            if (col.includes('漲幅') || col.includes('%') || 
+                                col.includes('外資') || col.includes('投信') || 
+                                col.includes('主力') || col.includes('融資') ||
+                                col.includes('散戶') || col.includes('買賣超')) {
                                 className = num > 0 ? 'td-positive' : (num < 0 ? 'td-negative' : '');
-                                value = num > 0 ? `+${value}` : value;
-                            } else if (col.includes('外資') || col.includes('投信') || 
-                                      col.includes('主力') || col.includes('融資') ||
-                                      col.includes('散戶')) {
-                                className = num > 0 ? 'td-positive' : (num < 0 ? 'td-negative' : '');
+                                if (num > 0 && (col.includes('漲幅') || col.includes('%'))) value = `+${value}`;
                             }
                         }
 
@@ -1407,7 +1430,7 @@
             // 在所有資料中搜尋
             const found = allData.find(row => {
                 const code = (row['代碼'] || '').replace('.TW', '').replace('.TWO', '');
-                const name = row['商品'] || '';
+                const name = row['商品'] || row['名稱'] || '';
                 return code.includes(keyword) || name.includes(keyword);
             });
 
@@ -1434,18 +1457,19 @@
             card.classList.add('active');
 
             // 更新卡片內容
-            document.getElementById('cardStockName').textContent = stock['商品'] || '-';
+            document.getElementById('cardStockName').textContent = stock['商品'] || stock['名稱'] || '-';
             document.getElementById('cardStockCode').textContent = code;
-            document.getElementById('cardPrice').textContent = stock['成交'] || '-';
+            document.getElementById('cardPrice').textContent = stock['成交'] || stock['收盤'] || '-';
 
             // 漲跌幅
-            const change = parseFloat(stock['漲幅%']) || 0;
+            const changeCol = columns.find(c => c.includes('漲幅')) || columns.find(c => c.includes('%'));
+            const change = changeCol ? (parseFloat(stock[changeCol]) || 0) : 0;
             const changeEl = document.getElementById('cardChange');
             changeEl.textContent = change > 0 ? `+${change}%` : `${change}%`;
             changeEl.className = 'price-change ' + (change > 0 ? 'up' : (change < 0 ? 'down' : 'flat'));
 
-            // 基本資料
-            document.getElementById('cardVolume').textContent = formatNumber(stock['總量']);
+            // 基本資料 (容錯處理，找不到欄位顯示 '-')
+            document.getElementById('cardVolume').textContent = formatNumber(stock['總量'] || stock['成交量']);
             document.getElementById('cardValue').textContent = stock['金額(億)'] || '-';
             document.getElementById('cardTurnover').textContent = stock['週轉率'] ? `${stock['週轉率']}%` : '-';
             document.getElementById('cardDayTrade').textContent = stock['當沖率'] ? `${stock['當沖率']}%` : '-';
@@ -1457,12 +1481,12 @@
             day5El.className = 'detail-value ' + (day5Change > 0 ? 'positive' : (day5Change < 0 ? 'negative' : ''));
 
             // 法人籌碼
-            updateChipValue('cardForeign', stock['外資買賣超(張)']);
-            updateChipValue('cardTrust', stock['投信買賣超(張)']);
-            updateChipValue('cardMain', stock['主力買賣超(張)']);
-            updateChipValue('cardRetail', stock['散戶買賣超(張)']);
-            updateChipValue('cardMargin', stock['融資增減(張)']);
-            updateChipValue('cardShort', stock['融券增減(張)']);
+            updateChipValue('cardForeign', stock['外資買賣超(張)'] || stock['外資']);
+            updateChipValue('cardTrust', stock['投信買賣超(張)'] || stock['投信']);
+            updateChipValue('cardMain', stock['主力買賣超(張)'] || stock['主力']);
+            updateChipValue('cardRetail', stock['散戶買賣超(張)'] || stock['散戶']);
+            updateChipValue('cardMargin', stock['融資增減(張)'] || stock['融資']);
+            updateChipValue('cardShort', stock['融券增減(張)'] || stock['融券']);
 
             // 滾動到卡片位置
             card.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1471,7 +1495,7 @@
         // 更新籌碼數值
         function updateChipValue(elementId, value) {
             const el = document.getElementById(elementId);
-            const num = parseFloat(value) || 0;
+            const num = parseFloat(String(value).replace(/,/g, '')) || 0;
             el.textContent = formatNumber(value);
             el.className = 'chip-value ' + (num > 0 ? 'td-positive' : (num < 0 ? 'td-negative' : ''));
         }
