@@ -3,1510 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rex大叔的168台股投資教室 - AI智慧台股熱門交易系統</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <title>Rex大叔的可轉債戰情室 - 七合一超級儀表板</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* CSS 樣式保持原樣，無需變動 */
+        :root {
+            --bg-dark: #0f1419;
+            --bg-panel: #1a252f;
+            --primary-blue: #00d4ff;
+            --accent-blue: #1e3a5f;
+            --text-main: #e8e8e8;
+            --text-sub: #a0c4e8;
+            --border-color: rgba(61, 122, 181, 0.3);
+            --up-color: #ff5252;
+            --down-color: #4caf50;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f1419 0%, #1a252f 50%, #0d2137 100%);
-            color: #e8e8e8;
-            min-height: 100vh;
-        }
-
-        /* 頂部導航欄 */
-        .header {
-            background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border-bottom: 2px solid #3d7ab5;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
-        }
-
-        .logo-text h1 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #fff;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .logo-text p {
-            font-size: 0.85rem;
-            color: #a0c4e8;
-        }
-
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .data-date {
-            background: rgba(0,212,255,0.15);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: #00d4ff;
-            border: 1px solid rgba(0,212,255,0.3);
-        }
-
-        .ai-badge {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #fff;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
-        }
-
-        /* 主要內容區 */
-        .main-container {
-            display: grid;
-            grid-template-columns: 380px 1fr;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1800px;
-            margin: 0 auto;
-            min-height: calc(100vh - 80px);
-        }
-
-        /* 左側面板 - 股票查詢 */
-        .left-panel {
-            background: linear-gradient(180deg, #1a2d42 0%, #152238 100%);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            border: 1px solid rgba(61, 122, 181, 0.3);
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #0d2137 100%);
+            color: var(--text-main);
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            overflow: hidden; /* 防止整個網頁捲動 */
         }
 
-        .panel-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #00d4ff;
-            padding-bottom: 10px;
-            border-bottom: 2px solid rgba(0,212,255,0.3);
+        /* 頂部導航 */
+        .header {
+            height: 60px;
+            background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 2px solid #3d7ab5;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-
-        .panel-title::before {
-            content: '🔍';
-            font-size: 1.2rem;
+        
+        .brand span {
+            background: var(--primary-blue);
+            color: #000;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
         }
 
-        /* 搜尋區域 */
-        .search-section {
+        .status-bar {
+            font-size: 0.9rem;
+            color: var(--primary-blue);
+        }
+
+        /* 主佈局：左 1/3，右 2/3 */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 60px); /* 扣掉 header 高度 */
+            overflow: hidden;
+        }
+
+        /* 左側面板：搜尋與卡片 */
+        .left-panel {
+            width: 380px; /* 固定寬度，或設為 30% */
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow-y: auto; /* 內容多時可捲動 */
+            flex-shrink: 0;
+        }
+
+        /* 右側面板：表格 */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
             background: rgba(0,0,0,0.2);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid rgba(61, 122, 181, 0.2);
+            overflow: hidden;
+        }
+
+        /* 搜尋區塊樣式 */
+        .search-container {
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
         }
 
         .search-box {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 8px;
         }
 
         .search-input {
             flex: 1;
-            padding: 14px 18px;
-            border: 2px solid rgba(0,212,255,0.3);
-            border-radius: 10px;
+            padding: 10px;
             background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
             color: #fff;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .search-input:focus {
+            border-radius: 6px;
             outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 20px rgba(0,212,255,0.2);
         }
 
-        .search-input::placeholder {
-            color: #6a8caa;
-        }
+        .search-input:focus { border-color: var(--primary-blue); }
 
-        .search-btn {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            border: none;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 1rem;
-            font-weight: 600;
+        .btn {
+            padding: 8px 16px;
+            background: var(--accent-blue);
+            color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
-        .search-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,212,255,0.4);
-        }
+        .btn:hover { background: var(--primary-blue); color: #000; }
+        
+        .btn-active { background: var(--primary-blue); color: #000; font-weight: bold; }
 
-        .search-hint {
-            font-size: 0.8rem;
-            color: #6a8caa;
-            margin-top: 10px;
-        }
-
-        /* 股票卡片 */
-        .stock-card {
+        /* 綜合資訊卡片樣式 */
+        .info-card {
             background: linear-gradient(135deg, #1e3a5f 0%, #2a4a6a 100%);
-            border-radius: 16px;
-            padding: 20px;
-            border: 1px solid rgba(0,212,255,0.2);
-            display: none;
-        }
-
-        .stock-card.active {
-            display: block;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid rgba(0,212,255,0.3);
+            display: none; /* 預設隱藏 */
             animation: fadeIn 0.5s ease;
         }
+        
+        .info-card.active { display: block; }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .stock-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+        .card-header {
             border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
         }
 
-        .stock-name-section h2 {
-            font-size: 1.5rem;
-            color: #fff;
+        .card-title { font-size: 1.5rem; color: #fff; font-weight: 700; }
+        .card-subtitle { color: var(--primary-blue); font-size: 1rem; }
+
+        .card-section { margin-bottom: 15px; }
+        .card-section-title {
+            font-size: 0.85rem;
+            color: #aaa;
             margin-bottom: 5px;
+            border-left: 3px solid var(--primary-blue);
+            padding-left: 8px;
         }
 
-        .stock-code {
-            font-size: 1rem;
-            color: #00d4ff;
-            font-weight: 600;
-        }
-
-        .stock-price-section {
-            text-align: right;
-        }
-
-        .current-price {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .price-change {
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
-            display: inline-block;
-            margin-top: 5px;
-        }
-
-        .price-change.up {
-            background: rgba(255, 82, 82, 0.2);
-            color: #ff5252;
-        }
-
-        .price-change.down {
-            background: rgba(76, 175, 80, 0.2);
-            color: #4caf50;
-        }
-
-        .price-change.flat {
-            background: rgba(158, 158, 158, 0.2);
-            color: #9e9e9e;
-        }
-
-        .stock-details {
+        .card-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-
-        .detail-item {
-            background: rgba(0,0,0,0.2);
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .detail-label {
-            font-size: 0.75rem;
-            color: #6a8caa;
-            margin-bottom: 4px;
-        }
-
-        .detail-value {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #fff;
-        }
-
-        .detail-value.positive { color: #ff5252; }
-        .detail-value.negative { color: #4caf50; }
-
-        /* 法人籌碼區塊 */
-        .chip-section {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .chip-title {
-            font-size: 0.9rem;
-            color: #00d4ff;
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .chip-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .chip-item {
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-        }
-
-        .chip-label {
-            font-size: 0.7rem;
-            color: #6a8caa;
-            margin-bottom: 4px;
-        }
-
-        .chip-value {
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-
-        /* 右側面板 - 熱門交易資訊 */
-        .right-panel {
-            background: linear-gradient(180deg, #1a2d42 0%, #152238 100%);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            border: 1px solid rgba(61, 122, 181, 0.3);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .right-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .right-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #00d4ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .right-title::before {
-            content: '📊';
-            font-size: 1.2rem;
-        }
-
-        /* 類別選擇器 */
-        .category-selector {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .category-group {
-            position: relative;
-        }
-
-        .category-btn {
-            padding: 10px 18px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 8px;
-            color: #a0c4e8;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
 
-        .category-btn:hover, .category-btn.active {
-            background: rgba(0,212,255,0.15);
-            border-color: #00d4ff;
-            color: #00d4ff;
+        .card-item {
+            background: rgba(0,0,0,0.2);
+            padding: 8px;
+            border-radius: 6px;
+        }
+        
+        .card-label { font-size: 0.75rem; color: #888; }
+        .card-value { font-size: 0.95rem; color: #fff; font-weight: 500; }
+
+        /* 右側標籤列 (Tabs) */
+        .tabs-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            white-space: nowrap;
         }
 
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: #1a2d42;
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 10px;
-            padding: 8px 0;
-            min-width: 220px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            z-index: 100;
-            display: none;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .dropdown-menu.show {
-            display: block;
-            animation: dropdownFade 0.2s ease;
-        }
-
-        @keyframes dropdownFade {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-item {
-            padding: 10px 16px;
-            color: #a0c4e8;
+        .tab-btn {
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            border-radius: 20px;
             cursor: pointer;
-            transition: all 0.2s ease;
             font-size: 0.9rem;
         }
 
-        .dropdown-item:hover {
-            background: rgba(0,212,255,0.1);
-            color: #00d4ff;
-        }
+        .tab-btn:hover { border-color: var(--primary-blue); color: #fff; }
+        .tab-btn.active { background: var(--primary-blue); color: #000; font-weight: bold; }
 
-        .dropdown-item.selected {
-            background: rgba(0,212,255,0.15);
-            color: #00d4ff;
-            font-weight: 600;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 8px 0;
-        }
-
-        .dropdown-header {
-            padding: 8px 16px;
-            color: #6a8caa;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        /* 表格區域 */
-        .table-container {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            background: rgba(0,0,0,0.2);
-            border-radius: 12px;
-            border: 1px solid rgba(61, 122, 181, 0.2);
-        }
-
+        /* 表格樣式 */
         .table-wrapper {
             flex: 1;
             overflow: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        thead {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        th {
-            background: linear-gradient(180deg, #2d5a87 0%, #1e3a5f 100%);
-            color: #fff;
-            padding: 14px 12px;
-            text-align: left;
-            font-weight: 600;
-            white-space: nowrap;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-            border-bottom: 2px solid #3d7ab5;
-        }
-
-        th:hover {
-            background: linear-gradient(180deg, #3d7ab5 0%, #2d5a87 100%);
-        }
-
-        th.sorted-asc::after { content: ' ▲'; color: #00d4ff; }
-        th.sorted-desc::after { content: ' ▼'; color: #00d4ff; }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            white-space: nowrap;
-        }
-
-        tr:hover {
-            background: rgba(0,212,255,0.05);
-        }
-
-        tr:nth-child(even) {
-            background: rgba(0,0,0,0.1);
-        }
-
-        tr:nth-child(even):hover {
-            background: rgba(0,212,255,0.08);
-        }
-
-        .td-code {
-            color: #00d4ff;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .td-code:hover {
-            text-decoration: underline;
-        }
-
-        .td-name {
-            color: #fff;
-            font-weight: 500;
-        }
-
-        .td-positive { color: #ff5252; font-weight: 600; }
-        .td-negative { color: #4caf50; font-weight: 600; }
-
-        .td-highlight {
-            background: rgba(255, 82, 82, 0.1);
-        }
-
-        /* 分頁區域 */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            padding: 15px;
             background: rgba(0,0,0,0.2);
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .pagination button {
-            padding: 8px 14px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0,212,255,0.3);
-            border-radius: 6px;
-            color: #a0c4e8;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-        .pagination button:hover:not(:disabled) {
-            background: rgba(0,212,255,0.15);
-            border-color: #00d4ff;
-            color: #00d4ff;
-        }
-
-        .pagination button.active {
-            background: linear-gradient(135deg, #00d4ff, #0099cc);
-            border-color: #00d4ff;
-            color: #fff;
-        }
-
-        .pagination button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .page-info {
-            color: #6a8caa;
-            font-size: 0.85rem;
-            margin: 0 10px;
-        }
-
-        /* 統計資訊區 */
-        .stats-bar {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            background: rgba(0,0,0,0.3);
-            padding: 10px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.05);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #6a8caa;
-        }
-
-        .stat-value {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #00d4ff;
-        }
-
-        .stat-value.up { color: #ff5252; }
-        .stat-value.down { color: #4caf50; }
-
-        /* 載入動畫 */
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px;
-            color: #6a8caa;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(0,212,255,0.1);
-            border-top-color: #00d4ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* 頁尾 */
-        .footer {
-            background: linear-gradient(90deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%);
-            padding: 20px;
-            text-align: center;
-            margin-top: auto;
-            border-top: 2px solid #3d7ab5;
-        }
-
-        .footer p {
-            font-size: 0.85rem;
-            color: #a0c4e8;
-            line-height: 1.8;
-        }
-
-        .footer .warning {
-            color: #ff6b6b;
-            font-weight: 500;
-            margin-top: 10px;
-            padding: 12px;
-            background: rgba(255, 107, 107, 0.1);
             border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
 
-        /* 響應式設計 */
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .left-panel {
-                order: 1;
-            }
-            
-            .right-panel {
-                order: 2;
-                min-height: 600px;
-            }
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        
+        thead { position: sticky; top: 0; background: #2d5a87; z-index: 1; }
+        
+        th { padding: 12px; text-align: left; color: #fff; white-space: nowrap; }
+        td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
+        
+        tr:hover { background: rgba(0,212,255,0.05); }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .header-info {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-            
-            .category-selector {
-                justify-content: center;
-            }
-            
-            .stats-bar {
-                justify-content: center;
-            }
-            
-            .stock-details {
-                grid-template-columns: 1fr;
-            }
-        }
+        .val-up { color: var(--up-color); }
+        .val-down { color: var(--down-color); }
 
-        /* 無資料提示 */
-        .no-data {
+        /* 檔案上傳區 (第一次使用時顯示) */
+        .upload-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        .upload-box {
+            background: #1a252f;
+            padding: 40px;
+            border-radius: 16px;
             text-align: center;
-            padding: 60px;
-            color: #6a8caa;
+            border: 2px dashed var(--primary-blue);
         }
 
-        .no-data-icon {
-            font-size: 4rem;
-            margin-bottom: 15px;
-            opacity: 0.5;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 滾動條美化 */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.2);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0,212,255,0.3);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0,212,255,0.5);
-        }
+        /* 卷軸美化 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-thumb { background: #3d7ab5; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #0f1419; }
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="logo-section">
-            <div class="logo-icon">168</div>
-            <div class="logo-text">
-                <h1>Rex大叔的168台股投資教室</h1>
-                <p>AI智慧台股熱門交易系統 v1.0</p>
-            </div>
-        </div>
-        <div class="header-info">
-            <div class="data-date">📅 資料日期：<span id="dataDate">載入中...</span></div>
-            <div class="ai-badge">🤖 AI 智慧分析</div>
-        </div>
-    </header>
 
-    <div class="main-container">
-        <div class="left-panel">
-            <div class="panel-title">股票/可轉債查詢</div>
-            
-            <div class="search-section">
-                <div class="search-box">
-                    <input type="text" class="search-input" id="stockSearch" 
-                           placeholder="輸入股票代號或名稱..." 
-                           onkeypress="if(event.key==='Enter')searchStock()">
-                    <button class="search-btn" onclick="searchStock()">查詢</button>
-                </div>
-                <p class="search-hint">💡 輸入股票代號（如：2330）或名稱進行查詢</p>
-            </div>
-
-            <div class="stock-card" id="stockCard">
-                <div class="stock-header">
-                    <div class="stock-name-section">
-                        <h2 id="cardStockName">-</h2>
-                        <span class="stock-code" id="cardStockCode">-</span>
-                    </div>
-                    <div class="stock-price-section">
-                        <div class="current-price" id="cardPrice">-</div>
-                        <div class="price-change" id="cardChange">-</div>
-                    </div>
-                </div>
-
-                <div class="stock-details">
-                    <div class="detail-item">
-                        <div class="detail-label">成交量(張)</div>
-                        <div class="detail-value" id="cardVolume">-</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">成交值(億)</div>
-                        <div class="detail-value" id="cardValue">-</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">週轉率</div>
-                        <div class="detail-value" id="cardTurnover">-</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">當沖率</div>
-                        <div class="detail-value" id="cardDayTrade">-</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">股本(億)</div>
-                        <div class="detail-value" id="cardCapital">-</div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">5日漲幅</div>
-                        <div class="detail-value" id="card5DayChange">-</div>
-                    </div>
-                </div>
-
-                <div class="chip-section">
-                    <div class="chip-title">📈 法人籌碼動態</div>
-                    <div class="chip-grid">
-                        <div class="chip-item">
-                            <div class="chip-label">外資買賣超</div>
-                            <div class="chip-value" id="cardForeign">-</div>
-                        </div>
-                        <div class="chip-item">
-                            <div class="chip-label">投信買賣超</div>
-                            <div class="chip-value" id="cardTrust">-</div>
-                        </div>
-                        <div class="chip-item">
-                            <div class="chip-label">主力買賣超</div>
-                            <div class="chip-value" id="cardMain">-</div>
-                        </div>
-                        <div class="chip-item">
-                            <div class="chip-label">散戶買賣超</div>
-                            <div class="chip-value" id="cardRetail">-</div>
-                        </div>
-                        <div class="chip-item">
-                            <div class="chip-label">融資增減</div>
-                            <div class="chip-value" id="cardMargin">-</div>
-                        </div>
-                        <div class="chip-item">
-                            <div class="chip-label">融券增減</div>
-                            <div class="chip-value" id="cardShort">-</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="right-panel">
-            <div class="right-header">
-                <div class="right-title">熱門交易資訊排行</div>
-                
-                <div class="category-selector">
-                    <div class="category-group">
-                        <button class="category-btn" onclick="toggleDropdown('cbMenu')">
-                            📈 可轉債CB
-                            <span>▼</span>
-                        </button>
-                        <div class="dropdown-menu" id="cbMenu">
-                            <div class="dropdown-header">熱門交易</div>
-                            <div class="dropdown-item" data-file="007_CB_volume.csv">成交值排行</div>
-                            <div class="dropdown-item" data-file="008_CB_turnover.csv">週轉率排行</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">漲跌排行</div>
-                            <div class="dropdown-item" data-file="005_CB_gainers.csv">漲幅排行</div>
-                            <div class="dropdown-item" data-file="006_CB_losers.csv">跌幅排行</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">計量統計</div>
-                            <div class="dropdown-item" data-file="003_CB_strong.csv">計量強勢排行</div>
-                            <div class="dropdown-item" data-file="004_CB_weak.csv">計量弱勢排行</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">突破指標</div>
-                            <div class="dropdown-item" data-file="002_CB_200day_high.csv">創200日新高</div>
-                            <div class="dropdown-item" data-file="001_CB_200day_low.csv">創200日新低</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">法人動態</div>
-                            <div class="dropdown-item" data-file="009_CB_foreign.csv">外資買超</div>
-                            <div class="dropdown-item" data-file="010_CB_trust.csv">投信買超</div>
-                        </div>
-                    </div>
-
-                    <div class="category-group">
-                        <button class="category-btn" onclick="toggleDropdown('stockMenu')">
-                            📊 上市櫃股票
-                            <span>▼</span>
-                        </button>
-                        <div class="dropdown-menu" id="stockMenu">
-                            <div class="dropdown-header">熱門交易</div>
-                            <div class="dropdown-item" data-file="013_stock_volume.csv">成交值排行</div>
-                            <div class="dropdown-item" data-file="011_stock_turnover.csv">週轉率排行</div>
-                            <div class="dropdown-item" data-file="012_stock_daytrade.csv">當沖率排行</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">計量統計</div>
-                            <div class="dropdown-item" data-file="014_stock_strong.csv">計量強勢排行</div>
-                            <div class="dropdown-item" data-file="015_stock_weak.csv">計量弱勢排行</div>
-                        </div>
-                    </div>
-
-                    <div class="category-group">
-                        <button class="category-btn" onclick="toggleDropdown('chipMenu')">
-                            💰 法人籌碼
-                            <span>▼</span>
-                        </button>
-                        <div class="dropdown-menu" id="chipMenu">
-                            <div class="dropdown-header">外資動態</div>
-                            <div class="dropdown-item" data-file="019_foreign_buy.csv">外本比買超排行</div>
-                            <div class="dropdown-item" data-file="020_foreign_sell.csv">外本比賣超排行</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">投信動態</div>
-                            <div class="dropdown-item" data-file="021_trust_buy.csv">投本比買超排行</div>
-                            <div class="dropdown-item" data-file="022_trust_sell.csv">投本比賣超排行</div>
-                        </div>
-                    </div>
-
-                    <div class="category-group">
-                        <button class="category-btn" onclick="toggleDropdown('chainMenu')">
-                            🔗 供應鏈
-                            <span>▼</span>
-                        </button>
-                        <div class="dropdown-menu" id="chainMenu">
-                            <div class="dropdown-item" data-file="025_nvidia.csv">NVIDIA概念股</div>
-                            <div class="dropdown-item" data-file="025_tsmc.csv">台積電供應鏈</div>
-                        </div>
-                    </div>
-
-                    <div class="category-group">
-                        <button class="category-btn" onclick="toggleDropdown('optionMenu')">
-                            🎯 元大選擇權
-                            <span>▼</span>
-                        </button>
-                        <div class="dropdown-menu" id="optionMenu">
-                            <div class="dropdown-header">報價資訊</div>
-                            <div class="dropdown-item" data-file="026_option_quote.csv">CB資產交換選擇權報價</div>
-                            <div class="dropdown-item" data-file="030_cb_daily.csv">CB每日行情表</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">流通資訊</div>
-                            <div class="dropdown-item" data-file="029_cb_balance.csv">CB流通在外餘額</div>
-                            <div class="dropdown-item" data-file="031_cb_basic.csv">CB基本資料檔</div>
-                            <div class="dropdown-divider"></div>
-                            <div class="dropdown-header">公告資訊</div>
-                            <div class="dropdown-item" data-file="027_redemption.csv">公司執行贖回權</div>
-                            <div class="dropdown-item" data-file="028_stop_conversion.csv">停止轉換資訊</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="stats-bar">
-                <div class="stat-item">
-                    <span class="stat-label">總筆數</span>
-                    <span class="stat-value" id="totalCount">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">上漲</span>
-                    <span class="stat-value up" id="upCount">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">下跌</span>
-                    <span class="stat-value down" id="downCount">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">平盤</span>
-                    <span class="stat-value" id="flatCount">-</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">當前報表</span>
-                    <span class="stat-value" id="currentReport" style="font-size: 0.9rem;">-</span>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div class="table-wrapper">
-                    <table id="dataTable">
-                        <thead id="tableHead"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-                </div>
-                <div class="pagination" id="pagination"></div>
-            </div>
+    <div class="upload-overlay" id="uploadOverlay">
+        <div class="upload-box">
+            <h2 style="margin-bottom: 20px; color: #fff;">歡迎來到可轉債戰情室</h2>
+            <p style="margin-bottom: 20px; color: #aaa;">請上傳包含 7 個工作表的 Excel 檔案 (.xlsx)</p>
+            <input type="file" id="excelInput" accept=".xlsx, .xls" style="display: none;" onchange="handleFileSelect(event)">
+            <button class="btn" style="font-size: 1.2rem; padding: 10px 30px;" onclick="document.getElementById('excelInput').click()">
+                📂 選擇 Excel 檔案
+            </button>
+            <p style="margin-top:15px; font-size: 0.8rem; color: #666;">資料將在您的瀏覽器本地處理，不會上傳雲端</p>
         </div>
     </div>
 
-    <footer class="footer">
-        <p>以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
-        <p>本人整理之資料僅為學習分享用，無任何商業用途</p>
-        <p class="warning">⚠️ 投資風險提醒：投資涉及風險，股票價格可升可跌，過往表現並非未來表現的指標。投資者應審慎評估自身財務狀況及風險承受能力，本資料不構成任何投資建議。</p>
-    </footer>
+    <header class="header">
+        <div class="brand">
+            <span>CB</span> Rex大叔可轉債戰情室
+        </div>
+        <div class="status-bar">
+            📊 資料狀態：<span id="fileStatus">等待檔案...</span>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        
+        <aside class="left-panel">
+            <div class="search-container">
+                <div style="margin-bottom: 8px; color: var(--text-sub); font-size: 0.9rem;">全方位搜尋</div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="輸入代碼 (如: 2330)" onkeypress="if(event.key==='Enter') searchCode()">
+                    <button class="btn" onclick="searchCode()">🔍</button>
+                </div>
+            </div>
+
+            <div id="infoCard" class="info-card">
+                <div class="card-header">
+                    <div class="card-title" id="cardName">台積電</div>
+                    <div class="card-subtitle" id="cardCode">2330</div>
+                </div>
+                
+                <div id="cardContent">
+                    <p style="text-align: center; color: #888;">請輸入代碼進行搜尋</p>
+                </div>
+            </div>
+
+            <div id="searchHint" style="text-align: center; margin-top: 50px; color: #555;">
+                <div style="font-size: 3rem; margin-bottom: 10px;">🔍</div>
+                <p>輸入可轉債或股票代碼<br>即時彙整 7 大工作表資訊</p>
+            </div>
+        </aside>
+
+        <main class="right-panel">
+            <div class="tabs-container" id="tabsContainer">
+                <span style="color: #666; padding: 8px;">請先載入檔案...</span>
+            </div>
+
+            <div class="table-wrapper">
+                <table id="mainTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
 
     <script>
-        // 全域變數
-        let allData = [];
-        let filteredData = [];
-        let currentPage = 1;
-        let sortColumn = null;
-        let sortDirection = 'desc';
-        let columns = [];
-        let currentFile = '';
-        let stockDatabase = {};
+        // 全域變數存儲 Excel 資料
+        let workbookData = {}; // 格式: { '工作表1': [row1, row2...], '工作表2': [...] }
+        let sheetNames = [];
+        let currentSheet = '';
 
-        // 優先顯示的欄位
-        const priorityColumns = [
-            '序號', '代碼', '商品', '成交', '漲幅%', '總量', '金額(億)', 
-            '週轉率', '當沖率', '外資買賣超(張)', '投信買賣超(張)', 
-            '主力買賣超(張)', '散戶買賣超(張)', '融資增減(張)', '融券增減(張)',
-            '5日%', '10日%', '股本(億)'
-        ];
+        // 1. 處理檔案上傳
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
 
-        // 報表名稱對照
-        const reportNames = {
-            '007_CB_volume.csv': 'CB成交值排行',
-            '008_CB_turnover.csv': 'CB週轉率排行',
-            '005_CB_gainers.csv': 'CB漲幅排行',
-            '006_CB_losers.csv': 'CB跌幅排行',
-            '003_CB_strong.csv': 'CB計量強勢',
-            '004_CB_weak.csv': 'CB計量弱勢',
-            '002_CB_200day_high.csv': 'CB創200日新高',
-            '001_CB_200day_low.csv': 'CB創200日新低',
-            '009_CB_foreign.csv': 'CB外資買超',
-            '010_CB_trust.csv': 'CB投信買超',
-            '013_stock_volume.csv': '上市櫃成交值',
-            '011_stock_turnover.csv': '上市櫃週轉率',
-            '012_stock_daytrade.csv': '上市櫃當沖率',
-            '014_stock_strong.csv': '上市櫃計量強勢',
-            '015_stock_weak.csv': '上市櫃計量弱勢',
-            '019_foreign_buy.csv': '外本比買超',
-            '020_foreign_sell.csv': '外本比賣超',
-            '021_trust_buy.csv': '投本比買超',
-            '022_trust_sell.csv': '投本比賣超',
-            '025_nvidia.csv': 'NVIDIA概念股',
-            '025_tsmc.csv': '台積電供應鏈'
-        };
-
-        // 初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 設定預設日期 (之後會從CSV更新)
-            document.getElementById('dataDate').textContent = '載入中...';
+            document.getElementById('fileStatus').textContent = "讀取中...";
             
-            // 綁定下拉選單項目點擊事件
-            document.querySelectorAll('.dropdown-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const file = this.getAttribute('data-file');
-                    loadData(file);
-                    closeAllDropdowns();
-                    
-                    // 更新選中狀態
-                    document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('selected'));
-                    this.classList.add('selected');
-                });
-            });
-
-            // 點擊其他地方關閉下拉選單
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.category-group')) {
-                    closeAllDropdowns();
-                }
-            });
-
-            // 預設載入第一個報表
-            setTimeout(() => {
-                loadData('007_CB_volume.csv');
-            }, 100);
-        });
-
-        // 切換下拉選單
-        function toggleDropdown(menuId) {
-            const menu = document.getElementById(menuId);
-            const isOpen = menu.classList.contains('show');
-            closeAllDropdowns();
-            if (!isOpen) {
-                menu.classList.add('show');
-            }
-        }
-
-        // 關閉所有下拉選單
-        function closeAllDropdowns() {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.classList.remove('show');
-            });
-        }
-
-        // 載入資料 (改進版：更強的編碼偵測)
-        function loadData(filename) {
-            currentFile = filename;
-            const tableBody = document.getElementById('tableBody');
-            const tableHead = document.getElementById('tableHead');
+            const reader = new FileReader();
             
-            // 顯示載入中
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="20">
-                        <div class="loading">
-                            <div class="loading-spinner"></div>
-                            <span>載入資料中... (${filename})</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            tableHead.innerHTML = '';
-
-            // 更新報表名稱
-            document.getElementById('currentReport').textContent = reportNames[filename] || filename;
-
-            // 使用 fetch 取得 Blob，以便手動控制 FileReader 的編碼
-            fetch(filename, { cache: "no-store" }) // 避免緩存舊資料
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.blob();
-                })
-                .then(blob => {
-                    // 優先嘗試 Big5 (台股常見編碼)
-                    tryParseBlob(blob, 'big5');
-                })
-                .catch(error => {
-                    console.error("Load failed:", error);
-                    showError(filename);
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                
+                // 解析所有工作表
+                workbookData = {};
+                sheetNames = workbook.SheetNames;
+                
+                sheetNames.forEach(name => {
+                    // 將每個工作表轉為 JSON 物件陣列 (第一列當標題)
+                    const worksheet = workbook.Sheets[name];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, {defval: ""}); // defval: "" 避免空值消失
+                    workbookData[name] = jsonData;
                 });
 
-            function tryParseBlob(blob, encoding) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const text = e.target.result;
-                    
-                    // 簡單檢查是否有常見的中文字 "代碼" 或 "商品" 或 "名稱"
-                    // 如果用 Big5 解出來沒有這些字，很可能是編碼錯誤
-                    if (!text.includes('代碼') && !text.includes('商品') && !text.includes('名稱') && encoding === 'big5') {
-                        console.log('Big5 decoding failed or no headers found, retrying with UTF-8...');
-                        tryParseBlob(blob, 'utf-8'); // 嘗試 UTF-8
-                        return;
-                    }
+                // 初始化介面
+                initInterface();
+                document.getElementById('uploadOverlay').style.display = 'none';
+                document.getElementById('fileStatus').textContent = `已載入 ${sheetNames.length} 個工作表`;
+            };
 
-                    // 開始解析 CSV
-                    Papa.parse(text, {
-                        header: false, // 手動處理 header
-                        skipEmptyLines: true,
-                        complete: function(results) {
-                            if (results.data && results.data.length > 0) {
-                                processData(results.data);
-                            } else {
-                                showError(filename, "檔案內容為空");
-                            }
-                        },
-                        error: function(err) {
-                            showError(filename, "解析失敗");
-                        }
-                    });
-                };
-                reader.onerror = () => showError(filename, "讀取錯誤");
-                reader.readAsText(blob, encoding);
-            }
-
-            function showError(file, msg = "") {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="20">
-                            <div class="no-data">
-                                <div class="no-data-icon">📁</div>
-                                <p>載入失敗：請確認 ${file} 檔案存在</p>
-                                <p style="font-size:0.8rem;margin-top:10px;color:#ff6b6b;">${msg}</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }
+            reader.readAsArrayBuffer(file);
         }
 
-        // 處理資料 (改進版：自動尋找標題列)
-        function processData(rawData) {
-            // 1. 尋找真正的標題列 (Header)
-            // 許多券商軟體匯出的 CSV 前幾行是報表資訊，不是欄位名稱
-            let headerIndex = -1;
-            for (let i = 0; i < Math.min(20, rawData.length); i++) {
-                const row = rawData[i];
-                // 判斷依據：該行包含 "代碼" 且包含 "漲幅" 或 "名稱" 或 "商品"
-                const rowStr = row.join(',');
-                if (rowStr.includes('代碼') && (rowStr.includes('漲幅') || rowStr.includes('商品') || rowStr.includes('名稱'))) {
-                    headerIndex = i;
-                    break;
-                }
-            }
+        // 2. 初始化介面 (建立 Tabs)
+        function initInterface() {
+            const tabsContainer = document.getElementById('tabsContainer');
+            tabsContainer.innerHTML = '';
 
-            if (headerIndex === -1) {
-                // 如果找不到標準標題，嘗試用第一行 (相容性)
-                headerIndex = 0; 
-            }
-
-            // 2. 處理欄位名稱
-            columns = rawData[headerIndex].map(col => {
-                if (!col) return '';
-                return col.trim().replace(/\n/g, '').replace(/"/g, '').replace(/\s+/g, '');
+            sheetNames.forEach((name, index) => {
+                const btn = document.createElement('button');
+                btn.className = `tab-btn ${index === 0 ? 'active' : ''}`;
+                btn.textContent = name;
+                btn.onclick = () => switchTab(name);
+                tabsContainer.appendChild(btn);
             });
 
-            // 3. 提取日期 (從標題列上方尋找)
-            let dataDate = '未知';
-            for (let i = 0; i < headerIndex; i++) {
-                const row = rawData[i].join(' ');
-                // 支援 2024/11/25, 2024-11-25, 2024年11月25日 等格式
-                const dateMatch = row.match(/(\d{4})[/-年]\s*(\d{1,2})[/-月]\s*(\d{1,2})[日]?/);
-                if (dateMatch) {
-                    dataDate = `${dateMatch[1]}/${dateMatch[2].padStart(2,'0')}/${dateMatch[3].padStart(2,'0')}`;
-                    break;
-                }
+            // 預設顯示第一個工作表
+            if (sheetNames.length > 0) {
+                switchTab(sheetNames[0]);
             }
-            // 如果上方沒找到日期，就顯示當天日期或保持原狀
-            if (dataDate !== '未知') {
-                document.getElementById('dataDate').textContent = dataDate;
-            } else {
-                 // 嘗試找最後更新時間
-                 const today = new Date();
-                 document.getElementById('dataDate').textContent = today.toLocaleDateString();
-            }
-
-            // 4. 處理資料內容
-            allData = [];
-            for (let i = headerIndex + 1; i < rawData.length; i++) {
-                const row = rawData[i];
-                if (!row || row.length < 2) continue; // 跳過空行
-
-                const rowObj = {};
-                let isValidRow = false;
-
-                columns.forEach((col, idx) => {
-                    if (col) {
-                        let value = row[idx] !== undefined ? String(row[idx]).trim().replace(/"/g, '') : '';
-                        
-                        // 處理括號負數 (Excel 格式)
-                        if (value.match(/^\([\d,.]+\)$/)) {
-                            value = '-' + value.replace(/[()]/g, '');
-                        }
-                        
-                        rowObj[col] = value;
-                        
-                        // 簡單驗證：如果有代碼，這行通常是有效資料
-                        if (col.includes('代碼') && value.length > 0) {
-                            isValidRow = true;
-                        }
-                    }
-                });
-
-                if (isValidRow) {
-                    allData.push(rowObj);
-                    // 建立股票查詢索引
-                    const code = rowObj['代碼'] ? rowObj['代碼'].replace('.TW', '').replace('.TWO', '') : '';
-                    if (code) {
-                        stockDatabase[code] = rowObj;
-                    }
-                }
-            }
-
-            filteredData = [...allData];
-            currentPage = 1;
-            sortColumn = null;
-            updateStats();
-            renderTable();
         }
 
-        // 更新統計資訊
-        function updateStats() {
-            const data = filteredData;
-            document.getElementById('totalCount').textContent = data.length;
-
-            // 找到漲幅欄位
-            const changeCol = columns.find(c => c.includes('漲幅'));
-
-            let up = 0, down = 0, flat = 0;
-            if (changeCol) {
-                data.forEach(row => {
-                    const val = parseFloat(String(row[changeCol]).replace(/,/g, '')) || 0;
-                    if (val > 0) up++;
-                    else if (val < 0) down++;
-                    else flat++;
-                });
-            } else {
-                flat = data.length; // 如果沒有漲幅欄位
-            }
-
-            document.getElementById('upCount').textContent = up;
-            document.getElementById('downCount').textContent = down;
-            document.getElementById('flatCount').textContent = flat;
-        }
-
-        // 排序資料
-        function sortData(column) {
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = 'desc';
-            }
-
-            filteredData.sort((a, b) => {
-                let valA = a[column] || '';
-                let valB = b[column] || '';
-
-                const numA = parseFloat(String(valA).replace(/,/g, ''));
-                const numB = parseFloat(String(valB).replace(/,/g, ''));
-
-                if (!isNaN(numA) && !isNaN(numB)) {
-                    return sortDirection === 'asc' ? numA - numB : numB - numA;
-                }
-
-                return sortDirection === 'asc'
-                    ? String(valA).localeCompare(String(valB))
-                    : String(valB).localeCompare(String(valA));
+        // 3. 切換工作表 (右側表格)
+        function switchTab(sheetName) {
+            currentSheet = sheetName;
+            
+            // 更新按鈕狀態
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === sheetName);
             });
 
-            renderTable();
+            renderTable(sheetName);
         }
 
-        // 渲染表格
-        function renderTable() {
-            const tableHead = document.getElementById('tableHead');
-            const tableBody = document.getElementById('tableBody');
-            const pageSize = 50;
+        // 4. 渲染表格
+        function renderTable(sheetName) {
+            const data = workbookData[sheetName];
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
 
-            // 排序欄位（優先欄位在前）
-            const sortedColumns = [...columns].filter(c => c).sort((a, b) => {
-                const idxA = priorityColumns.findIndex(p => a.includes(p));
-                const idxB = priorityColumns.findIndex(p => b.includes(p));
-                if (idxA === -1 && idxB === -1) return 0;
-                if (idxA === -1) return 1;
-                if (idxB === -1) return -1;
-                return idxA - idxB;
-            });
-
-            // 只顯示前15個重點欄位，避免表格太寬
-            const displayColumns = sortedColumns.slice(0, 15);
-
-            // 渲染表頭
-            tableHead.innerHTML = '<tr>' + displayColumns.map(col => {
-                const sortClass = sortColumn === col
-                    ? (sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc')
-                    : '';
-                return `<th class="${sortClass}" onclick="sortData('${col}')">${col}</th>`;
-            }).join('') + '</tr>';
-
-            // 計算分頁
-            const total = filteredData.length;
-            const totalPages = Math.ceil(total / pageSize);
-            const start = (currentPage - 1) * pageSize;
-            const end = start + pageSize;
-            const pageData = filteredData.slice(start, end);
-
-            // 渲染資料列
-            if (pageData.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="${Math.max(1, displayColumns.length)}">
-                            <div class="no-data">
-                                <div class="no-data-icon">📊</div>
-                                <p>無符合條件的資料</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tableBody.innerHTML = pageData.map(row => {
-                    const changeCol = columns.find(c => c.includes('漲幅'));
-                    const change = changeCol ? (parseFloat(String(row[changeCol]).replace(/,/g, '')) || 0) : 0;
-                    const rowClass = change > 5 ? 'td-highlight' : '';
-
-                    return `<tr class="${rowClass}">` + displayColumns.map(col => {
-                        let value = row[col] || '';
-                        let className = '';
-
-                        // 代碼欄位特殊處理
-                        if (col === '代碼') {
-                            const cleanCode = value.replace('.TW', '').replace('.TWO', '');
-                            return `<td class="td-code" onclick="showStockCard('${cleanCode}')">${cleanCode}</td>`;
-                        }
-
-                        // 商品名稱
-                        if (col === '商品' || col === '名稱') {
-                            return `<td class="td-name">${value}</td>`;
-                        }
-
-                        // 數值欄位處理
-                        const num = parseFloat(String(value).replace(/,/g, ''));
-                        if (!isNaN(num)) {
-                            // 判斷是否為需要紅綠變色的欄位
-                            if (col.includes('漲幅') || col.includes('%') || 
-                                col.includes('外資') || col.includes('投信') || 
-                                col.includes('主力') || col.includes('融資') ||
-                                col.includes('散戶') || col.includes('買賣超')) {
-                                className = num > 0 ? 'td-positive' : (num < 0 ? 'td-negative' : '');
-                                if (num > 0 && (col.includes('漲幅') || col.includes('%'))) value = `+${value}`;
-                            }
-                        }
-
-                        return `<td class="${className}">${value}</td>`;
-                    }).join('') + '</tr>';
-                }).join('');
-            }
-
-            renderPagination(totalPages);
-        }
-
-        // 渲染分頁
-        function renderPagination(totalPages) {
-            const pagination = document.getElementById('pagination');
-            if (totalPages <= 1) {
-                pagination.innerHTML = '';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">無資料</td></tr>';
                 return;
             }
 
-            let html = '';
-            html += `<button onclick="goToPage(1)" ${currentPage === 1 ? 'disabled' : ''}>首頁</button>`;
-            html += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一頁</button>`;
+            // 取得欄位名稱
+            const columns = Object.keys(data[0]);
 
-            const start = Math.max(1, currentPage - 2);
-            const end = Math.min(totalPages, currentPage + 2);
+            // 建立表頭
+            let headHtml = '<tr>';
+            columns.forEach(col => headHtml += `<th>${col}</th>`);
+            headHtml += '</tr>';
+            thead.innerHTML = headHtml;
 
-            for (let i = start; i <= end; i++) {
-                html += `<button class="${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-            }
-
-            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一頁</button>`;
-            html += `<button onclick="goToPage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>末頁</button>`;
-            html += `<span class="page-info">第 ${currentPage} / ${totalPages} 頁</span>`;
-
-            pagination.innerHTML = html;
+            // 建立內容 (限制顯示前 100 筆以免瀏覽器卡頓)
+            const displayData = data.slice(0, 100);
+            let bodyHtml = '';
+            
+            displayData.forEach(row => {
+                bodyHtml += '<tr>';
+                columns.forEach(col => {
+                    let val = row[col];
+                    // 簡單的顏色判斷 (如果是數字且有 + -)
+                    let colorClass = '';
+                    if (!isNaN(parseFloat(val))) {
+                        // 這裡可以根據您的 Excel 資料格式微調
+                        // 例如：如果有 "漲跌幅" 欄位
+                    }
+                    bodyHtml += `<td class="${colorClass}">${val}</td>`;
+                });
+                bodyHtml += '</tr>';
+            });
+            tbody.innerHTML = bodyHtml;
         }
 
-        // 跳轉頁面
-        function goToPage(page) {
-            currentPage = page;
-            renderTable();
-            document.querySelector('.table-wrapper').scrollTop = 0;
-        }
-
-        // 搜尋股票
-        function searchStock() {
-            const keyword = document.getElementById('stockSearch').value.trim();
+        // 5. 搜尋並建立卡片 (核心功能：跨工作表搜尋)
+        function searchCode() {
+            const keyword = document.getElementById('searchInput').value.trim().toUpperCase();
             if (!keyword) return;
 
-            // 在所有資料中搜尋
-            const found = allData.find(row => {
-                const code = (row['代碼'] || '').replace('.TW', '').replace('.TWO', '');
-                const name = row['商品'] || row['名稱'] || '';
-                return code.includes(keyword) || name.includes(keyword);
-            });
-
-            if (found) {
-                showStockCard(found['代碼'].replace('.TW', '').replace('.TWO', ''));
-            } else {
-                alert('找不到符合的股票，請確認代號或名稱是否正確');
-            }
-        }
-
-        // 顯示股票卡片
-        function showStockCard(code) {
-            const stock = allData.find(row => {
-                const rowCode = (row['代碼'] || '').replace('.TW', '').replace('.TWO', '');
-                return rowCode === code || rowCode.includes(code);
-            });
-
-            if (!stock) {
-                alert('找不到該股票資料');
-                return;
-            }
-
-            const card = document.getElementById('stockCard');
-            card.classList.add('active');
-
-            // 更新卡片內容
-            document.getElementById('cardStockName').textContent = stock['商品'] || stock['名稱'] || '-';
-            document.getElementById('cardStockCode').textContent = code;
-            document.getElementById('cardPrice').textContent = stock['成交'] || stock['收盤'] || '-';
-
-            // 漲跌幅
-            const changeCol = columns.find(c => c.includes('漲幅')) || columns.find(c => c.includes('%'));
-            const change = changeCol ? (parseFloat(stock[changeCol]) || 0) : 0;
-            const changeEl = document.getElementById('cardChange');
-            changeEl.textContent = change > 0 ? `+${change}%` : `${change}%`;
-            changeEl.className = 'price-change ' + (change > 0 ? 'up' : (change < 0 ? 'down' : 'flat'));
-
-            // 基本資料 (容錯處理，找不到欄位顯示 '-')
-            document.getElementById('cardVolume').textContent = formatNumber(stock['總量'] || stock['成交量']);
-            document.getElementById('cardValue').textContent = stock['金額(億)'] || '-';
-            document.getElementById('cardTurnover').textContent = stock['週轉率'] ? `${stock['週轉率']}%` : '-';
-            document.getElementById('cardDayTrade').textContent = stock['當沖率'] ? `${stock['當沖率']}%` : '-';
-            document.getElementById('cardCapital').textContent = stock['股本(億)'] || '-';
+            const card = document.getElementById('infoCard');
+            const cardContent = document.getElementById('cardContent');
+            const searchHint = document.getElementById('searchHint');
             
-            const day5Change = parseFloat(stock['5日%']) || 0;
-            const day5El = document.getElementById('card5DayChange');
-            day5El.textContent = day5Change > 0 ? `+${day5Change}%` : `${day5Change}%`;
-            day5El.className = 'detail-value ' + (day5Change > 0 ? 'positive' : (day5Change < 0 ? 'negative' : ''));
+            // 清空舊資料
+            cardContent.innerHTML = '';
+            let foundAny = false;
+            let basicInfoFound = false; // 用來標記是否找到基本資料來填標題
 
-            // 法人籌碼
-            updateChipValue('cardForeign', stock['外資買賣超(張)'] || stock['外資']);
-            updateChipValue('cardTrust', stock['投信買賣超(張)'] || stock['投信']);
-            updateChipValue('cardMain', stock['主力買賣超(張)'] || stock['主力']);
-            updateChipValue('cardRetail', stock['散戶買賣超(張)'] || stock['散戶']);
-            updateChipValue('cardMargin', stock['融資增減(張)'] || stock['融資']);
-            updateChipValue('cardShort', stock['融券增減(張)'] || stock['融券']);
+            // 遍歷所有工作表
+            sheetNames.forEach(sheetName => {
+                const sheetData = workbookData[sheetName];
+                
+                // 在該工作表中尋找符合代碼的列
+                // 假設您的 Excel 欄位中有 "代碼" 或 "名稱"
+                const foundRow = sheetData.find(row => {
+                    // 將所有欄位值轉為字串來搜尋 (模糊搜尋)
+                    return Object.values(row).some(val => String(val).toUpperCase().includes(keyword));
+                });
 
-            // 滾動到卡片位置
-            card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                if (foundRow) {
+                    foundAny = true;
+                    
+                    // 如果還沒設定卡片標題，且這行看起來有代碼名稱
+                    if (!basicInfoFound) {
+                        // 嘗試智慧抓取代碼與名稱
+                        // 這裡需要您提供 Excel 欄位後微調，目前先抓前兩個欄位
+                        const keys = Object.keys(foundRow);
+                        document.getElementById('cardCode').textContent = foundRow['代碼'] || foundRow['Code'] || keyword;
+                        document.getElementById('cardName').textContent = foundRow['名稱'] || foundRow['Name'] || foundRow['商品'] || '-';
+                        basicInfoFound = true;
+                    }
+
+                    // 建立該工作表的資訊區塊
+                    const section = document.createElement('div');
+                    section.className = 'card-section';
+                    
+                    let gridHtml = `<div class="card-section-title">📂 ${sheetName}</div><div class="card-grid">`;
+                    
+                    // 將該列的所有資料列出來
+                    for (const [key, value] of Object.entries(foundRow)) {
+                        // 過濾掉空值或太長的文字
+                        if (value !== "" && String(value).length < 20) {
+                            // 顏色判斷
+                            let colorClass = '';
+                            if (String(value).includes('+') || (typeof value === 'number' && value > 0 && key.includes('%'))) colorClass = 'val-up';
+                            if (String(value).includes('-') || (typeof value === 'number' && value < 0 && key.includes('%'))) colorClass = 'val-down';
+
+                            gridHtml += `
+                                <div class="card-item">
+                                    <div class="card-label">${key}</div>
+                                    <div class="card-value ${colorClass}">${value}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                    gridHtml += '</div>';
+                    section.innerHTML = gridHtml;
+                    cardContent.appendChild(section);
+                }
+            });
+
+            if (foundAny) {
+                card.classList.add('active');
+                searchHint.style.display = 'none';
+            } else {
+                alert(`在所有 7 個工作表中都找不到代碼：${keyword}`);
+            }
         }
-
-        // 更新籌碼數值
-        function updateChipValue(elementId, value) {
-            const el = document.getElementById(elementId);
-            const num = parseFloat(String(value).replace(/,/g, '')) || 0;
-            el.textContent = formatNumber(value);
-            el.className = 'chip-value ' + (num > 0 ? 'td-positive' : (num < 0 ? 'td-negative' : ''));
-        }
-
-        // 格式化數字
-        function formatNumber(value) {
-            if (!value || value === '-') return '-';
-            const num = parseFloat(String(value).replace(/,/g, ''));
-            if (isNaN(num)) return value;
-            return num.toLocaleString();
-        }
+        
+        // 自動載入測試 (如果您之後要把檔案放在同目錄下自動載入，可開啟此功能)
+        // window.onload = function() {
+        //     fetch('您的檔案名稱.xlsx').then(...)
+        // }
     </script>
 </body>
 </html>
