@@ -14,20 +14,19 @@
             color: #333;
             min-height: 100vh;
         }
+        .header {
+            background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+            color: white;
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
+        .header p { font-size: 0.9rem; opacity: 0.9; }
 
 ```
-    .header {
-        background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
-        color: white;
-        padding: 15px 20px;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-    }
-    .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
-    .header p { font-size: 0.9rem; opacity: 0.9; }
-    
     .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
     
     .controls {
@@ -188,29 +187,29 @@
             <label>選擇報表類型</label>
             <select id="reportType">
                 <optgroup label="可轉債 CB">
-                    <option value="007_CB+成交值排行.csv">CB 成交值排行</option>
-                    <option value="008_CB+週轉率排行.csv">CB 週轉率排行</option>
-                    <option value="005_CB+漲幅排行.csv">CB 漲幅排行</option>
-                    <option value="006_CB+跌幅排行.csv">CB 跌幅排行</option>
-                    <option value="003_CB+計量強勢排行.csv">CB 計量強勢排行</option>
-                    <option value="004_CB+計量弱勢排行.csv">CB 計量弱勢排行</option>
-                    <option value="002_CB+創200日新高.csv">CB 創200日新高</option>
-                    <option value="001_CB+創200日新低.csv">CB 創200日新低</option>
-                    <option value="009_CB+外資買超.csv">CB 外資買超</option>
-                    <option value="010_CB+投信買超.csv">CB 投信買超</option>
+                    <option value="007_CB成交值排行.csv">CB 成交值排行</option>
+                    <option value="008_CB週轉率排行.csv">CB 週轉率排行</option>
+                    <option value="005_CB漲幅排行.csv">CB 漲幅排行</option>
+                    <option value="006_CB跌幅排行.csv">CB 跌幅排行</option>
+                    <option value="003_CB計量強勢排行.csv">CB 計量強勢排行</option>
+                    <option value="004_CB計量弱勢排行.csv">CB 計量弱勢排行</option>
+                    <option value="002_CB創200日新高.csv">CB 創200日新高</option>
+                    <option value="001_CB創200日新低.csv">CB 創200日新低</option>
+                    <option value="009_CB外資買超.csv">CB 外資買超</option>
+                    <option value="010_CB投信買超.csv">CB 投信買超</option>
                 </optgroup>
                 <optgroup label="上市櫃股票">
-                    <option value="013_上市櫃+成交值排行.csv">上市櫃 成交值排行</option>
-                    <option value="011_上市櫃+週轉率排行.csv">上市櫃 週轉率排行</option>
-                    <option value="012_上市櫃+當沖率排行.csv">上市櫃 當沖率排行</option>
-                    <option value="014_上市櫃+計量統計強勢.csv">上市櫃 計量強勢排行</option>
-                    <option value="015_上市櫃+計量統計弱勢.csv">上市櫃 計量弱勢排行</option>
+                    <option value="013_上市櫃成交值排行.csv">上市櫃 成交值排行</option>
+                    <option value="011_上市櫃週轉率排行.csv">上市櫃 週轉率排行</option>
+                    <option value="012_上市櫃當沖率排行.csv">上市櫃 當沖率排行</option>
+                    <option value="014_上市櫃計量統計強勢.csv">上市櫃 計量強勢排行</option>
+                    <option value="015_上市櫃計量統計弱勢.csv">上市櫃 計量弱勢排行</option>
                 </optgroup>
                 <optgroup label="法人籌碼">
-                    <option value="019_全部上市櫃計量排行+外本比買超.csv">外本比 買超排行</option>
-                    <option value="020_全部上市櫃計量排行+外本比賣超.csv">外本比 賣超排行</option>
-                    <option value="021_全部上市櫃計量排行+投本比買超.csv">投本比 買超排行</option>
-                    <option value="022_全部上市櫃計量排行+投本比賣超.csv">投本比 賣超排行</option>
+                    <option value="019_全部上市櫃計量排行_外本比買超.csv">外本比 買超排行</option>
+                    <option value="020_全部上市櫃計量排行_外本比賣超.csv">外本比 賣超排行</option>
+                    <option value="021_全部上市櫃計量排行_投本比買超.csv">投本比 買超排行</option>
+                    <option value="022_全部上市櫃計量排行_投本比賣超.csv">投本比 賣超排行</option>
                 </optgroup>
                 <optgroup label="供應鏈">
                     <option value="025_NVIDIA概念股計量統計排行.csv">NVIDIA概念股排行</option>
@@ -267,7 +266,7 @@
     <div class="footer">
         <p>以上資料由Rex大叔彙集整理，一切資料投資人仍須以交易所公告為主</p>
         <p>本人整理之資料僅為學習分享用，無任何商業用途</p>
-        <p>若對以上內容有任何建議交流可以寄到：<a href="/cdn-cgi/l/email-protection#2b594e534f4a58435e1a1d136b4c464a424705484446"><span class="__cf_email__" data-cfemail="ccbea9b4a8adbfa4b9fdfaf48caba1ada5a0e2afa3a1">[email&#160;protected]</span></a></p>
+        <p>若對以上內容有任何建議交流可以寄到：<a href="mailto:rexdashu168@gmail.com">rexdashu168@gmail.com</a></p>
         <div class="warning">
             ⚠️ 投資風險提醒：投資涉及風險，股票價格可升可跌，過往表現並非未來表現的指標。<br>
             投資者應審慎評估自身財務狀況及風險承受能力，本資料不構成任何投資建議。
@@ -275,7 +274,7 @@
     </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
     let allData = [];
     let filteredData = [];
     let currentPage = 1;
@@ -520,5 +519,19 @@
         document.querySelector('.table-container').scrollIntoView({ behavior: 'smooth' });
     }
 
-    function debounce
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+</script>
 ```
+
+</body>
+</html>
