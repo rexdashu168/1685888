@@ -219,6 +219,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 </div>
 <script>
 // ========== 全域變數 ==========
+// ========== 工具函數 ==========
+function fmtDate(d){if(!d)return'-';var s=String(d);return s.length===8?s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8):s;}
+function fmtNum(n,dec){if(n===null||n===undefined||isNaN(n))return'-';return Number(n).toFixed(dec===undefined?2:dec);}
+function fmtMoney(n){if(!n||isNaN(n))return'-';var v=Number(n);if(v>=1e8)return(v/1e8).toFixed(1)+'\u5104';if(v>=1e4)return(v/1e4).toFixed(0)+'\u842c';return v.toLocaleString();}
+function priceClass(c){if(!c||isNaN(c))return'price-flat';return Number(c)>0?'price-up':Number(c)<0?'price-down':'price-flat';}
+function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function scrollToBottom(){var c=document.getElementById('chat-messages');setTimeout(function(){c.scrollTop=c.scrollHeight},50);}
+
 var DB = null, currentTab = 'cb', currentFn = 'basic', recentQueries = [], knowledgeCatIndex = 0;
 
 
