@@ -899,9 +899,12 @@ function renderCbPriceHistory(code) {
   // 建立日期→多筆陣列的 map
   var cbasMap = {};
   cbasRecs.forEach(function(r){
+    if (!r.nm || r.nm <= 0) return;  // 過濾掉無名目本金的舊格式資料
     var ds = String(r.d);
     if (!cbasMap[ds]) cbasMap[ds] = [];
-    cbasMap[ds].push(r);
+    // 去重：同日同nm只留一筆
+    var dup = cbasMap[ds].some(function(x){ return x.nm === r.nm && x.per === r.per; });
+    if (!dup) cbasMap[ds].push(r);
   });
 
   var hasCbas = cbasRecs.length > 0;
@@ -1549,11 +1552,45 @@ function showCbFullResult(result) {
   if (stockCode && window.STOCK_CB_MAP && STOCK_CB_MAP[stockCode] && STOCK_CB_MAP[stockCode].length > 1) {
     var siblings = STOCK_CB_MAP[stockCode];
     html += '<div class="data-section"><div class="section-title">🏢 同公司歷史CB (' + siblings.length + ' 檔)</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+
+    // 表格欄：代號名稱 | 狀態 | 最高(日) | 最低(日) | 振幅
+    var cols = 'grid-template-columns:55px 1fr 50px 70px 70px 70px 60px';
+    html += '<div class="mini-table"><div class="thead" style="' + cols + '">' +
+      '<span>代號</span><span>名稱</span><span>狀態</span>' +
+      '<span class="price-up">最高</span><span style="font-size:10px;color:var(--text4)">最高日</span>' +
+      '<span class="price-down">最低</span><span style="font-size:10px;color:var(--text4)">最低日</span>' +
+      '</div>';
+
     siblings.forEach(function(sib) {
       var isCurrent = sib.c === code;
       var isListed2 = !!DB._kbByCode[sib.c];
-      html += '<span style="font-size:10px;padding:3px 8px;border-radius:8px;cursor:pointer;background:' + (isCurrent?'var(--accent-light)':isListed2?'var(--ok-bg)':'var(--bg3)') + ';color:var(--text2)" onclick="doQuery(\'' + sib.c + '\')">' + (isListed2?'🟢':'⚫') + ' ' + sib.c + ' ' + sib.n + '</span>';
+
+      // 從 CB_PRICE_2026 + DB.cp 找最高最低
+      var allPx = [];
+      if (window.CB_PRICE_2026) {
+        CB_PRICE_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      if (DB.cp) {
+        DB.cp.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      allPx.sort(function(a,b){return a.d-b.d;});
+
+      var hiRec = allPx.length ? allPx.reduce(function(m,r){return r.p>m.p?r:m;}, allPx[0]) : null;
+      var loRec = allPx.length ? allPx.reduce(function(m,r){return r.p<m.p?r:m;}, allPx[0]) : null;
+      var amp = (hiRec && loRec && loRec.p > 0) ? ((hiRec.p - loRec.p) / loRec.p * 100).toFixed(1) + '%' : '-';
+
+      var statusTxt = isCurrent ? '▶ 本檔' : isListed2 ? '🟢 掛牌' : '⚫ 下市';
+      var rowBg = isCurrent ? 'background:var(--accent-light);' : '';
+
+      html += '<div class="trow" style="' + cols + ';cursor:pointer;' + rowBg + '" data-q="' + sib.c + '" onclick="doQuery(this.dataset.q)">' +
+        '<span style="color:var(--blue);font-weight:' + (isCurrent?'600':'400') + '">' + sib.c + '</span>' +
+        '<span>' + sib.n + '</span>' +
+        '<span style="font-size:10px">' + statusTxt + '</span>' +
+        '<span class="price-up" style="font-weight:500">' + (hiRec ? fmtNum(hiRec.p) : '-') + '</span>' +
+        '<span style="font-size:10px;color:var(--text4)">' + (hiRec ? fmtDate(hiRec.d) : '-') + '</span>' +
+        '<span class="price-down" style="font-weight:500">' + (loRec ? fmtNum(loRec.p) : '-') + '</span>' +
+        '<span style="color:var(--text3)">' + amp + '</span>' +
+        '</div>';
     });
     html += '</div></div>';
   }
