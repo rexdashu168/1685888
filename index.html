@@ -1299,7 +1299,9 @@ function sidebarClick(fn, action) {
   if (action) {
     var w = document.getElementById('welcome');
     if (w) w.style.display = 'none';
-    if (!DB) { addSystemMsg('資料庫載入中，請稍候...'); return; }
+    // 不需要DB的功能直接執行
+    var noDbActions = ['CBAS垃圾變黃金', '甜蜜點篩選', 'CB成交值排行', 'CB漲幅排行', 'CB跌幅排行', 'CB5日強勢', 'CB5日弱勢', '股票成交值排行', '股票5日強勢', '融資增加排行', '融資減少排行', '融券增加排行'];
+    if (!DB && noDbActions.indexOf(action) < 0) { addSystemMsg('資料庫載入中，請稍候...'); return; }
     doQuery(action);
   }
 }
@@ -1365,7 +1367,9 @@ function doQuery(q) {
   var query = q || input.value.trim();
   if (!query) return;
   input.value = '';
-  if (!DB) { addSystemMsg('資料庫載入中，請稍候...'); return; }
+  // 不需要DB的功能直接執行
+  var noDbNeeded = ['CBAS垃圾變黃金','甜蜜點篩選','CB成交值排行','CB漲幅排行','CB跌幅排行','CB5日強勢','CB5日弱勢','股票成交值排行','股票5日強勢','融資增加排行','融資減少排行','融券增加排行','外電總覽','產業觀察全覽'];
+  if (!DB && noDbNeeded.indexOf(query) < 0) { addSystemMsg('資料庫載入中，請稍候...'); return; }
   var w = document.getElementById('welcome');
   if (w) w.style.display = 'none';
   addUserMsg(query);
@@ -2255,9 +2259,9 @@ async function loadAllExtData() {
   }
 }
 
-async // CBAS 資料：陣列格式 [d, c, nm, cnt, lo, hi, avg, per]
-// 常駐：cbas_2026.js (CBAS_2026_B64) + cbas_2025.js (CBAS_2025_B64)
-// 按需：cbas_2024.js ~ cbas_2017.js
+// CBAS 資料：陣列格式 [d, c, nm, cnt, lo, hi, avg, per]
+// 常駐：cbas_2026.js (CBAS_2026_B64)
+// 按需：cbas_2025.js ~ cbas_2017.js
 
 var CBAS_LOADED_YEARS = new Set();
 
@@ -2272,29 +2276,20 @@ async function parseCbasB64(b64) {
 }
 
 async function loadCbasHistory() {
-  var allRecs = [];
-  // 載入常駐年份（2026, 2025）
+  // 載入常駐年份 2026
   if (window.CBAS_2026_B64) {
     var r26 = await parseCbasB64(CBAS_2026_B64);
-    allRecs = allRecs.concat(r26);
+    if (DB) DB.cbas = (DB.cbas || []).concat(r26);
     CBAS_LOADED_YEARS.add(2026);
     window.CBAS_2026_B64 = null;
+    var el = document.getElementById('ctx-cbas');
+    if (el && DB) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2026)';
   }
-  if (window.CBAS_2025_B64) {
-    var r25 = await parseCbasB64(CBAS_2025_B64);
-    allRecs = allRecs.concat(r25);
-    CBAS_LOADED_YEARS.add(2025);
-    window.CBAS_2025_B64 = null;
-  }
-  if (allRecs.length > 0) {
-    // 合併進 DB.cbas（按需載入的年份會再 concat）
-    if (DB) {
-      DB.cbas = (DB.cbas || []).concat(allRecs).sort(function(a,b){return a.d-b.d;});
-      var yrs = Array.from(CBAS_LOADED_YEARS).sort().join('/');
-      var el = document.getElementById('ctx-cbas');
-      if (el) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/' + yrs + ')';
-    }
-  }
+  // 2025 背景非同步載入（不卡住畫面）
+  loadCbasYear(2025, function() {
+    var el = document.getElementById('ctx-cbas');
+    if (el && DB) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2025-2026)';
+  });
 }
 
 // 按需載入指定年份
@@ -2434,7 +2429,6 @@ window.addEventListener('DOMContentLoaded', function(){
 });
 </script>
 <script src="cbas_2026.js"></script>
-<script src="cbas_2025.js"></script>
 <script src="cb_import.js"></script>
 <script src="stock_price_2026.js"></script>
 <script src="margin_2026.js"></script>
