@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rex大叔投資研究工作站 v1.4</title>
+<title>Rex大叔投資研究工作站 v1.6</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -173,7 +173,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
       <div class="tab active" data-tab="cb" onclick="switchTab('cb')">CB</div>
       <div class="tab" data-tab="cbas" onclick="switchTab('cbas')">CBAS</div>
     </div>
-    <div style="font-size:11px;color:var(--text4)">v1.4</div>
+    <div style="font-size:11px;color:var(--text4)">v1.6</div>
   </div>
 
   <div class="subtitle">
@@ -766,7 +766,7 @@ function renderChipAnalysis(code) {
 
 // ========== CB 歷史價格 ==========
 function renderCbPriceHistory(code) {
-  // 取 CB 價格
+  // CB 價格資料
   var allP = [];
   if (window.CB_DAILY_2026) allP = allP.concat(CB_DAILY_2026.filter(function(r){return r.c===code}));
   if (window.CB_DAILY_2018) allP = allP.concat(CB_DAILY_2018.filter(function(r){return r.c===code}));
@@ -774,27 +774,34 @@ function renderCbPriceHistory(code) {
   if (allP.length === 0) return '';
   var prices = allP.sort(function(a,b){return b.d-a.d});
 
-  // 取 CBAS 拆解紀錄（來自 DB.cbas）
-  var cbasRecs = (DB && DB.cbas) ? DB.cbas.filter(function(r){return String(r.c)===code}) : [];
-  var cbasMap = {};
-  cbasRecs.forEach(function(r){ cbasMap[String(r.d)] = r; });
+  // CBAS 資料：統一用完整欄位格式（nm/avg/per）
+  var cbasRecs = [];
+  var useNewFmt = true;
+  if (DB && DB.cbas) {
+    cbasRecs = DB.cbas.filter(function(r){return String(r.c)===code});
+  }
 
+  // 建立日期→多筆陣列的 map
+  var cbasMap = {};
+  cbasRecs.forEach(function(r){
+    var ds = String(r.d);
+    if (!cbasMap[ds]) cbasMap[ds] = [];
+    cbasMap[ds].push(r);
+  });
+
+  var hasCbas = cbasRecs.length > 0;
+
+  // 摘要統計
   var maxP = Math.max.apply(null, prices.map(function(p){return p.cl}));
   var minP = Math.min.apply(null, prices.map(function(p){return p.cl}));
   var maxD = prices.find(function(p){return p.cl===maxP});
   var minD = prices.find(function(p){return p.cl===minP});
+  var cbasMin = hasCbas ? Math.min.apply(null, cbasRecs.map(function(r){return r.lo||999})) : null;
+  var cbasMax = hasCbas ? Math.max.apply(null, cbasRecs.map(function(r){return r.hi||0})) : null;
 
-  // 統計 CBAS 最低/最高（全部紀錄）
-  var allCbasLo = cbasRecs.map(function(r){return r.lo||999});
-  var allCbasHi = cbasRecs.map(function(r){return r.hi||0});
-  var cbasMin = allCbasLo.length > 0 ? Math.min.apply(null, allCbasLo) : null;
-  var cbasMax = allCbasHi.length > 0 ? Math.max.apply(null, allCbasHi) : null;
-
-  var hasCbas = cbasRecs.length > 0;
-  var totalRows = prices.length;
   var sectionTitle = hasCbas
-    ? 'CB 價格 × CBAS 整合 (' + totalRows + ' 筆 / CBAS ' + cbasRecs.length + ' 筆)'
-    : 'CB 價格歷史 (' + totalRows + ' 筆)';
+    ? 'CB 價格 × CBAS 整合 (' + prices.length + ' 筆 / CBAS ' + cbasRecs.length + ' 筆)'
+    : 'CB 價格歷史 (' + prices.length + ' 筆)';
 
   var html = '<div class="data-section"><div class="section-title">' + sectionTitle + '</div>';
 
@@ -803,8 +810,8 @@ function renderCbPriceHistory(code) {
   html += '<span style="color:var(--text4)">CB最高: <b class="price-up">' + fmtNum(maxP) + '</b> (' + fmtDate(maxD.d) + ')</span>';
   html += '<span style="color:var(--text4)">CB最低: <b class="price-down">' + fmtNum(minP) + '</b> (' + fmtDate(minD.d) + ')</span>';
   if (hasCbas && cbasMin !== null) {
-    html += '<span style="color:var(--fr-text)">CBAS低: <b>' + fmtNum(cbasMin) + '</b></span>';
-    html += '<span style="color:var(--fr-text)">CBAS高: <b>' + fmtNum(cbasMax) + '</b></span>';
+    html += '<span style="color:var(--fr-text)">CBAS權利金低: <b>' + fmtNum(cbasMin) + '</b></span>';
+    html += '<span style="color:var(--fr-text)">CBAS權利金高: <b>' + fmtNum(cbasMax) + '</b></span>';
   }
   html += '</div>';
 
@@ -820,7 +827,7 @@ function renderCbPriceHistory(code) {
     html += '</div>';
   }
 
-  // 轉換價調整紀錄
+  // 轉換價調整
   var withCp = prices.filter(function(p){return p.cp});
   if (withCp.length > 1) {
     var cpSet = {};
@@ -833,45 +840,94 @@ function renderCbPriceHistory(code) {
     }
   }
 
-  // 整合表格欄位
-  var cols = hasCbas
-    ? 'grid-template-columns:70px 50px 40px 55px 45px 50px 50px 50px'
-    : 'grid-template-columns:70px 48px 48px 48px 55px';
+  // 表格 — 有 CBAS 時欄位更多
+  // 新格式（有avg/nm）：日期 CB收盤 量 餘額 轉換價 | 張數 期間 筆數 均權利金 金額(萬) 低 高
+  // 舊格式（無avg/nm）：日期 CB收盤 量 餘額 轉換價 | CBAS筆 權利金低 權利金高
+  var colsCB = '70px 50px 38px 55px 50px';  // 日期 收盤 量 餘額 轉換價
+  var colsCBAS_new = '40px 28px 30px 50px 46px 44px 44px';  // 張數 期 筆 均權利金 金額萬 低 高
+  var colsCBAS_old = '36px 44px 44px';  // 筆數 低 高
 
-  var thead = hasCbas
-    ? '<span>日期</span><span>CB收盤</span><span>量</span><span>餘額</span><span>轉換價</span><span style="color:var(--fr-text)">CBAS筆</span><span style="color:var(--fr-text)">權利金低</span><span style="color:var(--fr-text)">權利金高</span>'
-    : '<span>日期</span><span>收盤</span><span>量</span><span>餘額</span><span>轉換價</span>';
+  var theadCB = '<span>日期</span><span>CB收盤</span><span>量</span><span>餘額</span><span>轉換價</span>';
+  var theadCBAS_new = '<span style="color:var(--fr-text)">張數</span><span style="color:var(--fr-text)">期</span><span style="color:var(--fr-text)">筆</span><span style="color:var(--fr-text)">均權利金</span><span style="color:var(--fr-text)">金額(萬)</span><span style="color:var(--fr-text)">最低</span><span style="color:var(--fr-text)">最高</span>';
+  var theadCBAS_old = '<span style="color:var(--fr-text)">筆數</span><span style="color:var(--fr-text)">低</span><span style="color:var(--fr-text)">高</span>';
+
+  var cols, thead;
+  if (!hasCbas) {
+    cols = 'grid-template-columns:' + colsCB;
+    thead = theadCB;
+  } else if (useNewFmt) {
+    cols = 'grid-template-columns:' + colsCB + ' 6px ' + colsCBAS_new;
+    thead = theadCB + '<span></span>' + theadCBAS_new;
+  } else {
+    cols = 'grid-template-columns:' + colsCB + ' ' + colsCBAS_old;
+    thead = theadCB + theadCBAS_old;
+  }
+
+  function renderCbRow(p) {
+    var ds = String(p.d);
+    var cbasList = cbasMap[ds] || [];
+    var rows = '';
+
+    // 第一子列（CB 資料）
+    var cbSpan = Math.max(cbasList.length, 1);
+    var cbCols = cols;
+    
+    // CB 那行 + 第一筆 CBAS（同一列）
+    var cbPart = '<span>' + fmtDate(p.d) + '</span>' +
+      '<span style="font-weight:500">' + fmtNum(p.cl) + '</span>' +
+      '<span>' + (p.v||'-') + '</span>' +
+      '<span>' + (p.ba?p.ba.toLocaleString():'-') + '</span>' +
+      '<span>' + (p.cp?fmtNum(p.cp):'-') + '</span>';
+
+    if (!hasCbas) {
+      rows += '<div class="trow" style="' + cols + '">' + cbPart + '</div>';
+    } else if (cbasList.length === 0) {
+      // 無 CBAS 資料的日期
+      if (useNewFmt) {
+        rows += '<div class="trow" style="' + cols + '">' + cbPart + '<span></span><span style="color:var(--text4)">-</span><span style="color:var(--text4)">-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span></div>';
+      } else {
+        rows += '<div class="trow" style="' + cols + '">' + cbPart + '<span style="color:var(--text4)">-</span><span>-</span><span>-</span></div>';
+      }
+    } else {
+      // 有 CBAS：同一個 CB 日期展開多筆 CBAS
+      cbasList.forEach(function(cbas, ci) {
+        var cbasPart = '';
+        if (useNewFmt) {
+          var shares = Math.round((cbas.nm||0) / 100000);
+          var amtMillion = ((cbas.avg||0) * 1000 / 10000).toFixed(2);
+          cbasPart = '<span></span>' +  // 分隔
+            '<span style="color:var(--fr-text);font-weight:500">' + shares + '</span>' +
+            '<span style="color:var(--fr-text)">' + (cbas.per||'-') + '年</span>' +
+            '<span style="color:var(--fr-text)">' + (cbas.cnt||'-') + '</span>' +
+            '<span style="color:var(--fr-text);font-weight:500">' + fmtNum(cbas.avg) + '</span>' +
+            '<span style="color:var(--fr-text)">' + amtMillion + '</span>' +
+            '<span style="color:var(--fr-text)">' + fmtNum(cbas.lo) + '</span>' +
+            '<span style="color:var(--fr-text)">' + fmtNum(cbas.hi) + '</span>';
+        } else {
+          cbasPart = '<span style="color:var(--fr-text);font-weight:500">' + (cbas.cnt||'-') + '</span>' +
+            '<span style="color:var(--fr-text)">' + fmtNum(cbas.lo) + '</span>' +
+            '<span style="color:var(--fr-text)">' + fmtNum(cbas.hi) + '</span>';
+        }
+        // 第一筆同行顯示 CB，後續筆只顯示 CBAS（CB欄空白）
+        if (ci === 0) {
+          rows += '<div class="trow" style="' + cols + '">' + cbPart + cbasPart + '</div>';
+        } else {
+          // 續行：CB欄空白，CBAS欄顯示第二筆
+          var emptyPart = '<span></span><span></span><span></span><span></span><span></span>';
+          rows += '<div class="trow" style="' + cols + ';background:rgba(90,58,122,0.04)">' + emptyPart + cbasPart + '</div>';
+        }
+      });
+    }
+    return rows;
+  }
 
   var priceId = 'cbhist_' + code;
   html += '<div class="mini-table"><div class="thead" style="' + cols + '">' + thead + '</div>';
-
-  function renderRow(p) {
-    var ds = String(p.d);
-    var cbas = cbasMap[ds];
-    var row = '<div class="trow" style="' + cols + '">';
-    row += '<span>' + fmtDate(p.d) + '</span>';
-    row += '<span style="font-weight:500">' + fmtNum(p.cl) + '</span>';
-    row += '<span>' + (p.v||'-') + '</span>';
-    row += '<span>' + (p.ba?p.ba.toLocaleString():'-') + '</span>';
-    row += '<span>' + (p.cp?fmtNum(p.cp):'-') + '</span>';
-    if (hasCbas) {
-      if (cbas) {
-        row += '<span style="color:var(--fr-text);font-weight:500">' + cbas.cnt + '</span>';
-        row += '<span style="color:var(--fr-text)">' + fmtNum(cbas.lo) + '</span>';
-        row += '<span style="color:var(--fr-text)">' + fmtNum(cbas.hi) + '</span>';
-      } else {
-        row += '<span style="color:var(--text4)">-</span><span style="color:var(--text4)">-</span><span style="color:var(--text4)">-</span>';
-      }
-    }
-    row += '</div>';
-    return row;
-  }
-
-  prices.slice(0,20).forEach(function(p){ html += renderRow(p); });
+  prices.slice(0,20).forEach(function(p){ html += renderCbRow(p); });
 
   if (prices.length > 20) {
     html += '<div id="'+priceId+'" style="display:none">';
-    prices.slice(20).forEach(function(p){ html += renderRow(p); });
+    prices.slice(20).forEach(function(p){ html += renderCbRow(p); });
     html += '</div>';
     html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+priceId+'\','+(prices.length-20)+')">展開全部 '+(prices.length-20)+' 筆 ▼</span></div>';
   }
