@@ -314,42 +314,66 @@ function renderChipAnalysis(code, html_ref) {
 
 // CB 歷史價格（完整2026年）
 function renderCbPriceHistory(code) {
-  if (!window.CB_PRICE_2026) return '';
-  var prices = CB_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-  if (prices.length === 0) return '';
+  var allP = [];
+  if (window.CB_DAILY_2026) allP = allP.concat(CB_DAILY_2026.filter(function(r){return r.c===code}));
+  if (window.CB_DAILY_2018) allP = allP.concat(CB_DAILY_2018.filter(function(r){return r.c===code}));
+  if (allP.length === 0 && window.CB_PRICE_2026) allP = CB_PRICE_2026.filter(function(r){return r.c===code});
+  if (allP.length === 0) return '';
+  var prices = allP.sort(function(a,b){return b.d-a.d});
   
-  var html = '<div class="data-section"><div class="section-title">\u5b8c\u6574\u50f9\u683c\u6b77\u53f2 (2026\u5e74 ' + prices.length + ' \u7b46)</div>';
-  
-  // 摘要
   var maxP = Math.max.apply(null, prices.map(function(p){return p.cl}));
   var minP = Math.min.apply(null, prices.map(function(p){return p.cl}));
   var maxD = prices.find(function(p){return p.cl===maxP});
   var minD = prices.find(function(p){return p.cl===minP});
   
+  var html = '<div class="data-section"><div class="section-title">CB \u50f9\u683c\u6b77\u53f2 (' + prices.length + ' \u7b46)</div>';
   html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">';
   html += '<span style="color:var(--text4)">\u6700\u9ad8: <b class="price-up">' + fmtNum(maxP) + '</b> (' + fmtDate(maxD.d) + ')</span>';
   html += '<span style="color:var(--text4)">\u6700\u4f4e: <b class="price-down">' + fmtNum(minP) + '</b> (' + fmtDate(minD.d) + ')</span>';
   html += '</div>';
   
-  var priceId = 'cbprice_' + code;
-  html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 50px 45px 50px 50px 45px"><span>\u65e5\u671f</span><span>\u6536\u76e4</span><span>\u6f32\u8dcc</span><span>\u958b\u76e4</span><span>\u6700\u9ad8</span><span>\u5f35\u6578</span></div>';
-  prices.slice(0,15).forEach(function(p){
-    html += '<div class="trow" style="grid-template-columns:70px 50px 45px 50px 50px 45px">';
+  // 流通餘額變化摘要
+  var withBa = prices.filter(function(p){return p.ba});
+  if (withBa.length > 1) {
+    var latestBa = withBa[0].ba;
+    var firstBa = withBa[withBa.length-1].ba;
+    var baRatio = firstBa > 0 ? ((latestBa/firstBa)*100).toFixed(1) : '-';
+    html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">';
+    html += '<span style="color:var(--text4)">\u6d41\u901a\u9918\u984d: <b>' + latestBa.toLocaleString() + '</b> \u5f35</span>';
+    html += '<span style="color:var(--text4)">\u5269\u9918\u6bd4: <b class="' + (Number(baRatio)<30?'price-down':'') + '">' + baRatio + '%</b></span>';
+    html += '</div>';
+  }
+  
+  // 轉換價變動
+  var withCp = prices.filter(function(p){return p.cp});
+  if (withCp.length > 1) {
+    var cpSet = {};
+    withCp.forEach(function(p){ cpSet[p.cp] = p.d; });
+    var cpValues = Object.keys(cpSet);
+    if (cpValues.length > 1) {
+      html += '<div style="font-size:11px;color:var(--warn-text);background:var(--warn-bg);padding:4px 8px;border-radius:4px;margin-bottom:8px">\u8f49\u63db\u50f9\u66fe\u8abf\u6574: ';
+      cpValues.sort().forEach(function(v,i){ html += (i>0?' \u2192 ':'') + v + '\u5143'; });
+      html += '</div>';
+    }
+  }
+  
+  var priceId = 'cbhist_' + code;
+  html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 48px 48px 48px 55px"><span>\u65e5\u671f</span><span>\u6536\u76e4</span><span>\u91cf</span><span>\u9918\u984d</span><span>\u8f49\u63db\u50f9</span></div>';
+  prices.slice(0,20).forEach(function(p){
+    html += '<div class="trow" style="grid-template-columns:70px 48px 48px 48px 55px">';
     html += '<span>'+fmtDate(p.d)+'</span>';
-    html += '<span style="font-weight:500" class="'+priceClass(p.ch)+'">'+fmtNum(p.cl)+'</span>';
-    html += '<span class="'+priceClass(p.ch)+'">'+(p.ch!=null?fmtNum(p.ch):'-')+'</span>';
-    html += '<span>'+(p.o?fmtNum(p.o):'-')+'</span>';
-    html += '<span>'+(p.h?fmtNum(p.h):'-')+'</span>';
-    html += '<span>'+(p.v||'-')+'</span></div>';
+    html += '<span style="font-weight:500">'+fmtNum(p.cl)+'</span>';
+    html += '<span>'+(p.v||'-')+'</span>';
+    html += '<span>'+(p.ba?p.ba.toLocaleString():'-')+'</span>';
+    html += '<span>'+(p.cp?fmtNum(p.cp):'-')+'</span></div>';
   });
-  if (prices.length > 15) {
+  if (prices.length > 20) {
     html += '<div id="'+priceId+'" style="display:none">';
-    prices.slice(15).forEach(function(p){
-      html += '<div class="trow" style="grid-template-columns:70px 50px 45px 50px 50px 45px">';
-      html += '<span>'+fmtDate(p.d)+'</span><span style="font-weight:500" class="'+priceClass(p.ch)+'">'+fmtNum(p.cl)+'</span><span class="'+priceClass(p.ch)+'">'+(p.ch!=null?fmtNum(p.ch):'-')+'</span><span>'+(p.o?fmtNum(p.o):'-')+'</span><span>'+(p.h?fmtNum(p.h):'-')+'</span><span>'+(p.v||'-')+'</span></div>';
+    prices.slice(20).forEach(function(p){
+      html += '<div class="trow" style="grid-template-columns:70px 48px 48px 48px 55px"><span>'+fmtDate(p.d)+'</span><span style="font-weight:500">'+fmtNum(p.cl)+'</span><span>'+(p.v||'-')+'</span><span>'+(p.ba?p.ba.toLocaleString():'-')+'</span><span>'+(p.cp?fmtNum(p.cp):'-')+'</span></div>';
     });
     html += '</div>';
-    html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+priceId+'\',' + (prices.length-15) + ')">\u5c55\u958b\u5168\u90e8 '+(prices.length-15)+' \u7b46 \u25bc</span></div>';
+    html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+priceId+'\','+(prices.length-20)+')">\u5c55\u958b\u5168\u90e8 '+(prices.length-20)+' \u7b46 \u25bc</span></div>';
   }
   html += '</div></div>';
   return html;
@@ -1202,12 +1226,19 @@ async function loadAllExtData() {
     }
   } catch(e) { console.error('stock_price load error:', e); }
   try {
-    if (window.CB_PRICE_2026_B64) {
-      window.CB_PRICE_2026 = await decompressB64(CB_PRICE_2026_B64);
-      window.CB_PRICE_2026_B64 = null;
-      loaded.push('cb_price:' + CB_PRICE_2026.length);
+    if (window.CB_DAILY_2026_B64) {
+      window.CB_DAILY_2026 = await decompressB64(CB_DAILY_2026_B64);
+      window.CB_DAILY_2026_B64 = null;
+      loaded.push('cb_daily_2026:' + CB_DAILY_2026.length);
     }
-  } catch(e) { console.error('cb_price load error:', e); }
+  } catch(e) { console.error('cb_daily_2026 error:', e); }
+  try {
+    if (window.CB_DAILY_2018_B64) {
+      window.CB_DAILY_2018 = await decompressB64(CB_DAILY_2018_B64);
+      window.CB_DAILY_2018_B64 = null;
+      loaded.push('cb_daily_2018:' + CB_DAILY_2018.length);
+    }
+  } catch(e) { console.error('cb_daily_2018 error:', e); }
   try {
     if (window.MARGIN_2026_B64) {
       window.MARGIN_2026 = await decompressB64(MARGIN_2026_B64);
@@ -1302,9 +1333,12 @@ var STOCK_CB_MAP = {"3011":[{"c":"30112","n":"今皓二","ld":"2026/03/26","ed":
 <script src="cbas_history.js"></script>
 <script src="cb_import.js"></script>
 <script src="stock_price_2026.js"></script>
-<script src="cb_price_2026.js"></script>
 <script src="margin_2026.js"></script>
 <script src="sbl_2026.js"></script>
 <script src="cb_kanban_2026.js"></script>
+<script src="cb_daily_2026.js"></script>
+<script src="cb_daily_2018_2025.js"></script>
+<script src="cb_daily_2026.js"></script>
+<script src="cb_daily_2018_2025.js"></script>
 </body>
 </html>
