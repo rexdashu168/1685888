@@ -1469,29 +1469,8 @@ function showCbFullResult(result) {
     html += '</div>';
   }
   
-  var allCbasForThis = (DB.cbas||[]).filter(function(r){return String(r.c)===code}).sort(function(a,b){return b.d-a.d});
-  if (allCbasForThis.length > 0) {
-    var cbasTotal = allCbasForThis.length;
-    var cbasMinP = Math.min.apply(null, allCbasForThis.map(function(r){return r.lo||999}));
-    var cbasMaxP = Math.max.apply(null, allCbasForThis.map(function(r){return r.hi||0}));
-    var cbasId = 'cbas_expand_' + code;
-    html += '<div class="data-section"><div class="section-title">🔄 CBAS 拆解紀錄 (共 ' + cbasTotal + ' 筆)</div>';
-    html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:11px">';
-    html += '<span style="color:var(--text4)">歷史最低: <b style="color:var(--green)">' + fmtNum(cbasMinP) + '</b></span>';
-    html += '<span style="color:var(--text4)">歷史最高: <b style="color:var(--red)">' + fmtNum(cbasMaxP) + '</b></span>';
-    html += '<span style="color:var(--text4)">' + fmtDate(allCbasForThis[allCbasForThis.length-1].d) + '~' + fmtDate(allCbasForThis[0].d) + '</span>';
-    html += '</div>';
-    html += '<div class="mini-table"><div class="thead" style="grid-template-columns:75px 40px 70px 70px 50px"><span>日期</span><span>筆數</span><span>權利金低</span><span>權利金高</span><span>契約</span></div>';
-    allCbasForThis.slice(0,20).forEach(function(r){html+='<div class="trow" style="grid-template-columns:75px 40px 70px 70px 50px"><span>'+fmtDate(r.d)+'</span><span>'+r.cnt+'</span><span>'+fmtNum(r.lo)+'</span><span>'+fmtNum(r.hi)+'</span><span>'+r.per+'</span></div>';});
-    if (cbasTotal > 20) {
-      html += '<div id="' + cbasId + '" style="display:none">';
-      allCbasForThis.slice(20).forEach(function(r){html+='<div class="trow" style="grid-template-columns:75px 40px 70px 70px 50px"><span>'+fmtDate(r.d)+'</span><span>'+r.cnt+'</span><span>'+fmtNum(r.lo)+'</span><span>'+fmtNum(r.hi)+'</span><span>'+r.per+'</span></div>';});
-      html += '</div>';
-      html += '<div style="text-align:center;padding:8px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\'' + cbasId + '\',' + (cbasTotal-20) + ')">展開全部 ' + (cbasTotal-20) + ' 筆 ▼</span></div>';
-    }
-    html += '</div></div>';
-  }
-  
+
+
   if (stockCode && window.STOCK_CB_MAP && STOCK_CB_MAP[stockCode] && STOCK_CB_MAP[stockCode].length > 1) {
     var siblings = STOCK_CB_MAP[stockCode];
     html += '<div class="data-section"><div class="section-title">🏢 同公司歷史CB (' + siblings.length + ' 檔)</div>';
