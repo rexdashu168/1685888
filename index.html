@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rex大叔投資研究工作站 v1.3</title>
+<title>Rex大叔投資研究工作站 v1.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -76,6 +76,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 .mini-table .thead{display:grid;gap:4px;color:var(--text4);padding-bottom:4px;border-bottom:0.5px solid var(--border)}
 .mini-table .trow{display:grid;gap:4px;color:var(--text);padding:3px 0;border-bottom:0.5px solid rgba(232,227,219,0.5)}
 .mini-table .trow:last-child{border-bottom:none}
+
+/* AI 助理外掛 */
+
+/* AI 助理外掛 */
+.ai-btn{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;border:none;cursor:pointer;font-size:12px;font-weight:500;transition:all .15s;width:100%;margin-bottom:4px;text-align:left}
+.ai-btn-main{background:#5A3A7A;color:#fff}
+.ai-btn-main:hover{background:#4A2A6A}
+.ai-btn-sub{background:var(--fr-bg);color:var(--fr-text);border:0.5px solid var(--fr-border)}
+.ai-btn-sub:hover{background:#E8DCEF}
+.ai-copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9999}
+.ai-copy-toast.show{opacity:1}
 
 /* 外電報導專屬樣式 */
 .fr-card{background:var(--fr-bg);border:0.5px solid var(--fr-border);border-radius:8px;padding:9px 11px;margin-bottom:6px;font-size:12px}
@@ -162,7 +173,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
       <div class="tab active" data-tab="cb" onclick="switchTab('cb')">CB</div>
       <div class="tab" data-tab="cbas" onclick="switchTab('cbas')">CBAS</div>
     </div>
-    <div style="font-size:11px;color:var(--text4)">v1.3</div>
+    <div style="font-size:11px;color:var(--text4)">v1.4</div>
   </div>
 
   <div class="subtitle">
@@ -204,6 +215,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
     </div>
 
     <div class="right-panel">
+      <!-- AI 助理外掛 -->
+      <div class="rp-section" id="ai-panel">
+        <div class="rp-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🤖 AI 助理</span>
+          <span style="font-size:10px;color:var(--text4)">Claude</span>
+        </div>
+        <div id="ai-quick-btns">
+          <button class="ai-btn ai-btn-main" onclick="aiAsk('general')">✨ 問 Claude 任何問題</button>
+        </div>
+        <div style="font-size:10px;color:var(--text4);margin-top:4px">點擊後自動整理當前資料並開啟 Claude</div>
+      </div>
       <!-- 外電報導快覽（新增） -->
       <div class="rp-section" id="fr-panel">
         <div class="rp-title" style="display:flex;justify-content:space-between;align-items:center" onclick="toggleRpSection(this)">
@@ -251,6 +273,148 @@ function scrollToBottom(){var c=document.getElementById('chat-messages');setTime
 
 var DB = null, currentTab = 'cb', currentFn = 'basic', recentQueries = [], knowledgeCatIndex = 0;
 var FR_DB = null; // 外電報導資料庫
+
+
+// ========== AI 助理外掛 ==========
+
+var _lastQueryResult = null; // 存放最後一次查詢的結果摘要
+
+// 更新 AI 快捷按鈕（依查詢類型動態切換）
+function updateAiButtons(type, data) {
+  _lastQueryResult = { type: type, data: data };
+  var el = document.getElementById('ai-quick-btns');
+  if (!el) return;
+  
+  var btns = '<button class="ai-btn ai-btn-main" onclick="aiAsk(\'general\')">✨ 問 Claude 任何問題</button>';
+  
+  if (type === 'stock') {
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'stock_analysis\')">📊 分析此個股</button>';
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'fr_summary\')">📡 整理相關外電</button>';
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'chip_read\')">🔍 解讀籌碼變化</button>';
+  } else if (type === 'cb') {
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'cb_analysis\')">📋 解讀此 CB</button>';
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'cbas_read\')">🔄 CBAS 機會判斷</button>';
+  } else if (type === 'fr_full') {
+    btns += '<button class="ai-btn ai-btn-sub" onclick="aiAsk(\'industry_trend\')">🌐 產業趨勢整理</button>';
+  }
+  
+  el.innerHTML = btns;
+}
+
+// 組裝提問文字
+function buildPrompt(mode) {
+  var d = _lastQueryResult ? _lastQueryResult.data : {};
+  var base = 'Rex大叔投資研究工作站資料如下，請以CFP專業顧問角度分析（不要給買賣建議，只整理客觀資料）：\n\n';
+  
+  if (mode === 'general') {
+    return '請問：（請在此輸入你的問題）\n\n背景資訊：' + (d.summary || '無');
+  }
+  if (mode === 'stock_analysis' && d.code) {
+    var txt = base;
+    txt += '【個股】' + d.code + ' ' + (d.name||'') + '\n';
+    if (d.price) txt += '最新收盤：' + d.price + ' 元\n';
+    if (d.ind) txt += '產業：' + d.ind + '\n';
+    if (d.frCount) txt += '外電報導筆數：' + d.frCount + ' 筆\n';
+    if (d.frLatest && d.frLatest.length > 0) {
+      txt += '\n最新3筆外電摘要：\n';
+      d.frLatest.forEach(function(e, i) {
+        txt += (i+1) + '. [' + fmtDate(e.d) + '] ' + e.t + '\n';
+        if (e.b && e.b[0]) txt += '   ' + e.b[0] + '\n';
+      });
+    }
+    txt += '\n請整理這支股票的市場觀察重點。';
+    return txt;
+  }
+  if (mode === 'fr_summary' && d.frLatest) {
+    var txt = base + '【相關外電報導】\n';
+    d.frLatest.forEach(function(e, i) {
+      txt += '\n[' + fmtDate(e.d) + '] ' + e.t + ' (' + (e.src||'') + ')\n';
+      if (e.b) e.b.forEach(function(b){ txt += '• ' + b + '\n'; });
+    });
+    txt += '\n請整理以上報導的主要觀察重點與市場含義。';
+    return txt;
+  }
+  if (mode === 'cb_analysis' && d.code) {
+    var txt = base;
+    txt += '【CB可轉債】' + d.code + ' ' + (d.name||'') + '\n';
+    if (d.rp) txt += '參考價：' + d.rp + ' 元\n';
+    if (d.cp) txt += '轉換價：' + d.cp + ' 元\n';
+    if (d.sp) txt += '母股價：' + d.sp + ' 元\n';
+    if (d.prem !== undefined) txt += '溢價率：' + d.prem.toFixed(1) + '%\n';
+    if (d.tcri) txt += 'TCRI評等：' + d.tcri + '\n';
+    if (d.guar) txt += '擔保：' + d.guar + '\n';
+    if (d.cbasMin) txt += 'CBAS歷史最低權利金：' + d.cbasMin + ' 元\n';
+    txt += '\n請從CB投資角度整理此可轉債的現況觀察。';
+    return txt;
+  }
+  if (mode === 'cbas_read' && d.code) {
+    var txt = base;
+    txt += '【CBAS分析】' + d.code + ' ' + (d.name||'') + '\n';
+    if (d.rp) txt += '現價：' + d.rp + '\n';
+    if (d.cbasMin) txt += '歷史最低權利金：' + d.cbasMin + '\n';
+    if (d.cbasMax) txt += '歷史最高權利金：' + d.cbasMax + '\n';
+    txt += '\n請說明CBAS的機會與風險，最大損失為權利金歸零。';
+    return txt;
+  }
+  if (mode === 'chip_read' && d.code) {
+    var txt = base + '【' + d.code + ' ' + (d.name||'') + ' 籌碼狀況】\n';
+    if (d.marginLatest) txt += '融資餘額：' + d.marginLatest + ' 張\n';
+    if (d.shortLatest) txt += '融券餘額：' + d.shortLatest + ' 張\n';
+    txt += '\n請從籌碼面角度提供客觀觀察。';
+    return txt;
+  }
+  if (mode === 'industry_trend') {
+    var txt = base + '【近期產業觀察】\n';
+    if (FR_DB) {
+      var ind = FR_DB.entries.filter(function(e){ return e.tp !== '個股報導'; }).slice(-15).reverse();
+      ind.forEach(function(e) {
+        txt += '\n[' + fmtDate(e.d) + '] ' + e.t + '\n';
+        if (e.b && e.b[0]) txt += '• ' + e.b[0] + '\n';
+      });
+    }
+    txt += '\n請整理以上產業觀察的主要趨勢與重點。';
+    return txt;
+  }
+  return base + '請分析當前查詢的投資資料。';
+}
+
+// 執行：複製提問 + 開啟 claude.ai
+function aiAsk(mode) {
+  var prompt = buildPrompt(mode);
+  
+  // 複製到剪貼簿
+  navigator.clipboard.writeText(prompt).then(function() {
+    showToast('✅ 已複製提問內容！');
+  }).catch(function() {
+    // 降級方案
+    var ta = document.createElement('textarea');
+    ta.value = prompt;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ 已複製提問內容！');
+  });
+  
+  // 延遲開啟 claude.ai，讓使用者看到 toast
+  setTimeout(function() {
+    window.open('https://claude.ai/new', '_blank');
+  }, 600);
+}
+
+function showToast(msg) {
+  var t = document.getElementById('ai-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'ai-toast';
+    t.className = 'ai-copy-toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2000);
+}
+
 
 // ========== 外電報導功能 ==========
 
@@ -372,7 +536,7 @@ function renderFrCard(e, focusCode) {
           html += '<div style="font-size:10px;color:var(--text4);margin-top:4px;padding:3px 6px;background:rgba(0,0,0,0.03);border-radius:4px">📅 2025年報導 / 此代號無股價紀錄</div>';
         }
       } else {
-        html += '<div id="' + cardId + '" style="font-size:10px;color:var(--blue);margin-top:4px;padding:3px 8px;background:rgba(74,106,138,0.06);border-radius:4px;cursor:pointer" onclick="trigger2025Price('' + focusCode + '','' + cardId + '')">';
+        html += '<div id="' + cardId + '" data-code="' + focusCode + '" data-card="' + cardId + '" style="font-size:10px;color:var(--blue);margin-top:4px;padding:3px 8px;background:rgba(74,106,138,0.06);border-radius:4px;cursor:pointer" onclick="var el=this;trigger2025Price(el.dataset.code,el.dataset.card)">';
         html += STOCK_2025_LOADING ? '⏳ 載入 2025 股價中...' : '📅 點此載入 2025 股價追蹤';
         html += '</div>';
       }
@@ -1060,6 +1224,22 @@ function showCbFullResult(result) {
   
   html += '</div>';
   addSystemCard(html);
+  
+  // 更新 AI 快捷按鈕
+  var prem_val = (kb && kb.cp>0 && kb.sp>0) ? ((kb.rp / ((kb.sp/kb.cp)*100))-1)*100 : undefined;
+  var cbasRecs = (DB.cbas||[]).filter(function(r){return String(r.c)===code});
+  updateAiButtons('cb', {
+    code: code,
+    name: cb ? cb.n : (kb ? kb.n : ''),
+    rp: kb ? kb.rp : null,
+    cp: kb ? kb.cp : null,
+    sp: kb ? kb.sp : null,
+    prem: prem_val,
+    tcri: cb ? cb.r : null,
+    guar: cb ? cb.g : null,
+    cbasMin: cbasRecs.length > 0 ? Math.min.apply(null, cbasRecs.map(function(r){return r.lo||999})) : null,
+    cbasMax: cbasRecs.length > 0 ? Math.max.apply(null, cbasRecs.map(function(r){return r.hi||0})) : null,
+  });
 }
 
 // ========== 個股結果（含外電）==========
@@ -1143,6 +1323,26 @@ function showStockResult(result) {
   
   html += '</div>';
   addSystemCard(html);
+  
+  // 更新 AI 快捷按鈕
+  var frRelated = FR_DB ? (FR_DB.by_code[code]||[]).map(function(i){
+    return FR_DB.entries.find(function(e){return e.i===i;});
+  }).filter(Boolean).sort(function(a,b){return parseInt(b.d)-parseInt(a.d)}) : [];
+  var latestPrice = prices.length > 0 ? prices[0].cl : null;
+  var marginLatest = window.MARGIN_2026 ? (function(){
+    var mg = MARGIN_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+    return mg.length > 0 ? mg[0].mr : null;
+  })() : null;
+  updateAiButtons('stock', {
+    code: code,
+    name: indF ? indF.n : name,
+    price: latestPrice,
+    ind: indF ? indF.ind : '',
+    frCount: frRelated.length,
+    frLatest: frRelated.slice(0, 5),
+    marginLatest: marginLatest,
+    summary: code + ' ' + (indF?indF.n:name)
+  });
 }
 
 // ========== 掛牌中總覽 ==========
