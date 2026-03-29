@@ -1195,13 +1195,16 @@ function renderSidebar(tab) {
 function renderWelcomeHints(tab) {
   var el = document.getElementById('welcome-hints');
   if (!el) return;
+
+  function makeHint(text, query, style) {
+    return '<div class="hint" data-q="' + query + '" onclick="doQuery(this.dataset.q)"' + (style?' style="'+style+'"':'') + '>' + text + '</div>';
+  }
+
   var html = '';
 
   if (tab === 'cb') {
-    // 動態計算：近10日CB成交值Top5 + 固定入口
-    html += '<div class="hint" onclick="doQuery(\'CB成交值排行\')" style="background:var(--warn-bg);color:var(--warn-text);border-color:#D4A060">🔥 市場熱門看板</div>';
+    html += makeHint('🔥 市場熱門看板', 'CB成交值排行', 'background:var(--warn-bg);color:var(--warn-text);border-color:#D4A060');
 
-    // 從 CB_PRICE_2026 計算近10日成交值最高
     if (window.CB_PRICE_2026 && CB_PRICE_2026.length > 0) {
       var dates = [...new Set(CB_PRICE_2026.map(function(r){return r.d;}))].sort();
       var last10dates = dates.slice(-10);
@@ -1212,42 +1215,40 @@ function renderWelcomeHints(tab) {
       });
       var top5 = Object.entries(amtMap).sort(function(a,b){ return b[1].amt - a[1].amt; }).slice(0,5);
       top5.forEach(function(item){
-        html += '<div class="hint" onclick="doQuery(\'"+item[0]+"\')">' + item[0] + ' ' + item[1].n + ' 🔥</div>';
+        html += makeHint(item[0] + ' ' + item[1].n + ' 🔥', item[0], '');
       });
     } else {
-      // 資料未載入時的靜態備用
       [['33246','雙鴻六'],['23683','金像電三'],['65152','穎崴二']].forEach(function(x){
-        html += '<div class="hint" onclick="doQuery(\'"+x[0]+"\')">'+x[0]+' '+x[1]+' 🔥</div>';
+        html += makeHint(x[0] + ' ' + x[1] + ' 🔥', x[0], '');
       });
     }
 
-    html += '<div class="hint" onclick="doQuery(\'掛牌中\')" style="color:var(--ok-text)">🟢 掛牌中總覽</div>';
-    html += '<div class="hint" onclick="doQuery(\'競拍總覽\')" style="color:var(--blue)">🎯 競拍資料庫</div>';
+    html += makeHint('🟢 掛牌中總覽', '掛牌中', 'color:var(--ok-text)');
+    html += makeHint('🎯 競拍資料庫', '競拍總覽', 'color:var(--blue)');
 
   } else if (tab === 'stock') {
-    // 個股Tab：固定外電高頻 + 超級選股入口
-    html += '<div class="hint" onclick="doQuery(\'股票成交值排行\')" style="background:var(--warn-bg);color:var(--warn-text);border-color:#D4A060">🔥 超級選股</div>';
+    html += makeHint('🔥 超級選股', '股票成交值排行', 'background:var(--warn-bg);color:var(--warn-text);border-color:#D4A060');
     [['2308','台達電'],['3017','奇鋐'],['2383','台光電'],['6669','緯穎'],['2330','台積電'],['2454','聯發科']].forEach(function(x){
-      html += '<div class="hint" onclick="doQuery(\'"+x[0]+"\')">'+x[0]+' '+x[1]+'</div>';
+      html += makeHint(x[0] + ' ' + x[1], x[0], '');
     });
-    html += '<div class="hint" onclick="doQuery(\'外電總覽\')" style="color:var(--fr-text)">📡 外電總覽</div>';
+    html += makeHint('📡 外電總覽', '外電總覽', 'color:var(--fr-text)');
 
   } else if (tab === 'cbas') {
     var cfg = TAB_CONFIG[tab];
     cfg.hints.forEach(function(h) {
-      html += '<div class="hint" onclick="doQuery(\'"+h.q+"\')">'+h.text+'</div>';
+      html += makeHint(h.text, h.q, '');
     });
   }
 
   el.innerHTML = html;
 }
-
 function sidebarClick(fn, action) {
   currentFn = fn;
   renderSidebar(currentTab);
-  if (action && DB) {
+  if (action) {
     var w = document.getElementById('welcome');
     if (w) w.style.display = 'none';
+    if (!DB) { addSystemMsg('資料庫載入中，請稍候...'); return; }
     doQuery(action);
   }
 }
