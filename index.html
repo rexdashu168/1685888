@@ -2038,7 +2038,7 @@ function showCbRanking(type) {
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:0.5px solid var(--border)">';
   html += '<span style="font-size:11px;color:var(--text4)">切換：</span>';
   [{q:'CB成交值排行',t:'💰成交值'},{q:'CB漲幅排行',t:'🔴漲幅'},{q:'CB跌幅排行',t:'🟢跌幅'},{q:'CB5日強勢',t:'📈5日強'},{q:'CB5日弱勢',t:'📉5日弱'}].forEach(function(btn){
-    html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" onclick="doQuery(\'" + btn.q + "\')">' + btn.t + '</span>';
+    html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" data-q="' + btn.q + '" onclick="doQuery(this.dataset.q)">' + btn.t + '</span>';
   });
   html += '</div></div>';
   addSystemCard(html);
@@ -2125,7 +2125,7 @@ function showStockRanking(type) {
     html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:0.5px solid var(--border)">';
     html += '<span style="font-size:11px;color:var(--text4)">切換：</span>';
     [{q:'融資增加排行',t:'📈融資增'},{q:'融資減少排行',t:'📉融資減'},{q:'融券增加排行',t:'🔻融券增'},{q:'股票成交值排行',t:'💰成交值'},{q:'股票5日強勢',t:'🚀5日強'}].forEach(function(btn){
-      html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" onclick="doQuery(\'"+btn.q+"\')">'+btn.t+'</span>';
+      html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" data-q="'+btn.q+'" onclick="doQuery(this.dataset.q)">'+btn.t+'</span>';
     });
     html += '</div></div>';
     addSystemCard(html);
@@ -2168,7 +2168,7 @@ function showStockRanking(type) {
   html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:8px;border-top:0.5px solid var(--border)">';
   html += '<span style="font-size:11px;color:var(--text4)">切換：</span>';
   [{q:'股票成交值排行',t:'💰成交值'},{q:'股票5日強勢',t:'🚀5日強'},{q:'融資增加排行',t:'📈融資增'},{q:'融資減少排行',t:'📉融資減'},{q:'融券增加排行',t:'🔻融券增'}].forEach(function(btn){
-    html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" onclick="doQuery(\'"+btn.q+"\')">'+btn.t+'</span>';
+    html += '<span style="font-size:11px;padding:3px 10px;background:var(--bg3);border-radius:8px;cursor:pointer" data-q="'+btn.q+'" onclick="doQuery(this.dataset.q)">'+btn.t+'</span>';
   });
   html += '</div></div>';
   addSystemCard(html);
@@ -2291,16 +2291,16 @@ async function loadCbasHistory() {
   // 載入常駐年份 2026
   if (window.CBAS_2026_B64) {
     var r26 = await parseCbasB64(CBAS_2026_B64);
-    if (DB) DB.cbas = (DB.cbas || []).concat(r26);
+    DB.cbas = (DB.cbas || []).concat(r26);
     CBAS_LOADED_YEARS.add(2026);
     window.CBAS_2026_B64 = null;
     var el = document.getElementById('ctx-cbas');
-    if (el && DB) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2026)';
+    if (el) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2026)';
   }
-  // 2025 背景非同步載入（不卡住畫面）
+  // 2025 背景非同步載入
   loadCbasYear(2025, function() {
     var el = document.getElementById('ctx-cbas');
-    if (el && DB) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2025-2026)';
+    if (el) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/2025-2026)';
   });
 }
 
@@ -2312,7 +2312,7 @@ async function loadCbasYear(year, callback) {
     // 已在記憶體，直接解析
     var recs = await parseCbasB64(window[varname]);
     window[varname] = null;
-    if (DB) DB.cbas = (DB.cbas || []).concat(recs).sort(function(a,b){return a.d-b.d;});
+    if (DB) { DB.cbas = (DB.cbas || []).concat(recs); DB.cbas.sort(function(a,b){return a.d-b.d;}); }
     CBAS_LOADED_YEARS.add(year);
     callback && callback();
     return;
@@ -2324,7 +2324,7 @@ async function loadCbasYear(year, callback) {
     if (window[varname]) {
       var recs = await parseCbasB64(window[varname]);
       window[varname] = null;
-      if (DB) DB.cbas = (DB.cbas || []).concat(recs).sort(function(a,b){return a.d-b.d;});
+      if (DB) { DB.cbas = (DB.cbas || []).concat(recs); DB.cbas.sort(function(a,b){return a.d-b.d;}); }
     }
     CBAS_LOADED_YEARS.add(year);
     var el = document.getElementById('ctx-cbas');
@@ -2429,11 +2429,13 @@ function getStock2025Price(code, dateStr) {
 // ========== 初始化 ==========
 window.addEventListener('DOMContentLoaded', function(){
   switchTab('cb');
-  loadData().catch(function(e){console.error('Data load error:',e);addSystemMsg('資料載入失敗：'+e.message);});
+  loadData().then(function(){
+    // DB 建立完成後再載入 CBAS（才能正確塞入 DB.cbas）
+    loadCbasHistory();
+  }).catch(function(e){console.error('Data load error:',e);addSystemMsg('資料載入失敗：'+e.message);});
   renderYtVideos();
   renderArticles();
   renderKnowledge();
-  loadCbasHistory();
   loadCbImport();
   loadAllExtData();
   loadForeignReports();
