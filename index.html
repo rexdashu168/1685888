@@ -1554,11 +1554,12 @@ function showCbFullResult(result) {
     html += '<div class="data-section"><div class="section-title">🏢 同公司歷史CB (' + siblings.length + ' 檔)</div>';
 
     // 表格欄：代號名稱 | 狀態 | 最高(日) | 最低(日) | 振幅
-    var cols = 'grid-template-columns:55px 1fr 50px 70px 70px 70px 60px';
+    var cols = 'grid-template-columns:55px 1fr 50px 60px 68px 60px 68px 55px';
     html += '<div class="mini-table"><div class="thead" style="' + cols + '">' +
       '<span>代號</span><span>名稱</span><span>狀態</span>' +
       '<span class="price-up">最高</span><span style="font-size:10px;color:var(--text4)">最高日</span>' +
       '<span class="price-down">最低</span><span style="font-size:10px;color:var(--text4)">最低日</span>' +
+      '<span style="color:var(--text3)">振幅</span>' +
       '</div>';
 
     siblings.forEach(function(sib) {
@@ -1589,6 +1590,7 @@ function showCbFullResult(result) {
         '<span class="price-up" style="font-weight:500">' + (hiRec ? fmtNum(hiRec.p) : '-') + '</span>' +
         '<span style="font-size:10px;color:var(--text4)">' + (hiRec ? fmtDate(hiRec.d) : '-') + '</span>' +
         '<span class="price-down" style="font-weight:500">' + (loRec ? fmtNum(loRec.p) : '-') + '</span>' +
+        '<span style="font-size:10px;color:var(--text4)">' + (loRec ? fmtDate(loRec.d) : '-') + '</span>' +
         '<span style="color:var(--text3)">' + amp + '</span>' +
         '</div>';
     });
