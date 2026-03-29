@@ -883,8 +883,8 @@ function renderChipAnalysis(code) {
 function renderCbPriceHistory(code) {
   // CB 價格資料
   var allP = [];
-  if (window.CB_DAILY_2026) allP = allP.concat(CB_DAILY_2026.filter(function(r){return r.c===code}));
-  if (window.CB_DAILY_2018) allP = allP.concat(CB_DAILY_2018.filter(function(r){return r.c===code}));
+  if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl};}));
+  if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0}).map(function(r){return {d:r.d,c:r.c,cl:r.cl};}));
   if (allP.length === 0 && window.CB_PRICE_2026) allP = CB_PRICE_2026.filter(function(r){return r.c===code});
   if (allP.length === 0) return '';
   var prices = allP.sort(function(a,b){return b.d-a.d});
@@ -1568,26 +1568,18 @@ function showCbFullResult(result) {
 
       // 從所有可用價格來源找最高最低
       var allPx = [];
-      // 2026 年價格
-      if (window.CB_PRICE_2026) {
+      // CB_PRICE_HIST：歷史年份收盤（正確來源）
+      if (window.CB_PRICE_HIST && CB_PRICE_HIST.length > 0) {
+        CB_PRICE_HIST.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      // CB_PRICE_HIST_2026：2026年收盤
+      if (window.CB_PRICE_HIST_2026 && CB_PRICE_HIST_2026.length > 0) {
+        CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      // CB_PRICE_2026：即時行情補充
+      if (window.CB_PRICE_2026 && CB_PRICE_2026.length > 0) {
         CB_PRICE_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
       }
-      // 2018-2025 歷史日頻資料（含收盤）
-      if (window.CB_DAILY_2018) {
-        CB_DAILY_2018.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      // 2026 日頻
-      if (window.CB_DAILY_2026) {
-        CB_DAILY_2026.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      // DB.cp 近5日備用
-      if (DB && DB.cp) {
-        DB.cp.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      // 去重（同日只取一筆）
-      var pxMap = {};
-      allPx.forEach(function(r){if(!pxMap[r.d]||r.p>0) pxMap[r.d]=r.p;});
-      allPx = Object.keys(pxMap).map(function(d){return {d:parseInt(d),p:pxMap[d]};});
       allPx.sort(function(a,b){return a.d-b.d;});
 
       var hiRec = allPx.length ? allPx.reduce(function(m,r){return r.p>m.p?r:m;}, allPx[0]) : null;
@@ -2300,7 +2292,7 @@ async function loadCbImport() {
 async function loadAllExtData() {
   var tasks = [
     ['STOCK_PRICE_2026_B64', 'STOCK_PRICE_2026', 'ctx-stock', function(d){ return '股價資料 (' + d.length.toLocaleString() + ' 筆/2026全年)'; }],
-    ['CB_DAILY_2026_B64', 'CB_DAILY_2026', null, null],
+    ['CB_PRICE_HIST_2026_B64', 'CB_PRICE_HIST_2026', null, null],
     ['MARGIN_2026_B64', 'MARGIN_2026', null, null],
     ['SBL_2026_B64', 'SBL_2026', null, null],
     ['CB_KANBAN_2026_B64', 'CB_KANBAN_2026', null, null],
@@ -2331,12 +2323,17 @@ async function loadAllExtData() {
 }
 
 
-// CB_DAILY 歷史 kanban 按需載入（2017-2025 每年一個js）
-var CB_DAILY_LOADED_YEARS = new Set();
+// CB_PRICE 歷史收盤按需載入（2011-2025 每年一個js，含最高最低）
+// 格式：[d, c, cl, hi, lo]
+var CB_PRICE_HIST_LOADED = new Set();
+if (!window.CB_PRICE_HIST) window.CB_PRICE_HIST = [];
 
-async function loadCbDailyYear(year, callback) {
-  if (CB_DAILY_LOADED_YEARS.has(year)) { callback && callback(); return; }
-  var varname = 'CB_DAILY_' + year + '_B64';
+async function loadCbPriceYear(year, callback) {
+  if (CB_PRICE_HIST_LOADED.has(year)) { callback && callback(); return; }
+  var varname = 'CB_PRICE_' + year + '_B64';
+  
+  // 如果已在記憶體
+  if (window['CB_PRICE_HIST_' + year + '_B64']) varname = 'CB_PRICE_HIST_' + year + '_B64';
   
   // 如果已在記憶體（script 已載）
   if (window[varname]) {
@@ -2560,7 +2557,7 @@ window.addEventListener('DOMContentLoaded', function(){
 <script src="margin_2026.js"></script>
 <script src="sbl_2026.js"></script>
 <script src="cb_kanban_2026.js"></script>
-<script src="cb_daily_2026.js"></script>
+<script src="cb_price_2026.js"></script>
 <script src="foreign_reports.js"></script>
 </body>
 </html>
