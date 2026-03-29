@@ -130,6 +130,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 .stock-info .info-full .label{color:var(--text4);font-size:12px;margin-bottom:2px}
 .stock-info .info-full .value{color:var(--text);font-size:13px;line-height:1.5}
 
+.rp-section .rp-title{cursor:pointer;user-select:none}
+.rp-section .rp-title:hover{color:var(--accent)}
+.rp-section .rp-body{overflow:hidden;transition:max-height .2s ease}
 @media(max-width:900px){.sidebar{width:180px}.right-panel{width:200px}}
 @media(max-width:768px){.sidebar,.right-panel{display:none}.app{border-radius:0;max-height:100vh}}
 </style>
@@ -148,7 +151,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 
   <div class="subtitle">
     <span class="title" id="subtitle-title">CB 可轉債價格查詢</span>
-    <span class="meta" id="subtitle-meta"></span>
+    <span id="breadcrumb" style="font-size:12px;color:var(--text3);margin-left:8px"></span>
+    <span class="meta" id="subtitle-meta" style="margin-left:auto"></span>
   </div>
 
   <div class="main">
@@ -169,7 +173,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
     <div class="chat-area">
       <div class="chat-messages" id="chat-messages">
         <div class="welcome" id="welcome">
-          <div class="emoji">📊</div>
+          <div class="emoji"><svg width="52" height="52" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="44" height="44" rx="10" fill="#F5F1EB" stroke="#D4C5B0" stroke-width="1.5"/><polyline points="12,36 20,28 26,32 34,20 42,24" fill="none" stroke="#C44B4B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><polyline points="12,32 20,34 26,30 34,26 42,30" fill="none" stroke="#4A8A4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/><circle cx="34" cy="20" r="3" fill="#C44B4B"/><line x1="12" y1="40" x2="42" y2="40" stroke="#D4C5B0" stroke-width="1"/><line x1="12" y1="14" x2="12" y2="40" stroke="#D4C5B0" stroke-width="1"/></svg></div>
           <div class="wtitle">Rex大叔投資研究工作站</div>
           <div class="desc">輸入 CB 代號、股票代號或名稱開始查詢<br>所有相關資料一次呈現</div>
           <div class="hints" id="welcome-hints"></div>
@@ -187,26 +191,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 
     <!-- Right Panel -->
     <div class="right-panel">
+      <div class="rp-section" id="yt-panel">
+        <div class="rp-title" style="display:flex;justify-content:space-between"><span>▶ YouTube 影片</span><span style="font-size:10px;color:var(--text4)" id="yt-count"></span></div>
+        <div id="yt-list"></div>
+      </div>
       <div class="rp-section" id="articles-panel">
-        <div class="rp-title" style="display:flex;justify-content:space-between"><span>方格子文章</span><span style="font-size:10px;color:var(--text4)" id="articles-count"></span></div>
-        <div id="articles-list"></div>
+        <div class="rp-title" style="display:flex;justify-content:space-between" onclick="toggleRpSection(this)"><span><span class="rp-arrow">▸</span> 方格子文章</span><span style="font-size:10px;color:var(--text4)" id="articles-count"></span></div><div id="articles-list" style="display:none"></div>
       </div>
       <div class="rp-section" id="knowledge-panel">
-        <div class="rp-title" style="display:flex;justify-content:space-between"><span>研究發現</span><span style="font-size:10px;color:var(--text4);cursor:pointer" onclick="cycleKnowledge()">切換 →</span></div>
-        <div id="knowledge-cards"></div>
+        <div class="rp-title" style="display:flex;justify-content:space-between" onclick="toggleRpSection(this)"><span><span class="rp-arrow">▸</span> 研究發現</span><span style="font-size:10px;color:var(--text4);cursor:pointer" onclick="event.stopPropagation();cycleKnowledge()">切換 →</span></div><div id="knowledge-cards" style="display:none"></div>
       </div>
       <div class="rp-section" id="course-progress">
-        <div class="rp-title">120篇研究系列</div>
-        <div id="course-list"></div>
+        <div class="rp-title" onclick="toggleRpSection(this)"><span class="rp-arrow">▸</span> 120篇研究系列</div><div id="course-list" style="display:none"></div>
       </div>
       <div class="rp-section">
-        <div class="rp-title">Context</div>
-        <div style="font-size:10px;color:var(--text4);margin-bottom:6px">已連接資料庫</div>
+        <div class="rp-title" onclick="toggleRpSection(this)"><span class="rp-arrow">▸</span> Context</div><div id="ctx-body" style="display:none"><div style="font-size:10px;color:var(--text4);margin-bottom:6px">已連接資料庫</div>
         <div class="ctx-item"><div class="ctx-icon">📊</div><span id="ctx-cb">CB 資料庫 (載入中...)</span></div>
         <div class="ctx-item"><div class="ctx-icon">💰</div><span id="ctx-cbas">CBAS 拆解 (載入中...)</span></div>
         <div class="ctx-item"><div class="ctx-icon">📈</div><span id="ctx-stock">股價資料 (載入中...)</span></div>
         <div class="ctx-item"><div class="ctx-icon">🎯</div><span id="ctx-auction">競拍資料 (載入中...)</span></div>
-        <div id="db-stats" style="margin-top:8px;font-size:10px;color:var(--text4)"></div>
+        <div id="db-stats" style="margin-top:8px;font-size:10px;color:var(--text4)"></div></div>
       </div>
     </div>
   </div>
@@ -378,261 +382,79 @@ function renderStockPriceHistory(code) {
   return html;
 }
 
-// ========== Tab 定義：每個 Tab 對應的左欄功能 ==========
+
+function updateBreadcrumb(parts) {
+  var el = document.getElementById('subtitle-meta');
+  if (!el) return;
+  if (!parts || parts.length === 0) {
+    if (DB && typeof fmtDate === 'function') el.textContent = '\u8cc7\u6599\u5eab ' + DB.meta.cb_total + ' \u6a94 / \u639b\u724c ' + DB.kb.length + ' \u6a94 / \u8cc7\u6599\u81f3 ' + fmtDate(DB.meta.kanban_date);
+    return;
+  }
+  el.textContent = parts.join(' \u203a ');
+}
+
 var TAB_CONFIG = {
   stock: {
-    title: '股價查詢',
-    placeholder: '輸入股票代號或名稱...',
+    title: '\u80a1\u50f9\u67e5\u8a62',
+    placeholder: '\u8f38\u5165\u80a1\u7968\u4ee3\u865f\u6216\u540d\u7a31...',
     sidebar: [
-      { label: '快速查詢', items: [
-        { id: 'stock-search', icon: '🔍', text: '個股查詢', fn: 'stock-search' },
-        { id: 'stock-industry', icon: '🏭', text: '產業分類', fn: 'industry' },
+      { label: '\u5feb\u901f\u67e5\u8a62', items: [
+        { id: 'stock-search', icon: '\ud83d\udd0d', text: '\u500b\u80a1\u67e5\u8a62', fn: 'stock-search' },
+        { id: 'stock-industry', icon: '\ud83c\udfed', text: '\u7522\u696d\u5206\u985e', fn: 'industry' },
       ]},
-      { label: '分析工具', items: [
-        { id: 'stock-chip', icon: '📊', text: '籌碼分析', fn: 'chip', note: '融資/融券/借券' },
+      { label: '\u5206\u6790\u5de5\u5177', items: [
+        { id: 'stock-chip', icon: '\ud83d\udcca', text: '\u7c4c\u78bc\u5206\u6790', fn: 'chip', note: '\u878d\u8cc7/\u878d\u5238/\u501f\u5238' },
       ]},
     ],
     hints: [
-      { text: '2330 台積電', q: '2330' },
-      { text: '2454 聯發科', q: '2454' },
-      { text: '產業分類總覽', q: '產業總覽' },
+      { text: '2330 \u53f0\u7a4d\u96fb', q: '2330' },
+      { text: '2454 \u806f\u767c\u79d1', q: '2454' },
+      { text: '\u7522\u696d\u5206\u985e\u7e3d\u89bd', q: '\u7522\u696d\u7e3d\u89bd' },
     ]
   },
   cb: {
-    title: 'CB 可轉債價格查詢',
-    placeholder: '輸入CB代號或名稱...',
+    title: 'CB \u53ef\u8f49\u50b5\u50f9\u683c\u67e5\u8a62',
+    placeholder: '\u8f38\u5165CB\u4ee3\u865f\u6216\u540d\u7a31...',
     sidebar: [
-      { label: '快速查詢', items: [
-        { id: 'cb-basic', icon: '📋', text: 'CB 基本資料', fn: 'basic' },
-        { id: 'cb-price', icon: '📈', text: 'CB 價格走勢', fn: 'price' },
-        { id: 'cb-listed', icon: '🟢', text: '掛牌中總覽', fn: 'listed', action: '掛牌中' },
+      { label: '\u5feb\u901f\u67e5\u8a62', items: [
+        { id: 'cb-basic', icon: '\ud83d\udccb', text: 'CB \u57fa\u672c\u8cc7\u6599', fn: 'basic' },
+        { id: 'cb-price', icon: '\ud83d\udcc8', text: 'CB \u50f9\u683c\u8d70\u52e2', fn: 'price' },
+        { id: 'cb-listed', icon: '\ud83d\udfe2', text: '\u639b\u724c\u4e2d\u7e3d\u89bd', fn: 'listed', action: '\u639b\u724c\u4e2d' },
       ]},
-      { label: '競拍研究', items: [
-        { id: 'cb-auction', icon: '🎯', text: '競拍資料庫', fn: 'auction', action: '競拍總覽' },
-        { id: 'cb-industry', icon: '🏭', text: '產業分類', fn: 'industry', action: '產業總覽' },
+      { label: '\u7af6\u62cd\u7814\u7a76', items: [
+        { id: 'cb-auction', icon: '\ud83c\udfaf', text: '\u7af6\u62cd\u8cc7\u6599\u5eab', fn: 'auction', action: '\u7af6\u62cd\u7e3d\u89bd' },
+        { id: 'cb-industry', icon: '\ud83c\udfed', text: '\u7522\u696d\u5206\u985e', fn: 'industry', action: '\u7522\u696d\u7e3d\u89bd' },
       ]},
-      { label: '分析工具', items: [
-        { id: 'cb-premium', icon: '📐', text: '溢價率計算', fn: 'premium' },
+      { label: '\u5206\u6790\u5de5\u5177', items: [
+        { id: 'cb-premium', icon: '\ud83d\udcd0', text: '\u6ea2\u50f9\u7387\u8a08\u7b97', fn: 'premium' },
       ]},
     ],
     hints: [
-      { text: '53097 系統電七', q: '53097' },
-      { text: '38231 大聯大E1', q: '38231' },
-      { text: '掛牌中 CB 總覽', q: '掛牌中' },
-      { text: '競拍資料庫', q: '競拍總覽' },
-      { text: '核心研究發現', q: '研究發現' },
+      { text: '53097 \u7cfb\u7d71\u96fb\u4e03', q: '53097' },
+      { text: '38231 \u5927\u806f\u5927E1', q: '38231' },
+      { text: '\u639b\u724c\u4e2d CB \u7e3d\u89bd', q: '\u639b\u724c\u4e2d' },
+      { text: '\u7af6\u62cd\u8cc7\u6599\u5eab', q: '\u7af6\u62cd\u7e3d\u89bd' },
+      { text: '\u6838\u5fc3\u7814\u7a76\u767c\u73fe', q: '\u7814\u7a76\u767c\u73fe' },
     ]
   },
   cbas: {
-    title: 'CBAS 資產交換選擇權查詢',
-    placeholder: '輸入CB代號查詢CBAS拆解紀錄...',
+    title: 'CBAS \u8cc7\u7522\u4ea4\u63db\u9078\u64c7\u6b0a\u67e5\u8a62',
+    placeholder: '\u8f38\u5165CB\u4ee3\u865f\u67e5\u8a62CBAS\u62c6\u89e3\u7d00\u9304...',
     sidebar: [
-      { label: '快速查詢', items: [
-        { id: 'cbas-search', icon: '🔄', text: 'CBAS 拆解紀錄', fn: 'cbas' },
+      { label: '\u5feb\u901f\u67e5\u8a62', items: [
+        { id: 'cbas-search', icon: '\ud83d\udd04', text: 'CBAS \u62c6\u89e3\u7d00\u9304', fn: 'cbas' },
       ]},
-      { label: '篩選工具', items: [
-        { id: 'cbas-sweet', icon: '🍯', text: '甜蜜點篩選器', fn: 'sweet', action: '甜蜜點篩選' },
+      { label: '\u7be9\u9078\u5de5\u5177', items: [
+        { id: 'cbas-sweet', icon: '\ud83c\udf6f', text: '\u751c\u871c\u9ede\u7be9\u9078\u5668', fn: 'sweet', action: '\u751c\u871c\u9ede\u7be9\u9078' },
       ]},
     ],
     hints: [
-      { text: '53097 系統電七', q: '53097' },
-      { text: '49431 欣興五', q: '49431' },
-      { text: 'CBAS甜蜜點篩選', q: '甜蜜點篩選' },
+      { text: '53097 \u7cfb\u7d71\u96fb\u4e03', q: '53097' },
+      { text: '49431 \u6b23\u8208\u4e94', q: '49431' },
+      { text: 'CBAS\u751c\u871c\u9ede\u7be9\u9078', q: '\u751c\u871c\u9ede\u7be9\u9078' },
     ]
   }
 };
-
-// ========== 工具函數 ==========
-function fmtDate(d){if(!d)return'-';var s=String(d);return s.length===8?s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8):s;}
-function fmtNum(n,dec){if(n===null||n===undefined||isNaN(n))return'-';return Number(n).toFixed(dec===undefined?2:dec);}
-function fmtMoney(n){if(!n||isNaN(n))return'-';var v=Number(n);if(v>=1e8)return(v/1e8).toFixed(1)+'億';if(v>=1e4)return(v/1e4).toFixed(0)+'萬';return v.toLocaleString();}
-function priceClass(c){if(!c||isNaN(c))return'price-flat';return Number(c)>0?'price-up':Number(c)<0?'price-down':'price-flat';}
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function scrollToBottom(){var c=document.getElementById('chat-messages');setTimeout(function(){c.scrollTop=c.scrollHeight},50);}
-
-
-
-function toggleDelisted(id, count) {
-  var el = document.getElementById(id);
-  var btn = document.getElementById(id + '_btn');
-  if (el.style.display === 'none') {
-    el.style.display = 'block';
-    btn.textContent = '收合 ▲';
-  } else {
-    el.style.display = 'none';
-    btn.textContent = '展開全部 ▼';
-  }
-}
-function toggleCbas(el, id, remaining) {
-  var target = document.getElementById(id);
-  if (target.style.display === 'none') {
-    target.style.display = 'block';
-    el.textContent = '收合 ▲';
-  } else {
-    target.style.display = 'none';
-    el.textContent = '展開全部 ' + remaining + ' 筆 ▼';
-  }
-}
-
-function renderChipAnalysis(code, html_ref) {
-  var html = '';
-  
-  // 融資融券
-  if (window.MARGIN_2026) {
-    var mg = MARGIN_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-    if (mg.length > 0) {
-      html += '<div class="data-section"><div class="section-title">\u7c4c\u78bc\u5206\u6790\uff1a\u878d\u8cc7\u878d\u5238</div>';
-      
-      // 摘要：最近一日 vs 5日前 vs 20日前
-      var latest = mg[0];
-      var d5 = mg.length > 5 ? mg[4] : null;
-      var d20 = mg.length > 20 ? mg[19] : null;
-      
-      html += '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">';
-      // 融資餘額卡片
-      var mrChange5 = d5 ? (latest.mr||0) - (d5.mr||0) : null;
-      var mrChange20 = d20 ? (latest.mr||0) - (d20.mr||0) : null;
-      html += '<div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">\u878d\u8cc7\u9918\u984d</div>';
-      html += '<div style="font-size:16px;font-weight:500">' + ((latest.mr||0)/1000).toFixed(0) + '<span style="font-size:11px;color:var(--text4)"> \u5343\u5f35</span></div>';
-      if (mrChange5 !== null) html += '<div style="font-size:10px" class="' + (mrChange5>0?'price-up':'price-down') + '">5\u65e5 ' + (mrChange5>0?'+':'') + mrChange5 + '</div>';
-      if (mrChange20 !== null) html += '<div style="font-size:10px" class="' + (mrChange20>0?'price-up':'price-down') + '">20\u65e5 ' + (mrChange20>0?'+':'') + mrChange20 + '</div>';
-      html += '</div>';
-      
-      // 融券餘額卡片
-      var srChange5 = d5 ? (latest.sr||0) - (d5.sr||0) : null;
-      html += '<div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">\u878d\u5238\u9918\u984d</div>';
-      html += '<div style="font-size:16px;font-weight:500">' + (latest.sr||0) + '<span style="font-size:11px;color:var(--text4)"> \u5f35</span></div>';
-      if (srChange5 !== null) html += '<div style="font-size:10px" class="' + (srChange5>0?'price-up':'price-down') + '">5\u65e5 ' + (srChange5>0?'+':'') + srChange5 + '</div>';
-      html += '</div>';
-      html += '</div>';
-      
-      // 明細表
-      html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 50px 50px 60px 50px 50px 55px"><span>\u65e5\u671f</span><span>\u8cc7\u8cb7</span><span>\u8cc7\u8ce3</span><span>\u8cc7\u9918\u984d</span><span>\u5238\u8cb7</span><span>\u5238\u8ce3</span><span>\u5238\u9918\u984d</span></div>';
-      mg.slice(0,15).forEach(function(r){
-        var mbClass = (r.mb||0) > (r.ms||0) ? 'price-up' : (r.mb||0) < (r.ms||0) ? 'price-down' : '';
-        html += '<div class="trow" style="grid-template-columns:70px 50px 50px 60px 50px 50px 55px">';
-        html += '<span>'+fmtDate(r.d)+'</span>';
-        html += '<span class="price-up">'+(r.mb||'-')+'</span>';
-        html += '<span class="price-down">'+(r.ms||'-')+'</span>';
-        html += '<span style="font-weight:500">'+(r.mr||'-')+'</span>';
-        html += '<span class="price-up">'+(r.sb||'-')+'</span>';
-        html += '<span class="price-down">'+(r.ss||'-')+'</span>';
-        html += '<span style="font-weight:500">'+(r.sr||'-')+'</span></div>';
-      });
-      html += '</div></div>';
-    }
-  }
-  
-  // 借券
-  if (window.SBL_2026) {
-    var sbl = SBL_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-    if (sbl.length > 0) {
-      var latest = sbl[0];
-      var d5 = sbl.length > 5 ? sbl[4] : null;
-      var balChange = d5 ? (latest.bal||0) - (d5.bal||0) : null;
-      
-      html += '<div class="data-section"><div class="section-title">\u7c4c\u78bc\u5206\u6790\uff1a\u501f\u5238</div>';
-      html += '<div style="display:flex;gap:8px;margin-bottom:8px">';
-      html += '<div style="flex:1;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">\u501f\u5238\u9918\u984d</div>';
-      html += '<div style="font-size:16px;font-weight:500">' + fmtMoney(latest.bal) + '</div>';
-      if (balChange !== null) html += '<div style="font-size:10px" class="' + (balChange>0?'price-up':'price-down') + '">5\u65e5 ' + (balChange>0?'+':'') + fmtMoney(balChange) + '</div>';
-      html += '</div></div>';
-      
-      html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 1fr 1fr 1fr"><span>\u65e5\u671f</span><span>\u501f\u51fa</span><span>\u6b78\u9084</span><span>\u9918\u984d</span></div>';
-      sbl.slice(0,10).forEach(function(r){
-        html += '<div class="trow" style="grid-template-columns:70px 1fr 1fr 1fr">';
-        html += '<span>'+fmtDate(r.d)+'</span>';
-        html += '<span class="price-up">'+fmtMoney(r.bor)+'</span>';
-        html += '<span class="price-down">'+fmtMoney(r.ret)+'</span>';
-        html += '<span style="font-weight:500">'+fmtMoney(r.bal)+'</span></div>';
-      });
-      html += '</div></div>';
-    }
-  }
-  
-  return html;
-}
-
-// CB 歷史價格（完整2026年）
-function renderCbPriceHistory(code) {
-  if (!window.CB_PRICE_2026) return '';
-  var prices = CB_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-  if (prices.length === 0) return '';
-  
-  var html = '<div class="data-section"><div class="section-title">\u5b8c\u6574\u50f9\u683c\u6b77\u53f2 (2026\u5e74 ' + prices.length + ' \u7b46)</div>';
-  
-  // 摘要
-  var maxP = Math.max.apply(null, prices.map(function(p){return p.cl}));
-  var minP = Math.min.apply(null, prices.map(function(p){return p.cl}));
-  var maxD = prices.find(function(p){return p.cl===maxP});
-  var minD = prices.find(function(p){return p.cl===minP});
-  
-  html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">';
-  html += '<span style="color:var(--text4)">\u6700\u9ad8: <b class="price-up">' + fmtNum(maxP) + '</b> (' + fmtDate(maxD.d) + ')</span>';
-  html += '<span style="color:var(--text4)">\u6700\u4f4e: <b class="price-down">' + fmtNum(minP) + '</b> (' + fmtDate(minD.d) + ')</span>';
-  html += '</div>';
-  
-  var priceId = 'cbprice_' + code;
-  html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 50px 45px 50px 50px 45px"><span>\u65e5\u671f</span><span>\u6536\u76e4</span><span>\u6f32\u8dcc</span><span>\u958b\u76e4</span><span>\u6700\u9ad8</span><span>\u5f35\u6578</span></div>';
-  prices.slice(0,15).forEach(function(p){
-    html += '<div class="trow" style="grid-template-columns:70px 50px 45px 50px 50px 45px">';
-    html += '<span>'+fmtDate(p.d)+'</span>';
-    html += '<span style="font-weight:500" class="'+priceClass(p.ch)+'">'+fmtNum(p.cl)+'</span>';
-    html += '<span class="'+priceClass(p.ch)+'">'+(p.ch!=null?fmtNum(p.ch):'-')+'</span>';
-    html += '<span>'+(p.o?fmtNum(p.o):'-')+'</span>';
-    html += '<span>'+(p.h?fmtNum(p.h):'-')+'</span>';
-    html += '<span>'+(p.v||'-')+'</span></div>';
-  });
-  if (prices.length > 15) {
-    html += '<div id="'+priceId+'" style="display:none">';
-    prices.slice(15).forEach(function(p){
-      html += '<div class="trow" style="grid-template-columns:70px 50px 45px 50px 50px 45px">';
-      html += '<span>'+fmtDate(p.d)+'</span><span style="font-weight:500" class="'+priceClass(p.ch)+'">'+fmtNum(p.cl)+'</span><span class="'+priceClass(p.ch)+'">'+(p.ch!=null?fmtNum(p.ch):'-')+'</span><span>'+(p.o?fmtNum(p.o):'-')+'</span><span>'+(p.h?fmtNum(p.h):'-')+'</span><span>'+(p.v||'-')+'</span></div>';
-    });
-    html += '</div>';
-    html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+priceId+'\',' + (prices.length-15) + ')">\u5c55\u958b\u5168\u90e8 '+(prices.length-15)+' \u7b46 \u25bc</span></div>';
-  }
-  html += '</div></div>';
-  return html;
-}
-
-// 股價完整歷史（2026年）
-function renderStockPriceHistory(code) {
-  if (!window.STOCK_PRICE_2026) return '';
-  var prices = STOCK_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-  if (prices.length === 0) return '';
-  
-  var html = '<div class="data-section"><div class="section-title">\u5b8c\u6574\u80a1\u50f9\u6b77\u53f2 (2026\u5e74 ' + prices.length + ' \u7b46)</div>';
-  
-  var maxP = Math.max.apply(null, prices.map(function(p){return p.cl}));
-  var minP = Math.min.apply(null, prices.map(function(p){return p.cl}));
-  var maxD = prices.find(function(p){return p.cl===maxP});
-  var minD = prices.find(function(p){return p.cl===minP});
-  
-  html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">';
-  html += '<span style="color:var(--text4)">\u6700\u9ad8: <b class="price-up">' + fmtNum(maxP) + '</b> (' + fmtDate(maxD.d) + ')</span>';
-  html += '<span style="color:var(--text4)">\u6700\u4f4e: <b class="price-down">' + fmtNum(minP) + '</b> (' + fmtDate(minD.d) + ')</span>';
-  html += '</div>';
-  
-  var spId = 'sp_' + code;
-  html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 50px 50px 50px 50px 60px"><span>\u65e5\u671f</span><span>\u958b\u76e4</span><span>\u6700\u9ad8</span><span>\u6700\u4f4e</span><span>\u6536\u76e4</span><span>\u6210\u4ea4\u91cf</span></div>';
-  prices.slice(0,15).forEach(function(p){
-    html += '<div class="trow" style="grid-template-columns:70px 50px 50px 50px 50px 60px"><span>'+fmtDate(p.d)+'</span><span>'+(p.o?fmtNum(p.o):'-')+'</span><span>'+(p.h?fmtNum(p.h):'-')+'</span><span>'+(p.l?fmtNum(p.l):'-')+'</span><span style="font-weight:500">'+fmtNum(p.cl)+'</span><span>'+(p.v?(p.v/1000).toFixed(0)+'\u5343':'-')+'</span></div>';
-  });
-  if (prices.length > 15) {
-    html += '<div id="'+spId+'" style="display:none">';
-    prices.slice(15).forEach(function(p){
-      html += '<div class="trow" style="grid-template-columns:70px 50px 50px 50px 50px 60px"><span>'+fmtDate(p.d)+'</span><span>'+(p.o?fmtNum(p.o):'-')+'</span><span>'+(p.h?fmtNum(p.h):'-')+'</span><span>'+(p.l?fmtNum(p.l):'-')+'</span><span style="font-weight:500">'+fmtNum(p.cl)+'</span><span>'+(p.v?(p.v/1000).toFixed(0)+'\u5343':'-')+'</span></div>';
-    });
-    html += '</div>';
-    html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+spId+'\',' + (prices.length-15) + ')">\u5c55\u958b\u5168\u90e8 '+(prices.length-15)+' \u7b46 \u25bc</span></div>';
-  }
-  html += '</div></div>';
-  return html;
-}
 
 // ========== Tab 切換 ==========
 function switchTab(tab) {
@@ -640,6 +462,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===tab)});
   var cfg = TAB_CONFIG[tab];
   document.getElementById('subtitle-title').textContent = cfg.title;
+  updateBreadcrumb([]);
   document.getElementById('query-input').placeholder = cfg.placeholder;
   renderSidebar(tab);
   renderWelcomeHints(tab);
@@ -811,8 +634,18 @@ function search(query) {
 // ========== CB 完整呈現（核心！）==========
 function showCbFullResult(result) {
   var code = result.code;
+  var _cb = result.data;
+  updateBreadcrumb(['CB價格', code + ' ' + (cb?cb.n:''), '基本 / 價格 / CBAS / 籌碼']);
   var cb = result.data;
   var kb = result.kanban || DB._kbByCode[code];
+  // 如果有完整 2026 kanban，取最新一天
+  if (window.CB_KANBAN_2026) {
+    var kbFull = CB_KANBAN_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+    if (kbFull.length > 0) {
+      var latest = kbFull[0];
+      kb = {c: latest.c, n: latest.n, cp: latest.cp, rp: latest.rp, sp: latest.sp, oa: latest.oa, ba: latest.ba};
+    }
+  }
   var stockCode = cb ? cb.s : '';
   var ind = DB._indByCode[stockCode] || {};
   var isListed = !!kb;
@@ -869,6 +702,11 @@ function showCbFullResult(result) {
   
   // === 最新報價 ===
   var lp = DB.cp.filter(function(p){return String(p.c)===code}).sort(function(a,b){return b.d-a.d});
+  // 如果有完整 2026 CB 價格，優先使用
+  if (window.CB_PRICE_2026) {
+    var fullCp = CB_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+    if (fullCp.length > lp.length) lp = fullCp;
+  }
   if (lp.length > 0) {
     var p = lp[0];
     html += '<div class="data-section"><div class="section-title">最新報價 ('+fmtDate(p.d)+')</div>';
@@ -1015,7 +853,14 @@ function showCbFullResult(result) {
 // ========== 股票結果 ==========
 function showStockResult(result) {
   var code = result.code;
+  var _indF = window.IND_FULL ? IND_FULL[code] : null;
+  updateBreadcrumb(['股價查詢', code + ' ' + (result.name||(indF?indF.n:'')), '基本資料 / 股價 / 籌碼']);
   var prices = Array.isArray(result.data)?result.data.sort(function(a,b){return b.d-a.d}):[];
+  // 如果有完整 2026 股價，優先使用
+  if (window.STOCK_PRICE_2026) {
+    var fullPrices = STOCK_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+    if (fullPrices.length > prices.length) prices = fullPrices;
+  }
   var name = result.name || '';
   var ind = DB._indByCode[code] || {};
   var indF = window.IND_FULL ? IND_FULL[code] : null;
@@ -1097,6 +942,7 @@ function showStockResult(result) {
 
 // ========== 掛牌中總覽 ==========
 function showListedSummary() {
+  updateBreadcrumb(['CB價格', '掛牌中總覽']);
   var kb = DB.kb;
   var above130=0,r100_130=0,below100=0;
   kb.forEach(function(k){if(!k.rp)return;if(k.rp>=130)above130++;else if(k.rp>=100)r100_130++;else below100++;});
@@ -1117,6 +963,7 @@ function showListedSummary() {
 
 // ========== 競拍總覽 ==========
 function showAuctionSummary() {
+  updateBreadcrumb(['CB價格', '競拍資料庫']);
   if (!window.AUCTION) { addSystemMsg('競拍資料載入中...'); return; }
   var data = AUCTION;
   var completed = data.filter(function(a){return a.minbid!==null});
@@ -1147,6 +994,7 @@ function showAuctionSummary() {
 
 // ========== 產業總覽 ==========
 function showIndustrySummary() {
+  updateBreadcrumb(['CB價格', '產業分類總覽']);
   if (!DB||!DB.ind) return;
   var indCount={},indCBCount={};
   for(var c in DB.ind){var info=DB.ind[c];var i=info.ind||'未分類';if(i==='None')i='未分類';indCount[i]=(indCount[i]||0)+1;}
@@ -1194,6 +1042,7 @@ function searchIndustry(indName) {
 
 // ========== CBAS 甜蜜點篩選 ==========
 function showSweetSpotFilter() {
+  updateBreadcrumb(['CBAS', '甜蜜點篩選器']);
   if(!DB)return;
   var results=[];
   DB.kb.forEach(function(k){
@@ -1235,6 +1084,7 @@ function showSweetSpotFilter() {
 
 // ========== 研究發現 ==========
 function showResearchFindings() {
+  updateBreadcrumb(['知識庫', '核心研究發現']);
   if(!KNOWLEDGE)return;
   var html='<div class="data-card"><div class="card-title">📚 CB/CBAS 核心研究發現</div>';
   var levelMap={danger:'rp-danger',success:'rp-ok',info:'rp-info',warn:'rp-warn'};
@@ -1251,6 +1101,32 @@ function showResearchFindings() {
 }
 
 // ========== 右欄功能 ==========
+
+var YT_VIDEOS = [{"cat": "可轉債基礎系列", "videos": [{"t": "EP01 雙面寶石初體驗：認識可轉債的有趣本質", "u": "https://youtu.be/IM_8OWh51hg"}, {"t": "EP02 主力大戶的小秘密：為何聰明錢都愛可轉債", "u": "https://youtu.be/WdAhi9s6NX8"}, {"t": "EP03 踩雷警報器：可轉債投資的三大風險區", "u": "https://youtu.be/BN5wN8p8dWM"}, {"t": "EP04 買點雷達啟動：抓住可轉債的好時機", "u": "https://youtu.be/Lsqd7MyUyNk"}, {"t": "EP05 投資體質檢測：你跟可轉債合不合得來", "u": "https://youtu.be/Oa9czagQNXw"}, {"t": "EP06 三策略怎麼選？現股、競拍、CBAS入門", "u": "https://youtu.be/ouLq9pKFr-8"}]}, {"cat": "可轉債結構系列", "videos": [{"t": "EP07 拆解寶石的秘密：債券與選擇權的組合藝術", "u": "https://youtu.be/SAlsPwmPZ_g"}, {"t": "EP08 算盤打得響：轉換價格的數學不難懂", "u": "https://youtu.be/Z_6JuLn0DsA"}, {"t": "EP09 價值判斷眼光：理論價格這樣算就對了", "u": "https://youtu.be/4m3LD9THewo"}, {"t": "EP10 便宜還是貴：溢價折價的投資智慧", "u": "https://youtu.be/-Vf-ckkvXvI"}, {"t": "EP11 價格密碼破解術：揭開可轉債漲跌五大秘密", "u": "https://youtu.be/dfFSWbGzxjs"}, {"t": "EP12 進攻防守一把抓：可轉債的攻守轉換實戰術", "u": "https://youtu.be/7fryryHlZVQ"}]}, {"cat": "損益表解密系列", "videos": [{"t": "EP01 營業收入大解密：路邊麵店的經營真相", "u": "https://youtu.be/gXNbMSKvlNo"}, {"t": "EP02 毛利率像菜市場賺價差：阿婆vs iPhone", "u": "https://youtu.be/a0Kj-plbWXU"}, {"t": "EP03 營業利益率：毛利率50%還賠錢收攤？", "u": "https://youtu.be/C6OjLNmnTzM"}, {"t": "EP04 稅後淨利：有些公司靠賣地比做生意還賺", "u": "https://youtu.be/dQ9wuIxsMAo"}, {"t": "EP05 EPS像分蛋糕：EPS漲50%股東沒賺到？", "u": "https://youtu.be/2GESPSrSHZo"}]}, {"cat": "台股產業龍頭系列", "videos": [{"t": "EP01 台塑四寶深度解析｜史詩級價值低估", "u": "https://youtu.be/SY7O28c2dPM"}, {"t": "EP02 貨櫃三雄｜航運週期大揭密", "u": "https://youtu.be/xDFVQPJjxdU"}, {"t": "EP03 金控三雄｜富邦國泰中信金誰最強", "u": "https://youtu.be/MPV-fj8_NTs"}, {"t": "EP04 電信三雄｜5G時代護城河攻防戰", "u": "https://youtu.be/EM6WZK7En3o"}, {"t": "EP05 晶圓雙雄｜台積電與聯電製程競爭全解析", "u": "https://youtu.be/lLysEaFqeKQ"}, {"t": "EP06 通路三雄｜統一超全家寶雅誰稱霸", "u": "https://youtu.be/SYhdRZHtiKc"}, {"t": "EP07 PCB三雄｜台光電台燿金像電搶AI大餅", "u": "https://youtu.be/jRMGMEvC8Z0"}]}];
+
+function renderYtVideos() {
+  if (!YT_VIDEOS) return;
+  var el = document.getElementById('yt-list');
+  var cnt = document.getElementById('yt-count');
+  if (!el) return;
+  var total = YT_VIDEOS.reduce(function(s,g){return s+g.videos.length},0);
+  cnt.textContent = total + ' 支';
+  var html = '';
+  YT_VIDEOS.forEach(function(g, gi) {
+    var isExp = gi < 2;
+    html += '<div class="article-group"><div class="article-cat" onclick="toggleArticleGroup(this)">';
+    html += '<span style="font-size:9px;transition:transform .15s;transform:rotate(' + (isExp?90:0) + 'deg)">' + (isExp?'▾':'▸') + '</span>';
+    html += '<span style="font-weight:500">' + g.cat + '</span>';
+    html += '<span style="color:var(--text4);font-size:10px">(' + g.videos.length + ')</span></div>';
+    html += '<div style="display:' + (isExp?'block':'none') + ';padding-left:14px">';
+    g.videos.forEach(function(v) {
+      html += '<div class="rp-item" style="padding:3px 0;font-size:10px" onclick="window.open(\''+v.u+'\',\'_blank\')">▶ ' + v.t + '</div>';
+    });
+    html += '</div></div>';
+  });
+  el.innerHTML = html;
+}
+
 function renderArticles(){if(!window.ARTICLES)return;var c=document.getElementById('articles-list'),cnt=document.getElementById('articles-count');var total=ARTICLES.reduce(function(s,g){return s+g.n},0);cnt.textContent=total+' 篇';var html='';ARTICLES.forEach(function(g,gi){var isExp=gi<3;html+='<div class="article-group"><div class="article-cat" onclick="toggleArticleGroup(this)"><span style="font-size:9px;transition:transform .15s;transform:rotate('+(isExp?90:0)+'deg)">'+(isExp?'▾':'▸')+'</span><span style="font-weight:500">'+g.c+'</span><span style="color:var(--text4);font-size:10px">('+g.n+')</span></div><div style="display:'+(isExp?'block':'none')+';padding-left:14px">';g.a.forEach(function(a){html+='<div class="rp-item" style="padding:3px 0;font-size:10px" onclick="window.open(\''+a.u+'\',\'_blank\')">'+a.t+'</div>';});html+='</div></div>';});c.innerHTML=html;}
 function toggleArticleGroup(el){var items=el.nextElementSibling;var arrow=el.querySelector('span');var vis=items.style.display!=='none';items.style.display=vis?'none':'block';arrow.style.transform=vis?'rotate(0deg)':'rotate(90deg)';arrow.textContent=vis?'▸':'▾';}
 
@@ -1346,6 +1222,21 @@ async function loadAllExtData() {
     }
   } catch(e) { console.error('kanban load error:', e); }
   console.log('Ext data loaded:', loaded.join(', '));
+  // 更新 Context 顯示
+  if (window.STOCK_PRICE_2026) document.getElementById('ctx-stock').textContent = '股價資料 (' + STOCK_PRICE_2026.length.toLocaleString() + ' 筆/2026全年)';
+  if (window.CB_PRICE_2026) {
+    var cpEl = document.getElementById('ctx-cb');
+    if (cpEl) cpEl.textContent = cpEl.textContent.replace(')', ' + CB價格' + CB_PRICE_2026.length + '筆)');
+  }
+  if (window.MARGIN_2026 || window.SBL_2026) {
+    var statsEl = document.getElementById('db-stats');
+    if (statsEl) {
+      var extra = '';
+      if (window.MARGIN_2026) extra += '<div>融資融券: ' + MARGIN_2026.length.toLocaleString() + ' 筆</div>';
+      if (window.SBL_2026) extra += '<div>借券: ' + SBL_2026.length.toLocaleString() + ' 筆</div>';
+      statsEl.innerHTML += extra;
+    }
+  }
 }
 
 async function loadCbasHistory() {
@@ -1380,6 +1271,7 @@ async function loadCbasHistory() {
 window.addEventListener('DOMContentLoaded', function(){
   switchTab('cb');
   loadData().catch(function(e){console.error('Data load error:',e);addSystemMsg('資料載入失敗：'+e.message);});
+  renderYtVideos();
   renderArticles();
   renderKnowledge();
   // 載入完整CBAS歷史
