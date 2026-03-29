@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rex大叔投資研究工作站 v1.6</title>
+<title>Rex大叔投資研究工作站 v1.8</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -173,7 +173,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
       <div class="tab active" data-tab="cb" onclick="switchTab('cb')">CB</div>
       <div class="tab" data-tab="cbas" onclick="switchTab('cbas')">CBAS</div>
     </div>
-    <div style="font-size:11px;color:var(--text4)">v1.6</div>
+    <div style="font-size:11px;color:var(--text4)">v1.8</div>
   </div>
 
   <div class="subtitle">
@@ -270,7 +270,7 @@ function fmtMoney(n){if(!n||isNaN(n))return'-';var v=Number(n);if(v>=1e8)return(
 function priceClass(c){if(!c||isNaN(c))return'price-flat';return Number(c)>0?'price-up':Number(c)<0?'price-down':'price-flat';}
 function escHtml(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function scrollToBottom(){var c=document.getElementById('chat-messages');setTimeout(function(){c.scrollTop=c.scrollHeight},50);}
-function scrollToNewMsg(){var c=document.getElementById('chat-messages');setTimeout(function(){var msgs=c.querySelectorAll('.msg.sys');if(msgs.length>0){var last=msgs[msgs.length-1];c.scrollTop=last.offsetTop-8;}},50);}
+function scrollToNewMsg(){var c=document.getElementById('chat-messages');setTimeout(function(){var msgs=c.querySelectorAll('.msg.sys');if(msgs.length>0){var last=msgs[msgs.length-1];var cRect=c.getBoundingClientRect();var lRect=last.getBoundingClientRect();c.scrollTop+=lRect.top-cRect.top-8;}},80);}
 
 var DB = null, currentTab = 'cb', currentFn = 'basic', recentQueries = [], knowledgeCatIndex = 0;
 var FR_DB = null; // 外電報導資料庫
@@ -421,17 +421,52 @@ function showToast(msg) {
 
 // 觸發 2025 股價載入，完成後刷新外電卡片
 function trigger2025Price(code, cardId) {
-  var el = document.getElementById(cardId);
-  if (el) el.innerHTML = '⏳ 載入 2025 股價中...';
+  // 標記所有同個 code 的 placeholder 為載入中
+  var allCards = document.querySelectorAll('[id^="fr_price_"][id$="_' + code + '"]');
+  allCards.forEach(function(el) {
+    el.innerHTML = '⏳ 載入 2025 股價中，共 247 個交易日，請稍候約 15-30 秒...';
+    el.style.cursor = 'default';
+    el.onclick = null;
+  });
+  
   loadStock2025IfNeeded(code, function() {
-    // 重新查詢同一個個股，讓整個結果重新渲染
-    var lastQuery = recentQueries[0];
-    if (lastQuery) {
-      // 清除最後一則 sys 訊息，重新查詢
-      var msgs = document.querySelectorAll('.msg.sys');
-      if (msgs.length > 0) msgs[msgs.length-1].remove();
-      doQuery(lastQuery);
+    // 載入完成：更新所有這個 code 的外電卡片
+    var np2025 = null;
+    if (window.STOCK_PRICE_2026) {
+      var hits = STOCK_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+      if (hits.length > 0) np2025 = {p: hits[0].cl, d: String(hits[0].d)};
     }
+    
+    // 找所有這個 code 的 placeholder，逐一更新
+    var allPH = document.querySelectorAll('[id^="fr_price_"]');
+    allPH.forEach(function(el) {
+      if (!el.id.endsWith('_' + code)) return;
+      // 從 id 取 entry index: fr_price_{i}_{code}
+      var parts = el.id.split('_');
+      var entryIdx = parts[2]; // fr_price_[i]_[code]
+      
+      var p2025 = getStock2025Price(code, entryIdx.length === 8 ? entryIdx : null);
+      // entryIdx 其實是 e.i（報導編號），不是日期，要從 FR_DB 取日期
+      if (FR_DB) {
+        var entry = FR_DB.entries.find(function(e){ return String(e.i) === entryIdx; });
+        if (entry) p2025 = getStock2025Price(code, entry.d);
+      }
+      
+      if (p2025 && np2025) {
+        var chg = (np2025.p - p2025.p) / p2025.p * 100;
+        var cls = chg > 0 ? 'price-up' : chg < 0 ? 'price-down' : 'price-flat';
+        var icon = chg > 0 ? '▲' : '▼';
+        el.outerHTML = '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;padding:5px 8px;background:rgba(255,255,255,0.6);border-radius:6px;font-size:11px">' +
+          '<span style="color:var(--text4)">報導日 ' + fmtDate(p2025.d) + '</span>' +
+          '<span style="font-weight:500">' + p2025.p + '</span>' +
+          '<span style="color:var(--text4)">→ 現在</span>' +
+          '<span style="font-weight:500">' + np2025.p + '</span>' +
+          '<span class="' + cls + '" style="font-weight:600;font-size:12px">' + icon + ' ' + Math.abs(chg).toFixed(2) + '%</span>' +
+          '</div>';
+      } else {
+        el.outerHTML = '<div style="font-size:10px;color:var(--text4);padding:3px 6px">此代號無 2025 股價紀錄</div>';
+      }
+    });
   });
 }
 
@@ -560,7 +595,21 @@ function renderFrCard(e, focusCode) {
 
 // 個股查詢時帶出相關外電（兩層：個股相關 + 按鈕展開全部）
 function renderStockForeignReports(code, stockName) {
-  if (!FR_DB) return '';
+  if (!FR_DB) {
+    // 還沒載入：回傳 placeholder，等載好後自動填入
+    var pid = 'fr_placeholder_' + code;
+    setTimeout(function() {
+      var el = document.getElementById(pid);
+      if (!el) return;
+      var waitFR2 = setInterval(function() {
+        if (FR_DB) {
+          clearInterval(waitFR2);
+          el.outerHTML = renderStockForeignReports(code, stockName);
+        }
+      }, 300);
+    }, 0);
+    return '<div id="fr_placeholder_' + code + '" class="data-section" style="color:var(--text4);font-size:12px;padding:8px 0">📡 外電報導載入中...</div>';
+  }
   
   var relatedIdxs = FR_DB.by_code[code] || [];
   var related = relatedIdxs.map(function(i){ return FR_DB.entries.find(function(e){ return e.i === i; }); }).filter(Boolean);
@@ -1735,23 +1784,17 @@ var STOCK_2025_LOADING = false;
 var STOCK_2025_MAP = {}; // {code: {date: close}}
 
 async function loadStock2025IfNeeded(code, callback) {
-  // 已載入完畢
-  if (STOCK_2025_LOADED) {
-    callback && callback();
-    return;
-  }
-  // 正在載入中，等候
+  if (STOCK_2025_LOADED) { callback && callback(); return; }
   if (STOCK_2025_LOADING) {
     var wait = setInterval(function() {
       if (STOCK_2025_LOADED) { clearInterval(wait); callback && callback(); }
-    }, 200);
+    }, 300);
     return;
   }
   STOCK_2025_LOADING = true;
-  
   try {
-    await _loadStockXlsx('stock_price_2025.xlsx', false, false);
-    await _loadStockXlsx('otc_price_2025.xlsx', true, false);
+    await _loadStockXlsx('stock_price_2025.xlsx', false);
+    await _loadStockXlsx('otc_price_2025.xlsx', true);
     STOCK_2025_LOADED = true;
     STOCK_2025_LOADING = false;
     console.log('2025 股價載入完成，代號數:', Object.keys(STOCK_2025_MAP).length);
@@ -1763,48 +1806,51 @@ async function loadStock2025IfNeeded(code, callback) {
   }
 }
 
-async function _loadStockXlsx(filename, isOtc2025, is2026) {
-  // 動態載入 SheetJS（如尚未載入）
+async function _loadStockXlsx(filename, isOtc) {
+  // 動態載入 SheetJS
   if (!window.XLSX) {
     await new Promise(function(resolve, reject) {
       var s = document.createElement('script');
       s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-      s.onload = resolve;
-      s.onerror = reject;
+      s.onload = resolve; s.onerror = reject;
       document.head.appendChild(s);
     });
   }
-  
   var resp = await fetch(filename);
   if (!resp.ok) throw new Error('fetch ' + filename + ' failed: ' + resp.status);
   var ab = await resp.arrayBuffer();
-  var wb = XLSX.read(ab, { type: 'array', cellDates: false });
   
-  wb.SheetNames.forEach(function(sheetName) {
-    // 取日期：sheet名可能是 '20250102' 或 'OTC_20250102'
-    var dateStr = sheetName.replace(/\D/g, '');
-    if (dateStr.length !== 8) return;
-    
-    var rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: null });
-    if (rows.length < 2) return;
-    
-    // 判斷欄位索引
-    // stock_2025: [Code, Name, Volume, Value, Open, High, Low, Close, Trades]  -> close=7, code=0
-    // otc_2025:   [Code, Name, Close, Change, Open, High, Low, Volume, ...]    -> close=2, code=0
-    // 2026:       [代號, 名稱, 成交量, 成交值, 開盤, 最高, 最低, 收盤, 成交筆數]  -> close=7, code=0
-    var ciCode = 0, ciClose = isOtc2025 ? 2 : 7;
-    
-    for (var i = 1; i < rows.length; i++) {
-      var row = rows[i];
-      if (!row || row[ciCode] == null) continue;
-      var code = String(row[ciCode]).replace(/\.0$/, '').trim();
-      var close = parseFloat(row[ciClose]);
-      if (!code || isNaN(close) || close === 0) continue;
-      
-      if (!STOCK_2025_MAP[code]) STOCK_2025_MAP[code] = {};
-      STOCK_2025_MAP[code][dateStr] = close;
-    }
-  });
+  // 用 Web Worker 式的非同步分批處理避免 UI 凍結
+  var wb = XLSX.read(ab, { type: 'array', cellDates: false, dense: true });
+  var sheetNames = wb.SheetNames;
+  
+  // stock_2025: [Code, Name, Volume, Value, Open, High, Low, Close, Trades] close=7
+  // otc_2025:   [Code, Name, Close, Change, Open, High, Low, Volume, ...]   close=2
+  var ciClose = isOtc ? 2 : 7;
+  
+  // 分批處理，每批 20 個 sheet，讓瀏覽器喘息
+  var BATCH = 20;
+  for (var b = 0; b < sheetNames.length; b += BATCH) {
+    var batch = sheetNames.slice(b, b + BATCH);
+    batch.forEach(function(sheetName) {
+      var dateStr = sheetName.replace(/\D/g, '');
+      if (dateStr.length !== 8) return;
+      var ws = wb.Sheets[sheetName];
+      if (!ws) return;
+      var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (!row || row[0] == null) continue;
+        var code = String(row[0]).replace(/\.0$/, '').trim();
+        var close = parseFloat(row[ciClose]);
+        if (!code || isNaN(close) || close === 0) continue;
+        if (!STOCK_2025_MAP[code]) STOCK_2025_MAP[code] = {};
+        STOCK_2025_MAP[code][dateStr] = close;
+      }
+    });
+    // 讓 UI 喘息
+    await new Promise(function(r){ setTimeout(r, 0); });
+  }
 }
 
 // 查 2025 股價（報導日最近交易日的收盤）
