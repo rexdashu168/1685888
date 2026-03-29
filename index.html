@@ -1158,8 +1158,8 @@ var TAB_CONFIG = {
       { text: '23683 金像電三🔥', q: '23683' },
       { text: '65152 穎崴二🔥', q: '65152' },
       { text: '370201 大聯大E1', q: '370201' },
-      { text: '30171 奇鋐一', q: '30171' },
-      { text: '23831 台光電一', q: '23831' },
+      { text: '65152 穎崴二', q: '65152' },
+      { text: '82993 群聯三', q: '82993' },
       { text: '🟢 掛牌中總覽', q: '掛牌中' },
       { text: '🎯 競拍資料庫', q: '競拍總覽' },
     ]
@@ -1433,7 +1433,14 @@ function search(query) {
   }
   
   var nm = DB.cb.filter(function(cb){return cb.n.includes(q)});
-  if (nm.length > 0) { results.push({type:'cb',code:nm[0].c,data:nm[0],relatedCbs:nm.length>1?nm:null}); return results; }
+  if (nm.length > 0) {
+    // 優先取掛牌中（KB 裡有的）的，若全部下市才取第一筆
+    var nmListed = nm.filter(function(cb){ return DB._kbByCode && DB._kbByCode[cb.c]; });
+    var nmFirst = nmListed.length > 0 ? nmListed[0] : nm[0];
+    var relCbs = nm.length > 1 ? nm : null;
+    results.push({type:'cb',code:nmFirst.c,data:nmFirst,relatedCbs:relCbs});
+    return results;
+  }
   var snm = DB.sp.filter(function(s){return s.n&&s.n.includes(q)});
   if (snm.length > 0) { var codes=[...new Set(snm.map(function(s){return String(s.c)}))]; results.push({type:'stock',code:codes[0],data:snm.filter(function(s){return String(s.c)===codes[0]}),name:snm[0].n}); return results; }
   var kn = DB.kb.filter(function(k){return k.n.includes(q)});
