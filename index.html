@@ -1173,6 +1173,7 @@ var TAB_CONFIG = {
       ]},
       { label: '篩選工具', items: [
         { id: 'cbas-sweet', icon: '🍯', text: '甜蜜點篩選器', fn: 'sweet', action: '甜蜜點篩選' },
+        { id: 'cbas-rocket', icon: '🚀', text: '垃圾變黃金', fn: 'rocket', action: 'CBAS垃圾變黃金' },
       ]},
     ],
     hints: [
@@ -1376,6 +1377,7 @@ function doQuery(q) {
   if (query === '研究發現') return showResearchFindings();
   if (query === '市場熱門') return showMarketHeatmap();
   if (query === '甜蜜點篩選') return showSweetSpotFilter();
+  if (query === 'CBAS垃圾變黃金') return showCbasRocket();
   if (query === '外電總覽') return showForeignReportsFull();
   if (query === '產業觀察全覽') return showIndustryReports();
   
@@ -1887,6 +1889,39 @@ function showResearchFindings() {
 }
 
 
+
+function showCbasRocket() {
+  updateBreadcrumb(['CBAS', '垃圾變黃金']);
+  var rows = [{"c": "26106", "n": "華航六", "lo": 0.65, "lo_d": 20191231, "hi": 47.27, "hi_d": 20210722, "x": 73}, {"c": "49066", "n": "正文六", "lo": 1.18, "lo_d": 20260304, "hi": 26.82, "hi_d": 20260319, "x": 23}, {"c": "28884", "n": "新光金三", "lo": 1.28, "lo_d": 20170103, "hi": 16.55, "hi_d": 20180102, "x": 13}, {"c": "64512", "n": "訊芯二K", "lo": 2.04, "lo_d": 20251128, "hi": 24.95, "hi_d": 20260318, "x": 12}, {"c": "36892", "n": "湧德二", "lo": 1.29, "lo_d": 20200102, "hi": 12.7, "hi_d": 20260325, "x": 10}, {"c": "25425", "n": "興富發五", "lo": 2.15, "lo_d": 20180102, "hi": 20.52, "hi_d": 20210722, "x": 10}, {"c": "36913", "n": "碩禾三", "lo": 4.18, "lo_d": 20260106, "hi": 30.74, "hi_d": 20260303, "x": 7}, {"c": "65521", "n": "易華電一", "lo": 0.5, "lo_d": 20260302, "hi": 3.5, "hi_d": 20260317, "x": 7}, {"c": "33621", "n": "先進光一", "lo": 0.86, "lo_d": 20260225, "hi": 6.02, "hi_d": 20260319, "x": 7}, {"c": "47393", "n": "康普三", "lo": 3.79, "lo_d": 20260102, "hi": 21.5, "hi_d": 20260319, "x": 6}, {"c": "27271", "n": "王品一", "lo": 2.72, "lo_d": 20260202, "hi": 15.33, "hi_d": 20260325, "x": 6}, {"c": "24393", "n": "美律三", "lo": 3.61, "lo_d": 20230103, "hi": 13.31, "hi_d": 20240102, "x": 4}, {"c": "35871", "n": "閎康一", "lo": 4.61, "lo_d": 20260318, "hi": 16.41, "hi_d": 20260319, "x": 4}, {"c": "65851", "n": "鼎基一", "lo": 1.68, "lo_d": 20260317, "hi": 5.83, "hi_d": 20260325, "x": 4}, {"c": "67062", "n": "惠特二", "lo": 2.02, "lo_d": 20260121, "hi": 6.32, "hi_d": 20260303, "x": 3}];
+  var html = '<div class="data-card">';
+  html += '<div class="card-title">🚀 CBAS 垃圾變黃金<span style="font-size:11px;color:var(--text4);margin-left:8px">低權利金→大幅暴漲歷史案例（2017–2026/03）</span></div>';
+  html += '<div style="font-size:12px;color:var(--text3);margin-bottom:10px;line-height:1.6">統計歷史上 CBAS 權利金曾低於 5 元，之後最高漲幅達 3 倍以上的案例。資料為截面資料，僅供參考。</div>';
+  html += '<div class="stats-bar">';
+  html += '<div class="stat-card"><div class="stat-label">收錄案例</div><div class="stat-value">' + rows.length + ' 筆</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">最大倍數</div><div class="stat-value price-up">' + rows[0].x + ' 倍</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">案例標準</div><div class="stat-value">低點≤5元→高點≥3倍</div></div>';
+  html += '</div>';
+  html += '<div class="mini-table"><div class="thead" style="grid-template-columns:28px 55px 1fr 55px 70px 55px 70px 45px">';
+  html += '<span>#</span><span>代號</span><span>名稱</span><span>低點</span><span>低點日</span><span>高點</span><span>高點日</span><span class="price-up">倍數</span></div>';
+  rows.forEach(function(r, i) {
+    html += '<div class="trow" style="grid-template-columns:28px 55px 1fr 55px 70px 55px 70px 45px;cursor:pointer" onclick="doQuery(this.dataset.q)" data-q="' + r.c + '">';
+    html += '<span style="color:var(--text4)">' + (i+1) + '</span>';
+    html += '<span style="color:var(--blue)">' + r.c + '</span>';
+    html += '<span>' + r.n + '</span>';
+    html += '<span style="color:var(--green);font-weight:500">' + r.lo + '元</span>';
+    html += '<span style="font-size:11px;color:var(--text4)">' + fmtDate(r.lo_d) + '</span>';
+    html += '<span style="color:var(--red);font-weight:500">' + r.hi + '元</span>';
+    html += '<span style="font-size:11px;color:var(--text4)">' + fmtDate(r.hi_d) + '</span>';
+    html += '<span class="price-up" style="font-weight:600">' + r.x + 'x</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+  html += '<div style="font-size:11px;color:var(--text4);margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)">⚠️ 本統計基於 CBAS 截面交易資料，低點與高點非連續追蹤，僅反映歷史交易紀錄中的極值範圍，不代表可操作的交易時機。</div>';
+  html += '</div>';
+  addSystemCard(html);
+}
+
+
 // ========== 超級選股 / 排行榜 ==========
 
 function calcCbRankData() {
@@ -2220,13 +2255,77 @@ async function loadAllExtData() {
   }
 }
 
-async function loadCbasHistory() {
-  if (!window.CBAS_FULL_B64) return;
+async // CBAS 資料：陣列格式 [d, c, nm, cnt, lo, hi, avg, per]
+// 常駐：cbas_2026.js (CBAS_2026_B64) + cbas_2025.js (CBAS_2025_B64)
+// 按需：cbas_2024.js ~ cbas_2017.js
+
+var CBAS_LOADED_YEARS = new Set();
+
+async function parseCbasB64(b64) {
   try {
-    var fullCbas = await decompressB64(CBAS_FULL_B64);
-    if (DB) { DB.cbas = fullCbas; document.getElementById('ctx-cbas').textContent = 'CBAS 拆解 (' + fullCbas.length.toLocaleString() + ' 筆/2017-2026)'; }
-    window.CBAS_FULL_B64 = null;
-  } catch(e) { console.error('CBAS history load error:', e); }
+    var raw = await decompressB64(b64);
+    // 陣列格式轉物件：[d, c, nm, cnt, lo, hi, avg, per]
+    return raw.map(function(r){
+      return {d:r[0], c:r[1], nm:r[2], cnt:r[3], lo:r[4], hi:r[5], avg:r[6], per:r[7]};
+    });
+  } catch(e) { console.error('parseCbasB64 error:', e); return []; }
+}
+
+async function loadCbasHistory() {
+  var allRecs = [];
+  // 載入常駐年份（2026, 2025）
+  if (window.CBAS_2026_B64) {
+    var r26 = await parseCbasB64(CBAS_2026_B64);
+    allRecs = allRecs.concat(r26);
+    CBAS_LOADED_YEARS.add(2026);
+    window.CBAS_2026_B64 = null;
+  }
+  if (window.CBAS_2025_B64) {
+    var r25 = await parseCbasB64(CBAS_2025_B64);
+    allRecs = allRecs.concat(r25);
+    CBAS_LOADED_YEARS.add(2025);
+    window.CBAS_2025_B64 = null;
+  }
+  if (allRecs.length > 0) {
+    // 合併進 DB.cbas（按需載入的年份會再 concat）
+    if (DB) {
+      DB.cbas = (DB.cbas || []).concat(allRecs).sort(function(a,b){return a.d-b.d;});
+      var yrs = Array.from(CBAS_LOADED_YEARS).sort().join('/');
+      var el = document.getElementById('ctx-cbas');
+      if (el) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/' + yrs + ')';
+    }
+  }
+}
+
+// 按需載入指定年份
+async function loadCbasYear(year, callback) {
+  if (CBAS_LOADED_YEARS.has(year)) { callback && callback(); return; }
+  var varname = 'CBAS_' + year + '_B64';
+  if (window[varname]) {
+    // 已在記憶體，直接解析
+    var recs = await parseCbasB64(window[varname]);
+    window[varname] = null;
+    if (DB) DB.cbas = (DB.cbas || []).concat(recs).sort(function(a,b){return a.d-b.d;});
+    CBAS_LOADED_YEARS.add(year);
+    callback && callback();
+    return;
+  }
+  // 動態載入 js 檔
+  var s = document.createElement('script');
+  s.src = 'cbas_' + year + '.js';
+  s.onload = async function() {
+    if (window[varname]) {
+      var recs = await parseCbasB64(window[varname]);
+      window[varname] = null;
+      if (DB) DB.cbas = (DB.cbas || []).concat(recs).sort(function(a,b){return a.d-b.d;});
+    }
+    CBAS_LOADED_YEARS.add(year);
+    var el = document.getElementById('ctx-cbas');
+    if (el && DB) el.textContent = 'CBAS 拆解 (' + DB.cbas.length.toLocaleString() + ' 筆/' + Array.from(CBAS_LOADED_YEARS).sort().join('/') + ')';
+    callback && callback();
+  };
+  s.onerror = function() { console.error('載入 cbas_' + year + '.js 失敗'); callback && callback(); };
+  document.head.appendChild(s);
 }
 
 // ===== 2025 年股價按需載入（SheetJS）=====
@@ -2334,7 +2433,8 @@ window.addEventListener('DOMContentLoaded', function(){
   document.getElementById('query-input').focus();
 });
 </script>
-<script src="cbas_history.js"></script>
+<script src="cbas_2026.js"></script>
+<script src="cbas_2025.js"></script>
 <script src="cb_import.js"></script>
 <script src="stock_price_2026.js"></script>
 <script src="margin_2026.js"></script>
