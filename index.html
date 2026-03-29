@@ -1566,14 +1566,28 @@ function showCbFullResult(result) {
       var isCurrent = sib.c === code;
       var isListed2 = !!DB._kbByCode[sib.c];
 
-      // 從 CB_PRICE_2026 + DB.cp 找最高最低
+      // 從所有可用價格來源找最高最低
       var allPx = [];
+      // 2026 年價格
       if (window.CB_PRICE_2026) {
         CB_PRICE_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
       }
-      if (DB.cp) {
+      // 2018-2025 歷史日頻資料（含收盤）
+      if (window.CB_DAILY_2018) {
+        CB_DAILY_2018.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      // 2026 日頻
+      if (window.CB_DAILY_2026) {
+        CB_DAILY_2026.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
+      }
+      // DB.cp 近5日備用
+      if (DB && DB.cp) {
         DB.cp.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
       }
+      // 去重（同日只取一筆）
+      var pxMap = {};
+      allPx.forEach(function(r){if(!pxMap[r.d]||r.p>0) pxMap[r.d]=r.p;});
+      allPx = Object.keys(pxMap).map(function(d){return {d:parseInt(d),p:pxMap[d]};});
       allPx.sort(function(a,b){return a.d-b.d;});
 
       var hiRec = allPx.length ? allPx.reduce(function(m,r){return r.p>m.p?r:m;}, allPx[0]) : null;
@@ -2287,7 +2301,6 @@ async function loadAllExtData() {
   var tasks = [
     ['STOCK_PRICE_2026_B64', 'STOCK_PRICE_2026', 'ctx-stock', function(d){ return '股價資料 (' + d.length.toLocaleString() + ' 筆/2026全年)'; }],
     ['CB_DAILY_2026_B64', 'CB_DAILY_2026', null, null],
-    ['CB_DAILY_2018_B64', 'CB_DAILY_2018', null, null],
     ['MARGIN_2026_B64', 'MARGIN_2026', null, null],
     ['SBL_2026_B64', 'SBL_2026', null, null],
     ['CB_KANBAN_2026_B64', 'CB_KANBAN_2026', null, null],
@@ -2316,6 +2329,59 @@ async function loadAllExtData() {
     renderWelcomeHints(currentTab);
   }
 }
+
+
+// CB_DAILY 歷史 kanban 按需載入（2017-2025 每年一個js）
+var CB_DAILY_LOADED_YEARS = new Set();
+
+async function loadCbDailyYear(year, callback) {
+  if (CB_DAILY_LOADED_YEARS.has(year)) { callback && callback(); return; }
+  var varname = 'CB_DAILY_' + year + '_B64';
+  
+  // 如果已在記憶體（script 已載）
+  if (window[varname]) {
+    var recs = await decompressB64(window[varname]);
+    window[varname] = null;
+    if (!window.CB_DAILY_HIST) window.CB_DAILY_HIST = [];
+    window.CB_DAILY_HIST = window.CB_DAILY_HIST.concat(recs);
+    // 也合入 CB_DAILY_2018 供舊邏輯相容
+    if (!window.CB_DAILY_2018) window.CB_DAILY_2018 = [];
+    window.CB_DAILY_2018 = window.CB_DAILY_2018.concat(recs);
+    CB_DAILY_LOADED_YEARS.add(year);
+    callback && callback();
+    return;
+  }
+  
+  // 動態載入
+  var s = document.createElement('script');
+  s.src = 'cb_daily_' + year + '.js';
+  s.onload = async function() {
+    if (window[varname]) {
+      var recs = await decompressB64(window[varname]);
+      window[varname] = null;
+      if (!window.CB_DAILY_2018) window.CB_DAILY_2018 = [];
+      window.CB_DAILY_2018 = window.CB_DAILY_2018.concat(recs);
+    }
+    CB_DAILY_LOADED_YEARS.add(year);
+    callback && callback();
+  };
+  s.onerror = function() { CB_DAILY_LOADED_YEARS.add(year); callback && callback(); };
+  document.head.appendChild(s);
+}
+
+// 查詢個股/CB時按需載入所需年份
+function ensureCbDailyLoaded(callback) {
+  // 預載 2025、2024（最常用）
+  var years = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017];
+  var idx = 0;
+  function next() {
+    if (idx >= years.length) { callback && callback(); return; }
+    var y = years[idx++];
+    loadCbDailyYear(y, next);
+  }
+  next();
+}
+
 
 // CBAS 資料：陣列格式 [d, c, nm, cnt, lo, hi, avg, per]
 // 常駐：cbas_2026.js (CBAS_2026_B64)
@@ -2495,7 +2561,6 @@ window.addEventListener('DOMContentLoaded', function(){
 <script src="sbl_2026.js"></script>
 <script src="cb_kanban_2026.js"></script>
 <script src="cb_daily_2026.js"></script>
-<script src="cb_daily_2018_2025.js"></script>
 <script src="foreign_reports.js"></script>
 </body>
 </html>
