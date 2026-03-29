@@ -1384,6 +1384,18 @@ function doQuery(q) {
   if (query === 'CBAS垃圾變黃金') return showCbasRocket();
   if (query === '外電總覽') return showForeignReportsFull();
   if (query === '產業觀察全覽') return showIndustryReports();
+  // CB 排行
+  if (query === 'CB成交值排行') return showCbRanking('amt');
+  if (query === 'CB漲幅排行') return showCbRanking('chg_up');
+  if (query === 'CB跌幅排行') return showCbRanking('chg_dn');
+  if (query === 'CB5日強勢') return showCbRanking('chg5_up');
+  if (query === 'CB5日弱勢') return showCbRanking('chg5_dn');
+  // 股票排行
+  if (query === '股票成交值排行') return showStockRanking('amt');
+  if (query === '股票5日強勢') return showStockRanking('chg5_up');
+  if (query === '融資增加排行') return showStockRanking('margin_up');
+  if (query === '融資減少排行') return showStockRanking('margin_dn');
+  if (query === '融券增加排行') return showStockRanking('short_up');
   
   var results = search(query);
   if (results.length === 0) { addSystemMsg('找不到「' + query + '」相關資料，請確認代號或名稱是否正確。'); return; }
