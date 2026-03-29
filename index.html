@@ -777,59 +777,109 @@ function toggleDelisted(id, total) {
 
 // ========== 籌碼分析 ==========
 function renderChipAnalysis(code) {
-  var html = '';
-  if (window.MARGIN_2026) {
-    var mg = MARGIN_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
+  var hasMg = window.MARGIN_2026 && MARGIN_2026.length > 0;
+  var hasSbl = window.SBL_2026 && SBL_2026.length > 0;
+  if (!hasMg && !hasSbl) return '';
+
+  var mg = hasMg ? MARGIN_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d}) : [];
+  var sbl = hasSbl ? SBL_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d}) : [];
+
+  if (mg.length === 0 && sbl.length === 0) return '';
+
+  // 建立借券 map（日期 → 資料）
+  var sblMap = {};
+  sbl.forEach(function(r){ sblMap[String(r.d)] = r; });
+
+  // 摘要卡片
+  var html = '<div class="data-section"><div class="section-title">籌碼分析：融資 / 融券 / 借券</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">';
+
+  if (mg.length > 0) {
+    var latest = mg[0];
+    var d5 = mg.length > 5 ? mg[4] : null;
+    var d20 = mg.length > 20 ? mg[19] : null;
+    var mrChg5 = d5 ? (latest.mr||0)-(d5.mr||0) : null;
+    var mrChg20 = d20 ? (latest.mr||0)-(d20.mr||0) : null;
+    var srChg5 = d5 ? (latest.sr||0)-(d5.sr||0) : null;
+
+    html += '<div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:8px 10px">';
+    html += '<div style="font-size:11px;color:var(--text4)">融資餘額</div>';
+    html += '<div style="font-size:16px;font-weight:500">'+((latest.mr||0)/1000).toFixed(0)+'<span style="font-size:11px;color:var(--text4)"> 千張</span></div>';
+    if (mrChg5!==null) html += '<div style="font-size:10px" class="'+(mrChg5>0?'price-up':'price-down')+'">5日 '+(mrChg5>0?'+':'')+mrChg5+'</div>';
+    if (mrChg20!==null) html += '<div style="font-size:10px" class="'+(mrChg20>0?'price-up':'price-down')+'">20日 '+(mrChg20>0?'+':'')+mrChg20+'</div>';
+    html += '</div>';
+
+    html += '<div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:8px 10px">';
+    html += '<div style="font-size:11px;color:var(--text4)">融券餘額</div>';
+    html += '<div style="font-size:16px;font-weight:500">'+(latest.sr||0)+'<span style="font-size:11px;color:var(--text4)"> 張</span></div>';
+    if (srChg5!==null) html += '<div style="font-size:10px" class="'+(srChg5>0?'price-up':'price-down')+'">5日 '+(srChg5>0?'+':'')+srChg5+'</div>';
+    html += '</div>';
+  }
+
+  if (sbl.length > 0) {
+    var sLatest = sbl[0];
+    var sd5 = sbl.length > 5 ? sbl[4] : null;
+    var balChg = sd5 ? (sLatest.bal||0)-(sd5.bal||0) : null;
+    html += '<div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:8px 10px">';
+    html += '<div style="font-size:11px;color:var(--text4)">借券餘額</div>';
+    html += '<div style="font-size:16px;font-weight:500">'+Math.round((sLatest.bal||0)/1000)+'<span style="font-size:11px;color:var(--text4)"> 張</span></div>';
+    if (balChg!==null) html += '<div style="font-size:10px" class="'+(balChg>0?'price-up':'price-down')+'">5日 '+(balChg>0?'+':'')+Math.round(balChg/1000)+'張</div>';
+    html += '</div>';
+  }
+
+  html += '</div>';
+
+  // 整合表格：以融資融券日期為主軸，借券對齊
+  // 欄位：日期 | 資買 資賣 資餘 | 券買 券賣 券餘 | 借出 歸還 借餘
+  var hasBothMgSbl = mg.length > 0 && sbl.length > 0;
+  var cols, thead;
+
+  if (hasBothMgSbl) {
+    cols = 'grid-template-columns:70px 40px 40px 55px 40px 40px 50px 55px 55px 65px';
+    thead = '<span>日期</span><span class="price-up">資買</span><span class="price-down">資賣</span><span>資餘</span><span class="price-up">券買</span><span class="price-down">券賣</span><span>券餘</span><span style="color:#7A5AAA">借出</span><span style="color:#7A5AAA">歸還</span><span style="color:#7A5AAA">借餘</span>';
+  } else if (mg.length > 0) {
+    cols = 'grid-template-columns:70px 50px 50px 60px 50px 50px 55px';
+    thead = '<span>日期</span><span class="price-up">資買</span><span class="price-down">資賣</span><span>資餘額</span><span class="price-up">券買</span><span class="price-down">券賣</span><span>券餘額</span>';
+  } else {
+    cols = 'grid-template-columns:70px 1fr 1fr 1fr';
+    thead = '<span>日期</span><span style="color:#7A5AAA">借出</span><span style="color:#7A5AAA">歸還</span><span style="color:#7A5AAA">借餘</span>';
+  }
+
+  var rows = mg.length > 0 ? mg : sbl;
+  var maxRows = 15;
+
+  html += '<div class="mini-table"><div class="thead" style="'+cols+'">'+thead+'</div>';
+
+  rows.slice(0, maxRows).forEach(function(r) {
+    var ds = String(r.d);
+    var s = sblMap[ds];
+    html += '<div class="trow" style="'+cols+'">';
+    html += '<span>'+fmtDate(r.d)+'</span>';
     if (mg.length > 0) {
-      html += '<div class="data-section"><div class="section-title">籌碼分析：融資融券</div>';
-      var latest = mg[0];
-      var d5 = mg.length > 5 ? mg[4] : null;
-      var d20 = mg.length > 20 ? mg[19] : null;
-      html += '<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">';
-      var mrChange5 = d5 ? (latest.mr||0) - (d5.mr||0) : null;
-      var mrChange20 = d20 ? (latest.mr||0) - (d20.mr||0) : null;
-      html += '<div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">融資餘額</div>';
-      html += '<div style="font-size:16px;font-weight:500">' + ((latest.mr||0)/1000).toFixed(0) + '<span style="font-size:11px;color:var(--text4)"> 千張</span></div>';
-      if (mrChange5 !== null) html += '<div style="font-size:10px" class="' + (mrChange5>0?'price-up':'price-down') + '">5日 ' + (mrChange5>0?'+':'') + mrChange5 + '</div>';
-      if (mrChange20 !== null) html += '<div style="font-size:10px" class="' + (mrChange20>0?'price-up':'price-down') + '">20日 ' + (mrChange20>0?'+':'') + mrChange20 + '</div>';
-      html += '</div>';
-      var srChange5 = d5 ? (latest.sr||0) - (d5.sr||0) : null;
-      html += '<div style="flex:1;min-width:120px;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">融券餘額</div>';
-      html += '<div style="font-size:16px;font-weight:500">' + (latest.sr||0) + '<span style="font-size:11px;color:var(--text4)"> 張</span></div>';
-      if (srChange5 !== null) html += '<div style="font-size:10px" class="' + (srChange5>0?'price-up':'price-down') + '">5日 ' + (srChange5>0?'+':'') + srChange5 + '</div>';
-      html += '</div></div>';
-      html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 50px 50px 60px 50px 50px 55px"><span>日期</span><span>資買</span><span>資賣</span><span>資餘額</span><span>券買</span><span>券賣</span><span>券餘額</span></div>';
-      mg.slice(0,15).forEach(function(r){
-        html += '<div class="trow" style="grid-template-columns:70px 50px 50px 60px 50px 50px 55px">';
-        html += '<span>'+fmtDate(r.d)+'</span><span class="price-up">'+(r.mb||'-')+'</span><span class="price-down">'+(r.ms||'-')+'</span><span style="font-weight:500">'+(r.mr||'-')+'</span><span class="price-up">'+(r.sb||'-')+'</span><span class="price-down">'+(r.ss||'-')+'</span><span style="font-weight:500">'+(r.sr||'-')+'</span></div>';
-      });
-      html += '</div></div>';
+      html += '<span class="price-up">'+(r.mb||'-')+'</span>';
+      html += '<span class="price-down">'+(r.ms||'-')+'</span>';
+      html += '<span style="font-weight:500">'+(r.mr||'-')+'</span>';
+      html += '<span class="price-up">'+(r.sb||'-')+'</span>';
+      html += '<span class="price-down">'+(r.ss||'-')+'</span>';
+      html += '<span style="font-weight:500">'+(r.sr||'-')+'</span>';
     }
-  }
-  if (window.SBL_2026) {
-    var sbl = SBL_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
-    if (sbl.length > 0) {
-      var latest = sbl[0];
-      var d5 = sbl.length > 5 ? sbl[4] : null;
-      var balChange = d5 ? (latest.bal||0) - (d5.bal||0) : null;
-      html += '<div class="data-section"><div class="section-title">籌碼分析：借券</div>';
-      html += '<div style="display:flex;gap:8px;margin-bottom:8px"><div style="flex:1;background:var(--bg);border-radius:8px;padding:8px 10px">';
-      html += '<div style="font-size:11px;color:var(--text4)">借券餘額</div><div style="font-size:16px;font-weight:500">' + fmtMoney(latest.bal) + '</div>';
-      if (balChange !== null) html += '<div style="font-size:10px" class="' + (balChange>0?'price-up':'price-down') + '">5日 ' + (balChange>0?'+':'') + fmtMoney(balChange) + '</div>';
-      html += '</div></div>';
-      html += '<div class="mini-table"><div class="thead" style="grid-template-columns:70px 1fr 1fr 1fr"><span>日期</span><span>借出</span><span>歸還</span><span>餘額</span></div>';
-      sbl.slice(0,10).forEach(function(r){
-        html += '<div class="trow" style="grid-template-columns:70px 1fr 1fr 1fr"><span>'+fmtDate(r.d)+'</span><span class="price-up">'+fmtMoney(r.bor)+'</span><span class="price-down">'+fmtMoney(r.ret)+'</span><span style="font-weight:500">'+fmtMoney(r.bal)+'</span></div>';
-      });
-      html += '</div></div>';
+    if (hasBothMgSbl) {
+      html += '<span style="color:#7A5AAA">'+(s?Math.round(s.bor/1000):'-')+'</span>';
+      html += '<span style="color:#7A5AAA">'+(s?Math.round(s.ret/1000):'-')+'</span>';
+      html += '<span style="color:#7A5AAA;font-weight:500">'+(s?Math.round(s.bal/1000):'-')+'</span>';
+    } else if (sbl.length > 0 && mg.length === 0) {
+      html += '<span style="color:#7A5AAA">'+Math.round(r.bor/1000)+'</span>';
+      html += '<span style="color:#7A5AAA">'+Math.round(r.ret/1000)+'</span>';
+      html += '<span style="color:#7A5AAA;font-weight:500">'+Math.round(r.bal/1000)+'</span>';
     }
-  }
+    html += '</div>';
+  });
+
+  html += '</div></div>';
   return html;
 }
 
-// ========== CB 歷史價格 ==========
+
 function renderCbPriceHistory(code) {
   // CB 價格資料
   var allP = [];
