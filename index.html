@@ -285,7 +285,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans T
 
   <div class="footer">Rex大叔投資研究工作站 — 資料僅供研究參考，不構成任何投資建議 — 投資有風險，CBAS最大損失為權利金歸零</div>
 </div>
-<script src="core_data.js"></script>
+<script src="data/core/core_data.js"></script>
 <script>
 // ========== 工具函數 ==========
 function fmtDate(d){if(!d)return'-';var s=String(d);return s.length===8?s.slice(0,4)+'/'+s.slice(4,6)+'/'+s.slice(6,8):s;}
@@ -2503,7 +2503,7 @@ callback && callback();
 if (window[varname]) { _process(varname); return; }
 
 var s = document.createElement(‘script’);
-s.src = ‘cb_price_’ + year + ‘.js’;
+s.src = ‘data/cb_price/cb_price_’ + year + ‘.js’;
 s.onload = function() {
 if (window[varname]) _process(varname);
 else { CB_PRICE_HIST_LOADED.add(year); callback && callback(); }
@@ -2548,7 +2548,7 @@ if (el) el.textContent = ‘CBAS 拆解 (’ + DB.cbas.length.toLocaleString() +
 // 按需載入指定年份
 async function loadCbasYear(year, callback) {
 if (CBAS_LOADED_YEARS.has(year)) { callback && callback(); return; }
-var varname = ‘CBAS_’ + year + ‘*B64’;
+var varname = ‘CBAS_’ + year + ‘_B64’;
 if (window[varname]) {
 // 已在記憶體，直接解析
 var recs = await parseCbasB64(window[varname]);
@@ -2560,7 +2560,7 @@ return;
 }
 // 動態載入 js 檔
 var s = document.createElement(‘script’);
-s.src = ’cbas*’ + year + ‘.js’;
+s.src = ‘data/cbas/cbas_’ + year + ‘.js’;
 s.onload = async function() {
 if (window[varname]) {
 var recs = await parseCbasB64(window[varname]);
@@ -2576,95 +2576,13 @@ s.onerror = function() { console.error(‘載入 cbas_’ + year + ‘.js 失敗
 document.head.appendChild(s);
 }
 
-// ===== 2025 年股價按需載入（SheetJS）=====
-// 觸發點：查到 2025 年外電報導，且對應代號尚無 2025 股價資料時呼叫
-
+// ===== 2025 年股價（已移除 xlsx，改用 stub）=====
 var STOCK_2025_LOADED = false;
 var STOCK_2025_LOADING = false;
-var STOCK_2025_MAP = {}; // {code: {date: close}}
+var STOCK_2025_MAP = {};
+function loadStock2025IfNeeded(code, callback) { callback && callback(); }
 
-async function loadStock2025IfNeeded(code, callback) {
-if (STOCK_2025_LOADED) { callback && callback(); return; }
-if (STOCK_2025_LOADING) {
-var wait = setInterval(function() {
-if (STOCK_2025_LOADED) { clearInterval(wait); callback && callback(); }
-}, 300);
-return;
-}
-STOCK_2025_LOADING = true;
-try {
-await _loadStockXlsx(‘stock_price_2025.xlsx’, false);
-await _loadStockXlsx(‘otc_price_2025.xlsx’, true);
-STOCK_2025_LOADED = true;
-STOCK_2025_LOADING = false;
-console.log(‘2025 股價載入完成，代號數:’, Object.keys(STOCK_2025_MAP).length);
-callback && callback();
-} catch(e) {
-STOCK_2025_LOADING = false;
-console.error(‘2025 股價載入失敗:’, e);
-callback && callback();
-}
-}
-
-async function _loadStockXlsx(filename, isOtc) {
-// 動態載入 SheetJS
-if (!window.XLSX) {
-await new Promise(function(resolve, reject) {
-var s = document.createElement(‘script’);
-s.src = ‘https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js’;
-s.onload = resolve; s.onerror = reject;
-document.head.appendChild(s);
-});
-}
-var resp = await fetch(filename);
-if (!resp.ok) throw new Error(’fetch ’ + filename + ’ failed: ’ + resp.status);
-var ab = await resp.arrayBuffer();
-
-// 用 Web Worker 式的非同步分批處理避免 UI 凍結
-var wb = XLSX.read(ab, { type: ‘array’, cellDates: false, dense: true });
-var sheetNames = wb.SheetNames;
-
-// stock_2025: [Code, Name, Volume, Value, Open, High, Low, Close, Trades] close=7
-// otc_2025:   [Code, Name, Close, Change, Open, High, Low, Volume, …]   close=2
-var ciClose = isOtc ? 2 : 7;
-
-// 分批處理，每批 20 個 sheet，讓瀏覽器喘息
-var BATCH = 20;
-for (var b = 0; b < sheetNames.length; b += BATCH) {
-var batch = sheetNames.slice(b, b + BATCH);
-batch.forEach(function(sheetName) {
-var dateStr = sheetName.replace(/\D/g, ‘’);
-if (dateStr.length !== 8) return;
-var ws = wb.Sheets[sheetName];
-if (!ws) return;
-var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-for (var i = 1; i < rows.length; i++) {
-var row = rows[i];
-if (!row || row[0] == null) continue;
-var code = String(row[0]).replace(/.0$/, ‘’).trim();
-var close = parseFloat(row[ciClose]);
-if (!code || isNaN(close) || close === 0) continue;
-if (!STOCK_2025_MAP[code]) STOCK_2025_MAP[code] = {};
-STOCK_2025_MAP[code][dateStr] = close;
-}
-});
-// 讓 UI 喘息
-await new Promise(function(r){ setTimeout(r, 0); });
-}
-}
-
-// 查 2025 股價（報導日最近交易日的收盤）
-function getStock2025Price(code, dateStr) {
-if (!STOCK_2025_MAP[code]) return null;
-var dates = Object.keys(STOCK_2025_MAP[code]).sort();
-// 找 <= dateStr 的最大日期
-var found = null;
-for (var i = dates.length - 1; i >= 0; i–) {
-if (dates[i] <= dateStr) { found = dates[i]; break; }
-}
-if (!found) return null;
-return { p: STOCK_2025_MAP[code][found], d: found };
-}
+function getStock2025Price(code, dateStr) { return null; }
 
 // ========== 初始化 ==========
 window.addEventListener(‘DOMContentLoaded’, function(){
@@ -2683,21 +2601,21 @@ document.getElementById(‘query-input’).focus();
 });
 </script>
 
-<script src="cbas_2026.js"></script>
+<script src="data/core/cbas_2026.js"></script>
 
-<script src="cb_import.js"></script>
+<script src="data/core/cb_import.js"></script>
 
-<script src="stock_price_2026.js"></script>
+<script src="data/core/stock_price_2026.js"></script>
 
-<script src="margin_2026.js"></script>
+<script src="data/core/margin_2026.js"></script>
 
-<script src="sbl_2026.js"></script>
+<script src="data/core/sbl_2026.js"></script>
 
-<script src="cb_kanban_2026.js"></script>
+<script src="data/core/cb_kanban_2026.js"></script>
 
-<script src="cb_price_2026.js"></script>
+<script src="data/core/cb_price_2026.js"></script>
 
-<script src="foreign_reports.js"></script>
+<script src="data/core/foreign_reports.js"></script>
 
 </body>
 </html>
