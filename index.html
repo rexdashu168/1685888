@@ -1615,26 +1615,14 @@ function showCbFullResult(result) {
       var isListed2 = !!DB._kbByCode[sib.c];
 
       // 從所有可用價格來源找最高最低
-      // 同公司CB最高最低：從 hi/lo 欄位取真實每日高低，再全域取極值
-      var hiCandidates = [];  // {d, p} 用 hi 欄位
-      var loCandidates = [];  // {d, p} 用 lo 欄位
-
-      function pushPriceRecs(recs, codeStr) {
-        recs.filter(function(r){return String(r.c)===codeStr && r.cl>0;}).forEach(function(r){
-          // 最高用 hi，沒有就用 cl
-          hiCandidates.push({d:r.d, p: r.hi||r.cl});
-          // 最低用 lo，沒有就用 cl
-          loCandidates.push({d:r.d, p: r.lo||r.cl});
-        });
-      }
-
-      if (window.CB_PRICE_HIST && CB_PRICE_HIST.length > 0)
-        pushPriceRecs(CB_PRICE_HIST, sib.c);
-      if (window.CB_PRICE_HIST_2026 && CB_PRICE_HIST_2026.length > 0)
-        pushPriceRecs(CB_PRICE_HIST_2026, sib.c);
-
-      var hiRec = hiCandidates.length ? hiCandidates.reduce(function(m,r){return r.p>m.p?r:m;}, hiCandidates[0]) : null;
-      var loRec = loCandidates.length ? loCandidates.reduce(function(m,r){return r.p<m.p?r:m;}, loCandidates[0]) : null;
+      // 用 index 快速查詢（O(1)），避免 forEach 43萬筆卡住
+      var idxRecs = (window.CB_PRICE_IDX && CB_PRICE_IDX[sib.c]) ? CB_PRICE_IDX[sib.c] : [];
+      var hiRec = null, loRec = null;
+      idxRecs.forEach(function(r){
+        var hi = r.hi||r.cl, lo = r.lo||r.cl;
+        if (!hiRec || hi > hiRec.p) hiRec = {d:r.d, p:hi};
+        if (!loRec || lo < loRec.p) loRec = {d:r.d, p:lo};
+      });
       var amp = (hiRec && loRec && loRec.p > 0) ? ((hiRec.p - loRec.p) / loRec.p * 100).toFixed(1) + '%' : '-';
 
       var statusTxt = isCurrent ? '▶ 本檔' : isListed2 ? '🟢 掛牌' : '⚫ 下市';
@@ -2381,7 +2369,15 @@ async function loadCbImport() {
 async function loadAllExtData() {
   var tasks = [
     ['STOCK_PRICE_2026_B64', 'STOCK_PRICE_2026', 'ctx-stock', function(d){ return '股價資料 (' + d.length.toLocaleString() + ' 筆/2026全年)'; }],
-    ['CB_PRICE_HIST_2026_B64', 'CB_PRICE_HIST_2026', null, null],
+    ['CB_PRICE_HIST_2026_B64', 'CB_PRICE_HIST_2026', null, function(d){
+      // 建立 2026 的 price index
+      if (!window.CB_PRICE_IDX) window.CB_PRICE_IDX = {};
+      d.forEach(function(r){
+        var key = String(r.c);
+        if (!CB_PRICE_IDX[key]) CB_PRICE_IDX[key] = [];
+        CB_PRICE_IDX[key].push(r);
+      });
+    }],
     ['MARGIN_2026_B64', 'MARGIN_2026', null, null],
     ['SBL_2026_B64', 'SBL_2026', null, null],
     ['CB_KANBAN_2026_B64', 'CB_KANBAN_2026', null, null],
