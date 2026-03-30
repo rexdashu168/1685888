@@ -885,7 +885,7 @@ function renderCbPriceHistory(code, filterDays) {
 
   // CB 價格資料（依需載入的年份範圍決定）
   var allP = [];
-  if (window.CB_PRICE_2026) allP = allP.concat(CB_PRICE_2026.filter(function(r){return String(r.c)===code && r.cl>0;}));
+  // CB_PRICE_2026 已合入 CB_PRICE_HIST_2026，不需額外讀取
   if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0;}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl};}));
   if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0;}).map(function(r){return {d:r.d,c:r.c,cl:r.cl};}));
   if (allP.length === 0) return '';
@@ -2335,7 +2335,6 @@ async function loadAllExtData() {
     ['MARGIN_2026_B64', 'MARGIN_2026', null, null],
     ['SBL_2026_B64', 'SBL_2026', null, null],
     ['CB_KANBAN_2026_B64', 'CB_KANBAN_2026', null, null],
-    ['CB_PRICE_2026_B64', 'CB_PRICE_2026', null, null],
   ];
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
