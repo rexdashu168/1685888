@@ -994,7 +994,7 @@ function renderCbPriceHistory(code, filterDays) {
   var colsCB = '70px 50px 38px 55px 50px';
   var colsCBAS_new = '40px 30px 46px 46px 52px 52px 32px';
   var colsCBAS_old = '36px 44px 44px';
-  var theadCB = '<span>日期</span><span>CB收盤</span><span>量</span><span>餘額</span><span>轉換價</span>';
+  var theadCB = '<span>日期</span><span>開盤</span><span>最高</span><span>最低</span><span class="price-up">收盤</span><span>量(張)</span><span>成交值</span>';
   var theadCBAS_new = '<span style="color:var(--fr-text);border-left:1.5px solid var(--fr-border);padding-left:6px">張數</span><span style="color:var(--fr-text)">筆</span><span style="color:var(--fr-text)">最低</span><span style="color:var(--fr-text)">最高</span><span style="color:var(--fr-text)">平均</span><span style="color:var(--fr-text)">金額(萬)</span><span style="color:var(--fr-text)">期</span>';
   var theadCBAS_old = '<span style="color:var(--fr-text)">筆數</span><span style="color:var(--fr-text)">低</span><span style="color:var(--fr-text)">高</span>';
   var cols, thead;
@@ -1013,11 +1013,15 @@ function renderCbPriceHistory(code, filterDays) {
     var ds = String(p.d);
     var cbasList = cbasMap[ds] || [];
     var rows = '';
+    var amt = (p.cl && p.v) ? (p.cl * p.v * 1000 / 1e8).toFixed(3) : null;
+    var chgCls = (p.cl && p.o) ? (p.cl > p.o ? 'price-up' : p.cl < p.o ? 'price-down' : '') : '';
     var cbPart = '<span>' + fmtDate(p.d) + '</span>' +
-      '<span style="font-weight:500">' + fmtNum(p.cl) + '</span>' +
-      '<span>' + (p.v||'-') + '</span>' +
-      '<span>' + (p.ba?p.ba.toLocaleString():'-') + '</span>' +
-      '<span>' + (p.cp?fmtNum(p.cp):'-') + '</span>';
+      '<span>' + (p.o ? fmtNum(p.o) : '-') + '</span>' +
+      '<span class="price-up">' + (p.hi ? fmtNum(p.hi) : '-') + '</span>' +
+      '<span class="price-down">' + (p.lo ? fmtNum(p.lo) : '-') + '</span>' +
+      '<span style="font-weight:600" class="' + chgCls + '">' + fmtNum(p.cl) + '</span>' +
+      '<span>' + (p.v ? p.v.toLocaleString() : '-') + '</span>' +
+      '<span style="color:var(--text3)">' + (amt ? amt + '億' : '-') + '</span>';
 
     if (!hasCbas) {
       rows += '<div class="trow" style="' + cols + '">' + cbPart + '</div>';
@@ -1049,7 +1053,7 @@ function renderCbPriceHistory(code, filterDays) {
         if (ci === 0) {
           rows += '<div class="trow" style="' + cols + '">' + cbPart + cbasPart + '</div>';
         } else {
-          var emptyPart = '<span></span><span></span><span></span><span></span><span></span>';
+          var emptyPart = '<span></span><span></span><span></span><span></span><span></span><span></span><span></span>';
           rows += '<div class="trow" style="' + cols + ';background:rgba(90,58,122,0.04)">' + emptyPart + cbasPart + '</div>';
         }
       });
