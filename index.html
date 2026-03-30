@@ -2576,13 +2576,79 @@ s.onerror = function() { console.error(‘載入 cbas_’ + year + ‘.js 失敗
 document.head.appendChild(s);
 }
 
-// ===== 2025 年股價（已移除 xlsx，改用 stub）=====
+// ===== 歷史資料動態載入（SBL / Margin / Stock Price）=====
+var SBL_HIST = [];
+var SBL_HIST_LOADED = new Set();
+async function loadSblYear(year, callback) {
+if (SBL_HIST_LOADED.has(year)) { callback && callback(); return; }
+var varname = ‘SBL_’ + year + ‘_B64’;
+async function _procSbl(vn) {
+try { var recs = await decompressB64(window[vn]); window[vn] = null; SBL_HIST = SBL_HIST.concat(recs); } catch(e) { console.error(‘SBL ’ + year + ‘ load err’, e); }
+SBL_HIST_LOADED.add(year); callback && callback();
+}
+if (window[varname]) { _procSbl(varname); return; }
+var s = document.createElement(‘script’);
+s.src = ‘data/sbl/sbl_’ + year + ‘.js’;
+s.onload = function() { if (window[varname]) _procSbl(varname); else { SBL_HIST_LOADED.add(year); callback && callback(); } };
+s.onerror = function() { SBL_HIST_LOADED.add(year); callback && callback(); };
+document.head.appendChild(s);
+}
+
+var MARGIN_HIST = [];
+var MARGIN_HIST_LOADED = new Set();
+async function loadMarginYear(year, callback) {
+if (MARGIN_HIST_LOADED.has(year)) { callback && callback(); return; }
+var varname = ‘MARGIN_’ + year + ‘_B64’;
+async function _procMg(vn) {
+try { var recs = await decompressB64(window[vn]); window[vn] = null; MARGIN_HIST = MARGIN_HIST.concat(recs); } catch(e) { console.error(‘Margin ’ + year + ‘ load err’, e); }
+MARGIN_HIST_LOADED.add(year); callback && callback();
+}
+if (window[varname]) { _procMg(varname); return; }
+var s = document.createElement(‘script’);
+s.src = ‘data/margin/margin_’ + year + ‘.js’;
+s.onload = function() { if (window[varname]) _procMg(varname); else { MARGIN_HIST_LOADED.add(year); callback && callback(); } };
+s.onerror = function() { MARGIN_HIST_LOADED.add(year); callback && callback(); };
+document.head.appendChild(s);
+}
+
+var STOCK_HIST = [];
+var STOCK_HIST_LOADED = new Set();
+async function loadStockYear(year, callback) {
+if (STOCK_HIST_LOADED.has(year)) { callback && callback(); return; }
+var varname = ‘STOCK_’ + year + ‘_B64’;
+async function _procSt(vn) {
+try { var recs = await decompressB64(window[vn]); window[vn] = null; STOCK_HIST = STOCK_HIST.concat(recs); } catch(e) { console.error(‘Stock ’ + year + ‘ load err’, e); }
+STOCK_HIST_LOADED.add(year); callback && callback();
+}
+if (window[varname]) { _procSt(varname); return; }
+var s = document.createElement(‘script’);
+s.src = ‘data/stock_price/stock_price_’ + year + ‘.js’;
+s.onload = function() { if (window[varname]) _procSt(varname); else { STOCK_HIST_LOADED.add(year); callback && callback(); } };
+s.onerror = function() { STOCK_HIST_LOADED.add(year); callback && callback(); };
+document.head.appendChild(s);
+}
+
+// Backward-compat: loadStock2025IfNeeded / getStock2025Price
 var STOCK_2025_LOADED = false;
 var STOCK_2025_LOADING = false;
 var STOCK_2025_MAP = {};
-function loadStock2025IfNeeded(code, callback) { callback && callback(); }
-
-function getStock2025Price(code, dateStr) { return null; }
+function loadStock2025IfNeeded(code, callback) {
+if (STOCK_2025_LOADED) { callback && callback(); return; }
+STOCK_2025_LOADING = true;
+loadStockYear(2025, function() {
+STOCK_2025_LOADED = true; STOCK_2025_LOADING = false;
+STOCK_HIST.filter(function(r){ return r.d >= 20250000 && r.d < 20260000; }).forEach(function(r){
+if (!STOCK_2025_MAP[r.c]) STOCK_2025_MAP[r.c] = [];
+STOCK_2025_MAP[r.c].push(r);
+});
+callback && callback();
+});
+}
+function getStock2025Price(code, dateStr) {
+if (!STOCK_2025_MAP[code]) return null;
+var d = parseInt(dateStr.replace(/-/g,‘’));
+return STOCK_2025_MAP[code].find(function(r){ return r.d === d; }) || null;
+}
 
 // ========== 初始化 ==========
 window.addEventListener(‘DOMContentLoaded’, function(){
