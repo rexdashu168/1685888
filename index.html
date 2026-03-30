@@ -880,51 +880,66 @@ function renderChipAnalysis(code) {
 }
 
 
-function renderCbPriceHistory(code) {
-  // CB 價格資料
-  var allP = [];
-  if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl};}));
-  if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0}).map(function(r){return {d:r.d,c:r.c,cl:r.cl};}));
-  if (allP.length === 0 && window.CB_PRICE_2026) allP = CB_PRICE_2026.filter(function(r){return r.c===code});
-  if (allP.length === 0) return '';
-  var prices = allP.sort(function(a,b){return b.d-a.d});
+function renderCbPriceHistory(code, filterDays) {
+  filterDays = filterDays || 30;  // 預設30日
 
-  // CBAS 資料：統一用完整欄位格式（nm/avg/per）
+  // CB 價格資料（依需載入的年份範圍決定）
+  var allP = [];
+  if (window.CB_PRICE_2026) allP = allP.concat(CB_PRICE_2026.filter(function(r){return String(r.c)===code && r.cl>0;}));
+  if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0;}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl};}));
+  if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0;}).map(function(r){return {d:r.d,c:r.c,cl:r.cl};}));
+  if (allP.length === 0) return '';
+
+  // 全部排序（由新到舊）
+  var allPrices = allP.sort(function(a,b){return b.d-a.d;});
+
+  // 依 filterDays 截取（-1=全部）
+  var prices;
+  if (filterDays === -1) {
+    prices = allPrices;
+  } else {
+    var lastDate = allPrices[0].d;
+    var lastDateObj = new Date(String(lastDate).replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3'));
+    var cutoffObj = new Date(lastDateObj);
+    cutoffObj.setDate(cutoffObj.getDate() - filterDays);
+    var cutoff = parseInt(cutoffObj.toISOString().slice(0,10).replace(/-/g,''));
+    prices = allPrices.filter(function(p){ return p.d >= cutoff; });
+    if (prices.length === 0) prices = allPrices.slice(0, Math.min(30, allPrices.length));
+  }
+
+  // CBAS 資料
   var cbasRecs = [];
   var useNewFmt = true;
   if (DB && DB.cbas) {
-    cbasRecs = DB.cbas.filter(function(r){return String(r.c)===code});
+    cbasRecs = DB.cbas.filter(function(r){return String(r.c)===code;});
   }
-
-  // 建立日期→多筆陣列的 map
   var cbasMap = {};
   cbasRecs.forEach(function(r){
-    if (!r.nm || r.nm <= 0) return;  // 過濾掉無名目本金的舊格式資料
+    if (!r.nm || r.nm <= 0) return;
     var ds = String(r.d);
     if (!cbasMap[ds]) cbasMap[ds] = [];
-    // 去重：同日同nm只留一筆
     var dup = cbasMap[ds].some(function(x){ return x.nm === r.nm && x.per === r.per; });
     if (!dup) cbasMap[ds].push(r);
   });
 
   var hasCbas = cbasRecs.length > 0;
 
-  // 摘要統計
-  var maxP = Math.max.apply(null, prices.map(function(p){return p.cl}));
-  var minP = Math.min.apply(null, prices.map(function(p){return p.cl}));
-  var maxD = prices.find(function(p){return p.cl===maxP});
-  var minD = prices.find(function(p){return p.cl===minP});
-  var cbasMin = hasCbas ? Math.min.apply(null, cbasRecs.map(function(r){return r.lo||999})) : null;
-  var cbasMax = hasCbas ? Math.max.apply(null, cbasRecs.map(function(r){return r.hi||0})) : null;
+  // 摘要統計（用全部資料計算）
+  var maxP = Math.max.apply(null, allPrices.map(function(p){return p.cl;}));
+  var minP = Math.min.apply(null, allPrices.map(function(p){return p.cl;}));
+  var maxD = allPrices.find(function(p){return p.cl===maxP;});
+  var minD = allPrices.find(function(p){return p.cl===minP;});
+  var cbasMin = hasCbas ? Math.min.apply(null, cbasRecs.map(function(r){return r.lo||999;})) : null;
+  var cbasMax = hasCbas ? Math.max.apply(null, cbasRecs.map(function(r){return r.hi||0;})) : null;
 
   var sectionTitle = hasCbas
     ? 'CB 價格 × CBAS 整合 (' + prices.length + ' 筆 / CBAS ' + cbasRecs.length + ' 筆)'
-    : 'CB 價格歷史 (' + prices.length + ' 筆)';
+    : 'CB 價格歷史 (' + prices.length + ' 筆 / 全部 ' + allPrices.length + ' 筆)';
 
   var html = '<div class="data-section"><div class="section-title">' + sectionTitle + '</div>';
 
   // 摘要列
-  html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px;flex-wrap:wrap">';
+  html += '<div style="display:flex;gap:12px;margin-bottom:6px;font-size:12px;flex-wrap:wrap">';
   html += '<span style="color:var(--text4)">CB最高: <b class="price-up">' + fmtNum(maxP) + '</b> (' + fmtDate(maxD.d) + ')</span>';
   html += '<span style="color:var(--text4)">CB最低: <b class="price-down">' + fmtNum(minP) + '</b> (' + fmtDate(minD.d) + ')</span>';
   if (hasCbas && cbasMin !== null) {
@@ -934,41 +949,54 @@ function renderCbPriceHistory(code) {
   html += '</div>';
 
   // 流通餘額
-  var withBa = prices.filter(function(p){return p.ba});
+  var withBa = prices.filter(function(p){return p.ba;});
   if (withBa.length > 1) {
     var latestBa = withBa[0].ba;
     var firstBa = withBa[withBa.length-1].ba;
     var baRatio = firstBa > 0 ? ((latestBa/firstBa)*100).toFixed(1) : '-';
-    html += '<div style="display:flex;gap:12px;margin-bottom:8px;font-size:12px">';
+    html += '<div style="display:flex;gap:12px;margin-bottom:6px;font-size:12px">';
     html += '<span style="color:var(--text4)">流通餘額: <b>' + latestBa.toLocaleString() + '</b> 張</span>';
     html += '<span style="color:var(--text4)">剩餘比: <b class="' + (Number(baRatio)<30?'price-down':'') + '">' + baRatio + '%</b></span>';
     html += '</div>';
   }
 
   // 轉換價調整
-  var withCp = prices.filter(function(p){return p.cp});
+  var withCp = prices.filter(function(p){return p.cp;});
   if (withCp.length > 1) {
     var cpSet = {};
     withCp.forEach(function(p){ cpSet[p.cp] = p.d; });
     var cpValues = Object.keys(cpSet);
     if (cpValues.length > 1) {
-      html += '<div style="font-size:11px;color:var(--warn-text);background:var(--warn-bg);padding:4px 8px;border-radius:4px;margin-bottom:8px">轉換價曾調整: ';
+      html += '<div style="font-size:11px;color:var(--warn-text);background:var(--warn-bg);padding:4px 8px;border-radius:4px;margin-bottom:6px">轉換價曾調整: ';
       cpValues.sort(function(a,b){ return parseInt(cpSet[a])-parseInt(cpSet[b]); }).forEach(function(v,i){ html += (i>0?' → ':'') + v + '元'; });
       html += '</div>';
     }
   }
 
-  // 表格 — 有 CBAS 時欄位更多
-  // 新格式（有avg/nm）：日期 CB收盤 量 餘額 轉換價 | 張數 期間 筆數 均權利金 金額(萬) 低 高
-  // 舊格式（無avg/nm）：日期 CB收盤 量 餘額 轉換價 | CBAS筆 權利金低 權利金高
-  var colsCB = '70px 50px 38px 55px 50px';  // 日期 收盤 量 餘額 轉換價
-  var colsCBAS_new = '40px 30px 46px 46px 52px 52px 32px';  // 張數 筆 低 高 均權利金 金額(萬) 期
-  var colsCBAS_old = '36px 44px 44px';  // 筆數 低 高
+  // 期間切換按鈕
+  var btnDefs = [
+    {d:30,t:'30日'},{d:60,t:'60日'},{d:90,t:'90日'},
+    {d:365,t:'1年'},{d:730,t:'2年'},{d:1095,t:'3年'},{d:-1,t:'全部'}
+  ];
+  html += '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px">';
+  btnDefs.forEach(function(btn){
+    var isActive = btn.d === filterDays;
+    var style = isActive
+      ? 'background:var(--accent);color:#fff;font-weight:600;'
+      : 'background:var(--bg3);color:var(--text2);';
+    html += '<span style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;' + style + '" onclick="switchCbPricePeriod(this.dataset.c, parseInt(this.dataset.d))" data-c="' + code + '" data-d="' + btn.d + '">' + btn.t + '</span>';
+  });
+  // 提示：全部資料
+  html += '<span style="font-size:10px;color:var(--text4);padding:3px 4px">共 ' + allPrices.length + ' 個交易日</span>';
+  html += '</div>';
 
+  // 表格欄位
+  var colsCB = '70px 50px 38px 55px 50px';
+  var colsCBAS_new = '40px 30px 46px 46px 52px 52px 32px';
+  var colsCBAS_old = '36px 44px 44px';
   var theadCB = '<span>日期</span><span>CB收盤</span><span>量</span><span>餘額</span><span>轉換價</span>';
   var theadCBAS_new = '<span style="color:var(--fr-text);border-left:1.5px solid var(--fr-border);padding-left:6px">張數</span><span style="color:var(--fr-text)">筆</span><span style="color:var(--fr-text)">最低</span><span style="color:var(--fr-text)">最高</span><span style="color:var(--fr-text)">平均</span><span style="color:var(--fr-text)">金額(萬)</span><span style="color:var(--fr-text)">期</span>';
   var theadCBAS_old = '<span style="color:var(--fr-text)">筆數</span><span style="color:var(--fr-text)">低</span><span style="color:var(--fr-text)">高</span>';
-
   var cols, thead;
   if (!hasCbas) {
     cols = 'grid-template-columns:' + colsCB;
@@ -985,12 +1013,6 @@ function renderCbPriceHistory(code) {
     var ds = String(p.d);
     var cbasList = cbasMap[ds] || [];
     var rows = '';
-
-    // 第一子列（CB 資料）
-    var cbSpan = Math.max(cbasList.length, 1);
-    var cbCols = cols;
-    
-    // CB 那行 + 第一筆 CBAS（同一列）
     var cbPart = '<span>' + fmtDate(p.d) + '</span>' +
       '<span style="font-weight:500">' + fmtNum(p.cl) + '</span>' +
       '<span>' + (p.v||'-') + '</span>' +
@@ -1000,14 +1022,12 @@ function renderCbPriceHistory(code) {
     if (!hasCbas) {
       rows += '<div class="trow" style="' + cols + '">' + cbPart + '</div>';
     } else if (cbasList.length === 0) {
-      // 無 CBAS 資料的日期
       if (useNewFmt) {
         rows += '<div class="trow" style="' + cols + '">' + cbPart + '<span style="color:var(--text4)">-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span><span>-</span></div>';
       } else {
         rows += '<div class="trow" style="' + cols + '">' + cbPart + '<span style="color:var(--text4)">-</span><span>-</span><span>-</span></div>';
       }
     } else {
-      // 有 CBAS：同一個 CB 日期展開多筆 CBAS
       cbasList.forEach(function(cbas, ci) {
         var cbasPart = '';
         if (useNewFmt) {
@@ -1026,11 +1046,9 @@ function renderCbPriceHistory(code) {
             '<span style="color:var(--fr-text)">' + fmtNum(cbas.lo) + '</span>' +
             '<span style="color:var(--fr-text)">' + fmtNum(cbas.hi) + '</span>';
         }
-        // 第一筆同行顯示 CB，後續筆只顯示 CBAS（CB欄空白）
         if (ci === 0) {
           rows += '<div class="trow" style="' + cols + '">' + cbPart + cbasPart + '</div>';
         } else {
-          // 續行：CB欄空白，CBAS欄顯示第二筆
           var emptyPart = '<span></span><span></span><span></span><span></span><span></span>';
           rows += '<div class="trow" style="' + cols + ';background:rgba(90,58,122,0.04)">' + emptyPart + cbasPart + '</div>';
         }
@@ -1039,23 +1057,29 @@ function renderCbPriceHistory(code) {
     return rows;
   }
 
-  var priceId = 'cbhist_' + code;
-  html += '<div class="mini-table"><div class="thead" style="' + cols + '">' + thead + '</div>';
-  prices.slice(0,20).forEach(function(p){ html += renderCbRow(p); });
-
-  if (prices.length > 20) {
-    html += '<div id="'+priceId+'" style="display:none">';
-    prices.slice(20).forEach(function(p){ html += renderCbRow(p); });
-    html += '</div>';
-    html += '<div style="text-align:center;padding:6px"><span style="font-size:11px;color:var(--blue);cursor:pointer;padding:4px 12px;background:var(--bg);border-radius:12px" onclick="toggleCbas(this,\''+priceId+'\','+(prices.length-20)+')">展開全部 '+(prices.length-20)+' 筆 ▼</span></div>';
-  }
-
+  // 容器 id（用於切換期間）
+  var containerId = 'cbhist_' + code;
+  html += '<div class="mini-table" id="' + containerId + '"><div class="thead" style="' + cols + '">' + thead + '</div>';
+  prices.forEach(function(p){ html += renderCbRow(p); });
   html += '</div></div>';
   return html;
 }
 
+// 切換CB價格期間（重新渲染整個 data-section）
+function switchCbPricePeriod(code, days) {
+  // 找含有 cbhist_{code} 的 data-section 重新渲染
+  var el = document.getElementById('cbhist_' + code);
+  if (!el) return;
+  var section = el.closest('.data-section');
+  if (!section) return;
+  var newHtml = renderCbPriceHistory(code, days);
+  var tmp = document.createElement('div');
+  tmp.innerHTML = newHtml;
+  var newSection = tmp.firstChild;
+  if (newSection) section.parentNode.replaceChild(newSection, section);
+}
 
-// ========== 股價歷史 ==========
+
 function renderStockPriceHistory(code) {
   if (!window.STOCK_PRICE_2026) return '';
   var prices = STOCK_PRICE_2026.filter(function(r){return r.c===code}).sort(function(a,b){return b.d-a.d});
@@ -1304,7 +1328,15 @@ function sidebarClick(fn, action) {
     if (w) w.style.display = 'none';
     // 不需要DB的功能直接執行
     var noDbActions = ['CBAS垃圾變黃金', '甜蜜點篩選', 'CB成交值排行', 'CB漲幅排行', 'CB跌幅排行', 'CB5日強勢', 'CB5日弱勢', '股票成交值排行', '股票5日強勢', '融資增加排行', '融資減少排行', '融券增加排行'];
-    if (!DB && noDbActions.indexOf(action) < 0) { addSystemMsg('資料庫載入中，請稍候...'); return; }
+    if (!DB && noDbActions.indexOf(action) < 0) {
+      addSystemMsg('資料庫載入中，請稍候約5-10秒，完成後請再點一次...');
+      // 等DB好了自動執行
+      var waitDB = setInterval(function() {
+        if (DB) { clearInterval(waitDB); doQuery(action); }
+      }, 500);
+      setTimeout(function(){ clearInterval(waitDB); }, 15000);
+      return;
+    }
     doQuery(action);
   }
 }
@@ -1371,8 +1403,15 @@ function doQuery(q) {
   if (!query) return;
   input.value = '';
   // 不需要DB的功能直接執行
-  var noDbNeeded = ['CBAS垃圾變黃金','甜蜜點篩選','CB成交值排行','CB漲幅排行','CB跌幅排行','CB5日強勢','CB5日弱勢','股票成交值排行','股票5日強勢','融資增加排行','融資減少排行','融券增加排行','外電總覽','產業觀察全覽'];
-  if (!DB && noDbNeeded.indexOf(query) < 0) { addSystemMsg('資料庫載入中，請稍候...'); return; }
+  var noDbNeeded = ['CBAS垃圾變黃金','甜蜜點篩選','CB成交值排行','CB漲幅排行','CB跌幅排行','CB5日強勢','CB5日弱勢','股票成交值排行','股票5日強勢','融資增加排行','融資減少排行','融券增加排行','外電總覽','產業觀察全覽','競拍總覽','掛牌中','研究發現'];
+  if (!DB && noDbNeeded.indexOf(query) < 0) {
+    addSystemMsg('資料庫載入中，請稍候約5-10秒，完成後請再點一次...');
+    var waitDB2 = setInterval(function() {
+      if (DB) { clearInterval(waitDB2); doQuery(query); }
+    }, 500);
+    setTimeout(function(){ clearInterval(waitDB2); }, 15000);
+    return;
+  }
   var w = document.getElementById('welcome');
   if (w) w.style.display = 'none';
   addUserMsg(query);
@@ -2144,7 +2183,7 @@ function showStockRanking(type) {
       var cl5 = day5[String(c)];
       var cl = spRec ? spRec.cl : null;
       var chg5 = (cl && cl5 && cl5>0) ? ((cl-cl5)/cl5*100) : null;
-      mgRows.push({ c: String(c), n: spRec ? spRec.n : c, mr: t.mr||0, mrChg: mrChg, sr: t.sr||0, srChg: srChg, cl: cl, chg5: chg5 });
+      mgRows.push({ c: String(c), n: (window.IND_FULL && IND_FULL[String(c)] ? IND_FULL[String(c)].n : (spRec ? spRec.n : c)), mr: t.mr||0, mrChg: mrChg, sr: t.sr||0, srChg: srChg, cl: cl, chg5: chg5 });
     });
 
     var sorted;
@@ -2189,7 +2228,7 @@ function showStockRanking(type) {
     var c = String(r.c);
     var cl5 = day5[c];
     var chg5 = (cl5 && cl5>0 && r.cl) ? ((r.cl-cl5)/cl5*100) : null;
-    return { c: c, n: r.n||c, cl: r.cl, v: r.v, chg5: chg5 };
+    return { c: c, n: (window.IND_FULL && IND_FULL[c] ? IND_FULL[c].n : (r.n||c)), cl: r.cl, v: r.v, chg5: chg5 };
   }).filter(function(r){ return r.cl > 0 && r.v > 0; });
 
   var sorted;
