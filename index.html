@@ -1598,7 +1598,8 @@ function showCbFullResult(result) {
 
   if (stockCode && window.STOCK_CB_MAP && STOCK_CB_MAP[stockCode] && STOCK_CB_MAP[stockCode].length > 1) {
     var siblings = STOCK_CB_MAP[stockCode];
-    html += '<div class="data-section"><div class="section-title">🏢 同公司歷史CB (' + siblings.length + ' 檔)</div>';
+    var sibContainerId = 'sib_cb_' + stockCode;
+    html += '<div class="data-section" id="' + sibContainerId + '"><div class="section-title">🏢 同公司歷史CB (' + siblings.length + ' 檔)</div>';
 
     // 表格欄：代號名稱 | 狀態 | 最高(日) | 最低(日) | 振幅
     var cols = 'grid-template-columns:55px 1fr 50px 60px 68px 60px 68px 55px';
@@ -1614,23 +1615,26 @@ function showCbFullResult(result) {
       var isListed2 = !!DB._kbByCode[sib.c];
 
       // 從所有可用價格來源找最高最低
-      var allPx = [];
-      // CB_PRICE_HIST：歷史年份收盤（正確來源）
-      if (window.CB_PRICE_HIST && CB_PRICE_HIST.length > 0) {
-        CB_PRICE_HIST.filter(function(r){return r.c===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      // CB_PRICE_HIST_2026：2026年收盤
-      if (window.CB_PRICE_HIST_2026 && CB_PRICE_HIST_2026.length > 0) {
-        CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      // CB_PRICE_2026：即時行情補充
-      if (window.CB_PRICE_2026 && CB_PRICE_2026.length > 0) {
-        CB_PRICE_2026.filter(function(r){return String(r.c)===sib.c && r.cl>0;}).forEach(function(r){allPx.push({d:r.d,p:r.cl});});
-      }
-      allPx.sort(function(a,b){return a.d-b.d;});
+      // 同公司CB最高最低：從 hi/lo 欄位取真實每日高低，再全域取極值
+      var hiCandidates = [];  // {d, p} 用 hi 欄位
+      var loCandidates = [];  // {d, p} 用 lo 欄位
 
-      var hiRec = allPx.length ? allPx.reduce(function(m,r){return r.p>m.p?r:m;}, allPx[0]) : null;
-      var loRec = allPx.length ? allPx.reduce(function(m,r){return r.p<m.p?r:m;}, allPx[0]) : null;
+      function pushPriceRecs(recs, codeStr) {
+        recs.filter(function(r){return String(r.c)===codeStr && r.cl>0;}).forEach(function(r){
+          // 最高用 hi，沒有就用 cl
+          hiCandidates.push({d:r.d, p: r.hi||r.cl});
+          // 最低用 lo，沒有就用 cl
+          loCandidates.push({d:r.d, p: r.lo||r.cl});
+        });
+      }
+
+      if (window.CB_PRICE_HIST && CB_PRICE_HIST.length > 0)
+        pushPriceRecs(CB_PRICE_HIST, sib.c);
+      if (window.CB_PRICE_HIST_2026 && CB_PRICE_HIST_2026.length > 0)
+        pushPriceRecs(CB_PRICE_HIST_2026, sib.c);
+
+      var hiRec = hiCandidates.length ? hiCandidates.reduce(function(m,r){return r.p>m.p?r:m;}, hiCandidates[0]) : null;
+      var loRec = loCandidates.length ? loCandidates.reduce(function(m,r){return r.p<m.p?r:m;}, loCandidates[0]) : null;
       var amp = (hiRec && loRec && loRec.p > 0) ? ((hiRec.p - loRec.p) / loRec.p * 100).toFixed(1) + '%' : '-';
 
       var statusTxt = isCurrent ? '▶ 本檔' : isListed2 ? '🟢 掛牌' : '⚫ 下市';
@@ -1648,6 +1652,44 @@ function showCbFullResult(result) {
         '</div>';
     });
     html += '</div></div>';
+
+    // 背景觸發歷史年份載入，載完後刷新同公司CB表格
+    (function(sibList, containerId, currentCode) {
+      // 收集需要的年份（從 CB_IMPORT 找掛牌年份）
+      var needYears = new Set();
+      if (window.CB_IMPORT) {
+        sibList.forEach(function(sib) {
+          var meta = CB_IMPORT.find(function(m){ return String(m.c) === sib.c; });
+          if (meta && meta.ld) {
+            var y = parseInt(String(meta.ld).slice(0,4));
+            var y2 = meta.md ? parseInt(String(meta.md).slice(0,4)) : new Date().getFullYear();
+            for (var yr = y; yr <= Math.min(y2, 2025); yr++) needYears.add(yr);
+          }
+        });
+      }
+      if (needYears.size === 0) return;  // 無需載入
+
+      // 檢查哪些年份還沒載入
+      var toLoad = Array.from(needYears).filter(function(y){
+        return !CB_PRICE_HIST_LOADED.has(y);
+      });
+      if (toLoad.length === 0) return;  // 全已載入
+
+      // 依序載入，全部完成後重新渲染同公司CB區塊
+      var remaining = toLoad.length;
+      toLoad.forEach(function(y) {
+        loadCbPriceYear(y, function() {
+          remaining--;
+          if (remaining === 0) {
+            // 重新渲染同公司CB表格
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            // 重新觸發查詢（最簡單的方式）
+            doQuery(currentCode);
+          }
+        });
+      });
+    })(siblings, sibContainerId, code);
   }
   
   html += renderCbPriceHistory(code);
