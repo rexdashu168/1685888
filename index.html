@@ -886,8 +886,8 @@ function renderCbPriceHistory(code, filterDays) {
   // CB 價格資料（依需載入的年份範圍決定）
   var allP = [];
   // CB_PRICE_2026 已合入 CB_PRICE_HIST_2026，不需額外讀取
-  if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0;}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl};}));
-  if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0;}).map(function(r){return {d:r.d,c:r.c,cl:r.cl};}));
+  if (window.CB_PRICE_HIST_2026) allP = allP.concat(CB_PRICE_HIST_2026.filter(function(r){return String(r.c)===code && r.cl>0;}).map(function(r){return {d:r.d,c:String(r.c),cl:r.cl,o:r.o,hi:r.hi,lo:r.lo,v:r.v};}));
+  if (window.CB_PRICE_HIST) allP = allP.concat(CB_PRICE_HIST.filter(function(r){return r.c===code && r.cl>0;}).map(function(r){return {d:r.d,c:r.c,cl:r.cl,o:r.o,hi:r.hi,lo:r.lo,v:r.v};}));
   if (allP.length === 0) return '';
 
   // 全部排序（由新到舊）
@@ -1036,7 +1036,7 @@ function renderCbPriceHistory(code, filterDays) {
         var cbasPart = '';
         if (useNewFmt) {
           var shares = Math.round((cbas.nm||0) / 100000);
-          var amtMillion = ((cbas.avg||0) * 1000 / 10000).toFixed(2);
+          var amtMillion = (shares * (cbas.avg||0) * 1000 / 10000).toFixed(2);
           cbasPart =
             '<span style="color:var(--fr-text);font-weight:500">' + shares + '</span>' +
             '<span style="color:var(--fr-text)">' + (cbas.cnt||'-') + '</span>' +
