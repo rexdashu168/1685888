@@ -1647,10 +1647,10 @@ function showCbFullResult(result) {
       var needYears = new Set();
       if (window.CB_IMPORT) {
         sibList.forEach(function(sib) {
-          var meta = CB_IMPORT.find(function(m){ return String(m.c) === sib.c; });
-          if (meta && meta.ld) {
-            var y = parseInt(String(meta.ld).slice(0,4));
-            var y2 = meta.md ? parseInt(String(meta.md).slice(0,4)) : new Date().getFullYear();
+          var meta = CB_IMPORT[sib.c] || CB_IMPORT[String(parseInt(sib.c))];
+          if (meta && meta['掛牌日（發行日）']) {
+            var y = parseInt(String(meta['掛牌日（發行日）']).slice(0,4));
+            var y2 = meta['到期日'] ? parseInt(String(meta['到期日']).slice(0,4)) : new Date().getFullYear();
             for (var yr = y; yr <= Math.min(y2, 2025); yr++) needYears.add(yr);
           }
         });
