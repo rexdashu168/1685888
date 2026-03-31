@@ -495,7 +495,21 @@ allPH.forEach(function(el) {
 async function loadForeignReports() {
 if (!window.FOREIGN_REPORTS_B64) return;
 try {
-FR_DB = await decompressB64(FOREIGN_REPORTS_B64);
+var binary = atob(FOREIGN_REPORTS_B64);
+var bytes = new Uint8Array(binary.length);
+for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+var ds = new DecompressionStream('gzip');
+var writer = ds.writable.getWriter();
+writer.write(bytes); writer.close();
+var reader = ds.readable.getReader();
+var chunks = [];
+while (true) { var r = await reader.read(); if (r.done) break; chunks.push(r.value); }
+var total = chunks.reduce(function(a,c){return a+c.length},0);
+var result = new Uint8Array(total);
+var offset = 0;
+for (var j = 0; j < chunks.length; j++) { result.set(chunks[j], offset); offset += chunks[j].length; }
+var text = new TextDecoder().decode(result);
+FR_DB = JSON.parse(text);
 window.FOREIGN_REPORTS_B64 = null;
 document.getElementById(‘ctx-fr’).textContent = ‘外電報導 (’ + FR_DB.meta.total + ‘筆/2025-2026)’;
 document.getElementById(‘fr-count’).textContent = FR_DB.meta.total + ’ 筆’;
@@ -1415,7 +1429,22 @@ scrollToNewMsg();
 
 // ========== 資料載入 ==========
 async function loadData() {
-DB = await decompressB64(DATA_B64);
+var b64 = DATA_B64;
+var binary = atob(b64);
+var bytes = new Uint8Array(binary.length);
+for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+var ds = new DecompressionStream('gzip');
+var writer = ds.writable.getWriter();
+writer.write(bytes); writer.close();
+var reader = ds.readable.getReader();
+var chunks = [];
+while (true) { var r = await reader.read(); if (r.done) break; chunks.push(r.value); }
+var total = chunks.reduce(function(a,c){return a+c.length},0);
+var result = new Uint8Array(total);
+var offset = 0;
+for (var j = 0; j < chunks.length; j++) { result.set(chunks[j], offset); offset += chunks[j].length; }
+var text = new TextDecoder().decode(result);
+DB = JSON.parse(text);
 DB._cbByCode = {};
 DB.cb.forEach(function(cb){DB._cbByCode[cb.c]=cb});
 DB._kbByCode = {};
